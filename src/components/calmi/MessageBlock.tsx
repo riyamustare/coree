@@ -8,7 +8,7 @@ interface MessageBlockProps {
   isOld?: boolean;
 }
 
-const transition = { duration: 0.3, ease: [0.4, 0, 0.2, 1] };
+const transition = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const };
 
 export function MessageBlock({ role, content, isThinking, isOld }: MessageBlockProps) {
   return (
