@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
@@ -33,6 +33,7 @@ const Index = () => {
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const spokenMessageIdRef = useRef<string | null>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -86,10 +87,11 @@ const Index = () => {
   useEffect(() => {
     if (mode !== "voice" || isLoading || messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last.role === "assistant" && !isSpeaking) {
+    if (last.role === "assistant" && last.id !== spokenMessageIdRef.current) {
+      spokenMessageIdRef.current = last.id;
       speak(last.content);
     }
-  }, [messages, mode, isLoading, isSpeaking, speak]);
+  }, [messages, mode, isLoading, speak]);
 
   // Loading
   if (authLoading) {
