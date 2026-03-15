@@ -40,6 +40,8 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
 
+    let userIntent: string | null = null;
+
     if (authHeader) {
       try {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -53,6 +55,16 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
+          // Get user's onboarding intent
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("onboarding_intent")
+            .eq("id", user.id)
+            .single();
+          if (profileData?.onboarding_intent) {
+            userIntent = profileData.onboarding_intent;
+          }
+
           // Generate embedding for the message to search memories
           const embedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -92,6 +104,21 @@ serve(async (req) => {
     const llmMessages = [
       { role: "system", content: CALMI_SYSTEM_PROMPT },
     ];
+
+    if (userIntent) {
+      const intentPrompts: Record<string, string> = {
+        "unlock insights about myself": "The user wants to gain self-awareness and personal insights. Focus on reflective questions, patterns in their thoughts, and helping them understand themselves better.",
+        "process my emotions": "The user wants help processing emotions. Focus on validating feelings, exploring emotional experiences, and helping them work through what they're feeling.",
+        "set and achieve my goals": "The user wants support with goals. Help them clarify what they want, break things down into steps, and stay motivated while being emotionally supportive.",
+        "just need to vent": "The user needs to vent. Be a great listener — validate, empathize, and don't try to fix things unless asked. Let them express freely.",
+        "i don't know yet": "The user is exploring. Be gently curious and let the conversation flow naturally without pushing any direction.",
+      };
+      const intentContext = intentPrompts[userIntent] || `The user's stated intent: ${userIntent}`;
+      llmMessages.push({
+        role: "system",
+        content: `User personalization context:\n${intentContext}`,
+      });
+    }
 
     if (memories.length > 0) {
       llmMessages.push({

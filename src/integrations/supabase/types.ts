@@ -84,6 +84,27 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          onboarding_completed: boolean
+          onboarding_intent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          onboarding_completed?: boolean
+          onboarding_intent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          onboarding_completed?: boolean
+          onboarding_intent?: string | null
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
