@@ -40,6 +40,8 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
 
+    let userIntent: string | null = null;
+
     if (authHeader) {
       try {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -53,6 +55,16 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
+          // Get user's onboarding intent
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("onboarding_intent")
+            .eq("id", user.id)
+            .single();
+          if (profileData?.onboarding_intent) {
+            userIntent = profileData.onboarding_intent;
+          }
+
           // Generate embedding for the message to search memories
           const embedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
