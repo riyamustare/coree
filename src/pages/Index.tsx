@@ -33,6 +33,7 @@ const Index = () => {
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const spokenMessageIdRef = useRef<string | null>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
