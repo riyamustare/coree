@@ -87,10 +87,11 @@ const Index = () => {
   useEffect(() => {
     if (mode !== "voice" || isLoading || messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last.role === "assistant" && !isSpeaking) {
+    if (last.role === "assistant" && last.id !== spokenMessageIdRef.current) {
+      spokenMessageIdRef.current = last.id;
       speak(last.content);
     }
-  }, [messages, mode, isLoading, isSpeaking, speak]);
+  }, [messages, mode, isLoading, speak]);
 
   // Loading
   if (authLoading) {
