@@ -49,7 +49,7 @@ export function useVoice() {
           }
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(250);
       });
     } catch (err) {
       console.error("Mic error:", err);
