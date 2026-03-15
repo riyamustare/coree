@@ -7,6 +7,12 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface SessionSummary {
+  summary: string;
+  messageCount: number;
+  duration: number; // seconds
+}
+
 export function useSession(userId: string | undefined) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
@@ -29,22 +35,42 @@ export function useSession(userId: string | undefined) {
     setMessages([]);
   }, [userId]);
 
-  const endSession = useCallback(async () => {
-    if (!sessionId) return;
+  const endSession = useCallback(async (): Promise<SessionSummary | null> => {
+    if (!sessionId) return null;
+
+    const duration = sessionStart
+      ? Math.floor((Date.now() - sessionStart.getTime()) / 1000)
+      : 0;
+    const messageCount = messages.length;
 
     // Summarize session via edge function
     try {
-      await supabase.functions.invoke("end-session", {
+      const { data } = await supabase.functions.invoke("end-session", {
         body: { sessionId },
       });
+
+      // Fetch the updated session to get summary
+      const { data: sessionData } = await supabase
+        .from("sessions")
+        .select("summary")
+        .eq("id", sessionId)
+        .single();
+
+      const summary = sessionData?.summary || "You took a moment to reflect today. That matters.";
+
+      setSessionId(null);
+      setSessionStart(null);
+      setMessages([]);
+
+      return { summary, messageCount, duration };
     } catch (err) {
       console.error("Failed to end session:", err);
+      setSessionId(null);
+      setSessionStart(null);
+      setMessages([]);
+      return { summary: "You took a moment to reflect today. That matters.", messageCount, duration };
     }
-
-    setSessionId(null);
-    setSessionStart(null);
-    setMessages([]);
-  }, [sessionId]);
+  }, [sessionId, sessionStart, messages.length]);
 
   const sendMessage = useCallback(
     async (content: string): Promise<void> => {
@@ -59,7 +85,6 @@ export function useSession(userId: string | undefined) {
       setIsLoading(true);
 
       try {
-        // Save user message
         await supabase.from("messages").insert({
           session_id: sessionId,
           user_id: userId,
@@ -67,14 +92,12 @@ export function useSession(userId: string | undefined) {
           content,
         });
 
-        // Get last 5 exchanges for context
         const recentExchanges = messages.slice(-10);
         const contextMessages = recentExchanges.map((m) => ({
           role: m.role,
           content: m.content,
         }));
 
-        // Stream response from edge function
         const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
         const resp = await fetch(CHAT_URL, {
           method: "POST",
@@ -145,7 +168,6 @@ export function useSession(userId: string | undefined) {
           }
         }
 
-        // Save assistant message
         if (assistantContent) {
           await supabase.from("messages").insert({
             session_id: sessionId,
