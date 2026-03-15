@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
+import { useProfile } from "@/hooks/useProfile";
 import { AuthScreen } from "@/components/calmi/AuthScreen";
 import { HomeScreen } from "@/components/calmi/HomeScreen";
+import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
 import { SummaryScreen } from "@/components/calmi/SummaryScreen";
 import { SessionHeader } from "@/components/calmi/SessionHeader";
 import { MessageBlock } from "@/components/calmi/MessageBlock";
@@ -12,12 +14,13 @@ import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
 
-type AppScreen = "home" | "chat" | "summary";
+type AppScreen = "home" | "onboarding" | "chat" | "summary";
 
 const GREETING = "How are you feeling right now?";
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { profile, loading: profileLoading, completeOnboarding } = useProfile(user?.id);
   const {
     sessionId,
     sessionStart,
@@ -35,12 +38,23 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
 
-  // Scroll to bottom on new messages
+  // Determine initial screen based on onboarding status
+  useEffect(() => {
+    if (user && profile && !profile.onboarding_completed && screen === "home") {
+      setScreen("onboarding");
+    }
+  }, [user, profile]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleOnboardingComplete = useCallback(async (intent: string) => {
+    await completeOnboarding(intent);
+    setScreen("home");
+  }, [completeOnboarding]);
 
   const handleStartConversation = useCallback(async () => {
     await startSession();
@@ -93,8 +107,7 @@ const Index = () => {
     }
   }, [messages, mode, isLoading, speak]);
 
-  // Loading
-  if (authLoading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 rounded-full bg-primary/20 animate-breathe" />
@@ -102,12 +115,14 @@ const Index = () => {
     );
   }
 
-  // Auth
   if (!user) {
     return <AuthScreen />;
   }
 
-  // Summary
+  if (screen === "onboarding") {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
+
   if (screen === "summary" && summaryData) {
     return (
       <SummaryScreen
@@ -118,9 +133,8 @@ const Index = () => {
     );
   }
 
-  // Home
   if (screen === "home") {
-    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} />;
+    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user.id} />;
   }
 
   // Chat
@@ -134,7 +148,6 @@ const Index = () => {
           sessionStart={sessionStart}
         />
 
-        {/* Messages */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto calmi-scroll py-4 space-y-3"
@@ -177,7 +190,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Input */}
         <div className="pb-6 pt-2">
           <AnimatePresence mode="wait">
             {mode === "text" ? (
