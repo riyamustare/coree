@@ -1,19 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { useSession } from "@/hooks/useSession";
+import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
 import { AuthScreen } from "@/components/calmi/AuthScreen";
+import { HomeScreen } from "@/components/calmi/HomeScreen";
+import { SummaryScreen } from "@/components/calmi/SummaryScreen";
 import { SessionHeader } from "@/components/calmi/SessionHeader";
 import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
 
+type AppScreen = "home" | "chat" | "summary";
+
 const GREETING = "How are you feeling right now?";
 
 const Index = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const {
     sessionId,
     sessionStart,
@@ -24,16 +28,11 @@ const Index = () => {
     sendMessage,
   } = useSession(user?.id);
   const { isListening, isSpeaking, startListening, stopListening, speak, stopSpeaking } = useVoice();
-  const [mode, setMode] = useState<"text" | "voice">("text");
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [showSummary, setShowSummary] = useState(false);
 
-  // Auto-start session when user arrives
-  useEffect(() => {
-    if (user && !sessionId) {
-      startSession();
-    }
-  }, [user, sessionId, startSession]);
+  const [screen, setScreen] = useState<AppScreen>("home");
+  const [mode, setMode] = useState<"text" | "voice">("text");
+  const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -42,15 +41,28 @@ const Index = () => {
     }
   }, [messages]);
 
+  const handleStartConversation = useCallback(async () => {
+    await startSession();
+    setScreen("chat");
+  }, [startSession]);
+
   const handleEndSession = useCallback(async () => {
     stopSpeaking();
-    setShowSummary(true);
-    await endSession();
-    setTimeout(() => {
-      setShowSummary(false);
-      startSession();
-    }, 3000);
-  }, [endSession, startSession, stopSpeaking]);
+    const result = await endSession();
+    setSummaryData(result);
+    setScreen("summary");
+  }, [endSession, stopSpeaking]);
+
+  const handleGoHome = useCallback(() => {
+    setSummaryData(null);
+    setScreen("home");
+  }, []);
+
+  const handleNewSession = useCallback(async () => {
+    setSummaryData(null);
+    await startSession();
+    setScreen("chat");
+  }, [startSession]);
 
   const handleSendText = useCallback(
     async (content: string) => {
@@ -62,13 +74,10 @@ const Index = () => {
   const handleVoiceToggle = useCallback(async () => {
     if (isListening) {
       stopListening();
-      // The startListening promise resolves with transcript on stop
     } else {
       const transcript = await startListening();
       if (transcript) {
         await sendMessage(transcript);
-        // After getting assistant response, speak it
-        // We'll watch for the last assistant message
       }
     }
   }, [isListening, startListening, stopListening, sendMessage]);
@@ -82,6 +91,7 @@ const Index = () => {
     }
   }, [messages, mode, isLoading, isSpeaking, speak]);
 
+  // Loading
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -90,14 +100,31 @@ const Index = () => {
     );
   }
 
+  // Auth
   if (!user) {
     return <AuthScreen />;
   }
 
+  // Summary
+  if (screen === "summary" && summaryData) {
+    return (
+      <SummaryScreen
+        summary={summaryData}
+        onGoHome={handleGoHome}
+        onNewSession={handleNewSession}
+      />
+    );
+  }
+
+  // Home
+  if (screen === "home") {
+    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} />;
+  }
+
+  // Chat
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="mx-auto flex w-full max-w-chat flex-1 flex-col px-4">
-        {/* Header */}
         <SessionHeader
           mode={mode}
           onModeChange={setMode}
@@ -105,37 +132,11 @@ const Index = () => {
           sessionStart={sessionStart}
         />
 
-        {/* Summary overlay */}
-        <AnimatePresence>
-          {showSummary && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-background"
-            >
-              <div className="text-center">
-                <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <div className="h-5 w-5 rounded-full bg-primary" />
-                </div>
-                <p className="text-xl font-medium text-foreground tracking-tight">
-                  Thanks for sharing today.
-                </p>
-                <p className="mt-2 text-muted-foreground">
-                  Take care of yourself.
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Messages */}
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto calmi-scroll py-4 space-y-3"
         >
-          {/* Greeting */}
           {messages.length === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -159,7 +160,6 @@ const Index = () => {
             />
           ))}
 
-          {/* Thinking indicator */}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -175,7 +175,7 @@ const Index = () => {
           )}
         </div>
 
-        {/* Input area */}
+        {/* Input */}
         <div className="pb-6 pt-2">
           <AnimatePresence mode="wait">
             {mode === "text" ? (
