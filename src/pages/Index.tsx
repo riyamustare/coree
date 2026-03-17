@@ -9,13 +9,15 @@ import { AuthScreen } from "@/components/calmi/AuthScreen";
 import { HomeScreen } from "@/components/calmi/HomeScreen";
 import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
 import { SummaryScreen } from "@/components/calmi/SummaryScreen";
+import { HistoryScreen } from "@/components/calmi/HistoryScreen";
+import { InsightsScreen } from "@/components/calmi/InsightsScreen";
 import { SessionHeader } from "@/components/calmi/SessionHeader";
 import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
 
-type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary";
+type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights";
 
 const GREETING = "How are you feeling right now?";
 
@@ -39,7 +41,6 @@ const Index = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
 
-  // Route to correct screen based on auth state
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -95,22 +96,6 @@ const Index = () => {
     [sendMessage]
   );
 
-  const handleVoiceToggle = useCallback(async () => {
-    if (isListening) {
-      const transcript = await (async () => {
-        // stopListening resolves the promise from startListening
-        stopListening();
-        return null; // transcript comes via the startListening promise
-      })();
-    } else {
-      const transcript = await startListening();
-      if (transcript) {
-        await sendMessage(transcript);
-      }
-    }
-  }, [isListening, startListening, stopListening, sendMessage]);
-
-  // Handle voice toggle properly - stop resolves the start promise
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
       stopListening();
@@ -122,7 +107,6 @@ const Index = () => {
     }
   }, [isListening, startListening, stopListening, sendMessage]);
 
-  // Auto-speak assistant responses in voice mode
   useEffect(() => {
     if (mode !== "voice" || isLoading || messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -167,8 +151,24 @@ const Index = () => {
     );
   }
 
+  if (screen === "history" && user) {
+    return <HistoryScreen userId={user.id} onBack={() => setScreen("home")} />;
+  }
+
+  if (screen === "insights" && user) {
+    return <InsightsScreen userId={user.id} onBack={() => setScreen("home")} />;
+  }
+
   if (screen === "home" && user) {
-    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user.id} />;
+    return (
+      <HomeScreen
+        onStartConversation={handleStartConversation}
+        onSignOut={signOut}
+        onViewHistory={() => setScreen("history")}
+        onViewInsights={() => setScreen("insights")}
+        userId={user.id}
+      />
+    );
   }
 
   // Chat

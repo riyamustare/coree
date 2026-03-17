@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { MessageSquare, LogOut, Clock } from "lucide-react";
+import { MessageSquare, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { FeedbackModal } from "./FeedbackModal";
 
 interface PastSession {
   id: string;
@@ -13,11 +14,14 @@ interface PastSession {
 interface HomeScreenProps {
   onStartConversation: () => void;
   onSignOut: () => void;
+  onViewHistory: () => void;
+  onViewInsights: () => void;
   userId: string;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, userId }: HomeScreenProps) {
+export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, userId }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const hour = new Date().getHours();
   const greeting =
@@ -31,10 +35,9 @@ export function HomeScreen({ onStartConversation, onSignOut, userId }: HomeScree
         .eq("user_id", userId)
         .not("ended_at", "is", null)
         .order("started_at", { ascending: false })
-        .limit(20);
+        .limit(5);
 
       if (data) {
-        // Filter to sessions > 5 minutes
         const filtered = data.filter((s) => {
           if (!s.ended_at || !s.started_at) return false;
           const duration = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
@@ -109,19 +112,51 @@ export function HomeScreen({ onStartConversation, onSignOut, userId }: HomeScree
           </motion.button>
         </motion.div>
 
+        {/* Quick links */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="mt-8 flex gap-3"
+        >
+          <button
+            onClick={onViewInsights}
+            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
+          >
+            <BarChart2 className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Insights</span>
+          </button>
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
+          >
+            <MessageCircleHeart className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Feedback</span>
+          </button>
+        </motion.div>
+
         {/* Past sessions */}
         {pastSessions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-10"
+            className="mt-8"
           >
-            <h2 className="text-sm font-medium text-muted-foreground mb-3 px-1">
-              Past conversations
-            </h2>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Past conversations
+              </h2>
+              <button
+                onClick={onViewHistory}
+                className="flex items-center gap-0.5 text-xs font-medium text-primary hover:text-primary/80 transition"
+              >
+                See all
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
             <div className="space-y-2">
-              {pastSessions.map((session, i) => (
+              {pastSessions.slice(0, 3).map((session, i) => (
                 <motion.div
                   key={session.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -158,6 +193,8 @@ export function HomeScreen({ onStartConversation, onSignOut, userId }: HomeScree
           </button>
         </div>
       </div>
+
+      <FeedbackModal userId={userId} open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }
