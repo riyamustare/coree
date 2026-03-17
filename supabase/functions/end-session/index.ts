@@ -83,10 +83,42 @@ Format as a brief, factual summary that can be used as memory for future session
       const summaryData = await summaryResponse.json();
       const summary = summaryData.choices?.[0]?.message?.content || "";
 
-      // Update session with summary
+      // Extract emotions for mood tracking
+      let emotions = null;
+      try {
+        const emotionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash-lite",
+            messages: [
+              {
+                role: "system",
+                content: `Analyze this conversation and rate the following emotions on a scale of 0-100 based on how present they were. Return ONLY a JSON object with these keys: happiness, sadness, anger, fear, surprise, disgust. Example: {"happiness": 20, "sadness": 60, "anger": 10, "fear": 30, "surprise": 5, "disgust": 0}`,
+              },
+              { role: "user", content: conversationText },
+            ],
+          }),
+        });
+        if (emotionResponse.ok) {
+          const emotionData = await emotionResponse.json();
+          const emotionText = emotionData.choices?.[0]?.message?.content || "";
+          const jsonMatch = emotionText.match(/\{[^}]+\}/);
+          if (jsonMatch) {
+            emotions = JSON.parse(jsonMatch[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Emotion extraction error:", err);
+      }
+
+      // Update session with summary and emotions
       await supabase
         .from("sessions")
-        .update({ ended_at: new Date().toISOString(), summary })
+        .update({ ended_at: new Date().toISOString(), summary, emotions })
         .eq("id", sessionId);
 
       // Store as memory
