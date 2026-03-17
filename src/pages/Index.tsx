@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
 import { useProfile } from "@/hooks/useProfile";
+import { LandingPage } from "@/components/calmi/LandingPage";
 import { AuthScreen } from "@/components/calmi/AuthScreen";
 import { HomeScreen } from "@/components/calmi/HomeScreen";
 import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
@@ -14,7 +15,7 @@ import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
 
-type AppScreen = "home" | "onboarding" | "chat" | "summary";
+type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary";
 
 const GREETING = "How are you feeling right now?";
 
@@ -30,20 +31,28 @@ const Index = () => {
     endSession,
     sendMessage,
   } = useSession(user?.id);
-  const { isListening, isSpeaking, startListening, stopListening, speak, stopSpeaking } = useVoice();
+  const { isListening, isSpeaking, liveTranscript, startListening, stopListening, speak, stopSpeaking } = useVoice();
 
-  const [screen, setScreen] = useState<AppScreen>("home");
+  const [screen, setScreen] = useState<AppScreen>("landing");
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
 
-  // Determine initial screen based on onboarding status
+  // Route to correct screen based on auth state
   useEffect(() => {
-    if (user && profile && !profile.onboarding_completed && screen === "home") {
-      setScreen("onboarding");
+    if (authLoading) return;
+    if (!user) {
+      if (screen !== "auth") setScreen("landing");
+      return;
     }
-  }, [user, profile]);
+    if (profileLoading) return;
+    if (profile && !profile.onboarding_completed) {
+      setScreen("onboarding");
+    } else if (screen === "landing" || screen === "auth") {
+      setScreen("home");
+    }
+  }, [user, authLoading, profile, profileLoading]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -88,6 +97,22 @@ const Index = () => {
 
   const handleVoiceToggle = useCallback(async () => {
     if (isListening) {
+      const transcript = await (async () => {
+        // stopListening resolves the promise from startListening
+        stopListening();
+        return null; // transcript comes via the startListening promise
+      })();
+    } else {
+      const transcript = await startListening();
+      if (transcript) {
+        await sendMessage(transcript);
+      }
+    }
+  }, [isListening, startListening, stopListening, sendMessage]);
+
+  // Handle voice toggle properly - stop resolves the start promise
+  const handleVoiceToggleFixed = useCallback(async () => {
+    if (isListening) {
       stopListening();
     } else {
       const transcript = await startListening();
@@ -107,7 +132,7 @@ const Index = () => {
     }
   }, [messages, mode, isLoading, speak]);
 
-  if (authLoading || profileLoading) {
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 rounded-full bg-primary/20 animate-breathe" />
@@ -115,8 +140,17 @@ const Index = () => {
     );
   }
 
-  if (!user) {
-    return <AuthScreen />;
+  if (screen === "landing" && !user) {
+    return (
+      <LandingPage
+        onGetStarted={() => setScreen("auth")}
+        onLogin={() => setScreen("auth")}
+      />
+    );
+  }
+
+  if (screen === "auth" && !user) {
+    return <AuthScreen onBack={() => setScreen("landing")} />;
   }
 
   if (screen === "onboarding") {
@@ -134,7 +168,7 @@ const Index = () => {
   }
 
   if (screen === "home") {
-    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user.id} />;
+    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user!.id} />;
   }
 
   // Chat
@@ -210,10 +244,14 @@ const Index = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
               >
-                <VoiceVisualizer isActive={isListening || isSpeaking} isSpeaking={isSpeaking} />
+                <VoiceVisualizer
+                  isActive={isListening || isSpeaking}
+                  isSpeaking={isSpeaking}
+                  transcription={isListening ? liveTranscript : undefined}
+                />
                 <div className="flex justify-center">
                   <button
-                    onClick={handleVoiceToggle}
+                    onClick={handleVoiceToggleFixed}
                     disabled={isLoading || isSpeaking}
                     className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
                       isListening

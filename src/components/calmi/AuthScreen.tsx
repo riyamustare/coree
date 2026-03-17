@@ -2,8 +2,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft } from "lucide-react";
 
-export function AuthScreen() {
+interface AuthScreenProps {
+  onBack?: () => void;
+}
+
+export function AuthScreen({ onBack }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,15 +55,25 @@ export function AuthScreen() {
         transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
         className="w-full max-w-sm"
       >
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
+        )}
+
         <div className="mb-10 text-center">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <div className="h-6 w-6 rounded-full bg-primary" />
           </div>
           <h1 className="text-2xl font-medium tracking-tight text-foreground">
-            Welcome to Calmi
+            {isSignUp ? "Create your account" : "Welcome back"}
           </h1>
           <p className="mt-2 text-base text-muted-foreground leading-relaxed">
-            A quiet space for reflection and support.
+            {isSignUp ? "Start your journey with Calmi." : "A quiet space for reflection and support."}
           </p>
         </div>
 

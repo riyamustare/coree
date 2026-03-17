@@ -3,38 +3,33 @@ import { useState, useCallback, useRef } from "react";
 function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
-
   function writeString(offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) {
-      view.setUint8(offset + i, str.charCodeAt(i));
-    }
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
   }
-
   writeString(0, "RIFF");
   view.setUint32(4, 36 + samples.length * 2, true);
   writeString(8, "WAVE");
   writeString(12, "fmt ");
   view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true); // PCM
-  view.setUint16(22, 1, true); // mono
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, sampleRate * 2, true);
   view.setUint16(32, 2, true);
   view.setUint16(34, 16, true);
   writeString(36, "data");
   view.setUint32(40, samples.length * 2, true);
-
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
     view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
   }
-
   return new Blob([buffer], { type: "audio/wav" });
 }
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState("");
   const audioContextRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -47,6 +42,7 @@ export function useVoice() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       setIsListening(true);
+      setLiveTranscript("");
       samplesRef.current = [];
 
       const audioContext = new AudioContext({ sampleRate: 16000 });
@@ -56,12 +52,33 @@ export function useVoice() {
       processorRef.current = processor;
 
       processor.onaudioprocess = (e) => {
-        const data = e.inputBuffer.getChannelData(0);
-        samplesRef.current.push(new Float32Array(data));
+        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
       };
-
       source.connect(processor);
       processor.connect(audioContext.destination);
+
+      // Use Web Speech API for live transcription (no extra API calls)
+      try {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = "en-US";
+          recognition.onresult = (event: any) => {
+            let transcript = "";
+            for (let i = 0; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+            }
+            setLiveTranscript(transcript);
+          };
+          recognition.onerror = () => {}; // silent fallback
+          recognition.start();
+          (audioContextRef.current as any).__recognition = recognition;
+        }
+      } catch {
+        // Web Speech API not available, no live preview
+      }
 
       return new Promise((resolve) => {
         resolveRef.current = resolve;
@@ -74,16 +91,21 @@ export function useVoice() {
   }, []);
 
   const stopListening = useCallback(async () => {
-    // Stop recording
+    // Stop live transcription
+    try {
+      const recognition = (audioContextRef.current as any)?.__recognition;
+      if (recognition) recognition.stop();
+    } catch {}
+
     processorRef.current?.disconnect();
     audioContextRef.current?.close();
     streamRef.current?.getTracks().forEach((t) => t.stop());
     setIsListening(false);
 
-    // Combine samples
     const totalLength = samplesRef.current.reduce((sum, s) => sum + s.length, 0);
     if (totalLength === 0) {
       resolveRef.current?.(null);
+      setLiveTranscript("");
       return;
     }
     const combined = new Float32Array(totalLength);
@@ -110,9 +132,12 @@ export function useVoice() {
         }
       );
       const data = await response.json();
-      resolveRef.current?.(data.text || null);
+      const text = data.text || null;
+      setLiveTranscript(text || "");
+      resolveRef.current?.(text);
     } catch {
       resolveRef.current?.(null);
+      setLiveTranscript("");
     }
   }, []);
 
@@ -155,5 +180,5 @@ export function useVoice() {
     setIsSpeaking(false);
   }, []);
 
-  return { isListening, isSpeaking, startListening, stopListening, speak, stopSpeaking };
+  return { isListening, isSpeaking, liveTranscript, startListening, stopListening, speak, stopSpeaking };
 }
