@@ -167,8 +167,8 @@ const Index = () => {
     );
   }
 
-  if (screen === "home") {
-    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user!.id} />;
+  if (screen === "home" && user) {
+    return <HomeScreen onStartConversation={handleStartConversation} onSignOut={signOut} userId={user.id} />;
   }
 
   // Chat
