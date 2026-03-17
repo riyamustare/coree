@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      feedback: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       memories: {
         Row: {
           content: string
@@ -108,6 +129,7 @@ export type Database = {
       sessions: {
         Row: {
           created_at: string
+          emotions: Json | null
           ended_at: string | null
           id: string
           started_at: string
@@ -116,6 +138,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          emotions?: Json | null
           ended_at?: string | null
           id?: string
           started_at?: string
@@ -124,6 +147,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          emotions?: Json | null
           ended_at?: string | null
           id?: string
           started_at?: string
