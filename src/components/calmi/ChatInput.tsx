@@ -7,41 +7,11 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
-function encodeWAV(samples: Float32Array, sampleRate: number): Blob {
-  const buffer = new ArrayBuffer(44 + samples.length * 2);
-  const view = new DataView(buffer);
-  function writeString(offset: number, str: string) {
-    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
-  }
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, samples.length * 2, true);
-  for (let i = 0; i < samples.length; i++) {
-    const s = Math.max(-1, Math.min(1, samples[i]));
-    view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-  }
-  return new Blob([buffer], { type: "audio/wav" });
-}
-
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const samplesRef = useRef<Float32Array[]>([]);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -64,79 +34,43 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const startRecording = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      samplesRef.current = [];
-      setIsRecording(true);
-
-      const audioContext = new AudioContext({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-    } catch (err) {
-      console.error("Mic error:", err);
+  const startRecording = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error("Web Speech API not supported");
+      return;
     }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setValue(transcript);
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+    recognition.start();
+    setIsRecording(true);
   }, []);
 
-  const stopRecording = useCallback(async () => {
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+  const stopRecording = useCallback(() => {
+    recognitionRef.current?.stop();
     setIsRecording(false);
-
-    const totalLength = samplesRef.current.reduce((sum, s) => sum + s.length, 0);
-    if (totalLength === 0) return;
-
-    const combined = new Float32Array(totalLength);
-    let offset = 0;
-    for (const chunk of samplesRef.current) {
-      combined.set(chunk, offset);
-      offset += chunk.length;
-    }
-
-    const wavBlob = encodeWAV(combined, 16000);
-    setIsTranscribing(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("audio", wavBlob, "recording.wav");
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: formData,
-        }
-      );
-      const data = await response.json();
-      if (data.text) {
-        setValue((prev) => (prev ? prev + " " + data.text : data.text));
-      }
-    } catch (err) {
-      console.error("Transcription error:", err);
-    } finally {
-      setIsTranscribing(false);
-    }
   }, []);
 
   const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    if (isRecording) stopRecording();
+    else startRecording();
   }, [isRecording, startRecording, stopRecording]);
 
   return (

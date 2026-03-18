@@ -30,116 +30,61 @@ export function useVoice() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const samplesRef = useRef<Float32Array[]>([]);
+  const recognitionRef = useRef<any>(null);
   const resolveRef = useRef<((text: string | null) => void) | null>(null);
+  const finalTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const startListening = useCallback(async (): Promise<string | null> => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      setIsListening(true);
-      setLiveTranscript("");
-      samplesRef.current = [];
-
-      const audioContext = new AudioContext({ sampleRate: 16000 });
-      audioContextRef.current = audioContext;
-      const source = audioContext.createMediaStreamSource(stream);
-      const processor = audioContext.createScriptProcessor(4096, 1, 1);
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (e) => {
-        samplesRef.current.push(new Float32Array(e.inputBuffer.getChannelData(0)));
-      };
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-
-      // Use Web Speech API for live transcription (no extra API calls)
-      try {
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          recognition.lang = "en-US";
-          recognition.onresult = (event: any) => {
-            let transcript = "";
-            for (let i = 0; i < event.results.length; i++) {
-              transcript += event.results[i][0].transcript;
-            }
-            setLiveTranscript(transcript);
-          };
-          recognition.onerror = () => {}; // silent fallback
-          recognition.start();
-          (audioContextRef.current as any).__recognition = recognition;
-        }
-      } catch {
-        // Web Speech API not available, no live preview
-      }
-
-      return new Promise((resolve) => {
-        resolveRef.current = resolve;
-      });
-    } catch (err) {
-      console.error("Mic error:", err);
-      setIsListening(false);
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error("Web Speech API not supported");
       return null;
     }
+
+    setIsListening(true);
+    setLiveTranscript("");
+    finalTranscriptRef.current = "";
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      let final = "";
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      finalTranscriptRef.current = final;
+      setLiveTranscript(final + interim);
+    };
+
+    recognition.onerror = () => {};
+    recognition.start();
+
+    return new Promise((resolve) => {
+      resolveRef.current = resolve;
+    });
   }, []);
 
   const stopListening = useCallback(async () => {
-    // Stop live transcription
-    try {
-      const recognition = (audioContextRef.current as any)?.__recognition;
-      if (recognition) recognition.stop();
-    } catch {}
-
-    processorRef.current?.disconnect();
-    audioContextRef.current?.close();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    recognitionRef.current?.stop();
     setIsListening(false);
 
-    const totalLength = samplesRef.current.reduce((sum, s) => sum + s.length, 0);
-    if (totalLength === 0) {
-      resolveRef.current?.(null);
-      setLiveTranscript("");
-      return;
-    }
-    const combined = new Float32Array(totalLength);
-    let offset = 0;
-    for (const chunk of samplesRef.current) {
-      combined.set(chunk, offset);
-      offset += chunk.length;
-    }
+    // Give a small delay for final results to arrive
+    await new Promise((r) => setTimeout(r, 300));
 
-    const wavBlob = encodeWAV(combined, 16000);
-
-    try {
-      const formData = new FormData();
-      formData.append("audio", wavBlob, "recording.wav");
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speech-to-text`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: formData,
-        }
-      );
-      const data = await response.json();
-      const text = data.text || null;
-      setLiveTranscript(text || "");
-      resolveRef.current?.(text);
-    } catch {
-      resolveRef.current?.(null);
-      setLiveTranscript("");
-    }
-  }, []);
+    const text = finalTranscriptRef.current || liveTranscript || null;
+    setLiveTranscript(text || "");
+    resolveRef.current?.(text);
+  }, [liveTranscript]);
 
   const speak = useCallback(async (text: string) => {
     setIsSpeaking(true);
