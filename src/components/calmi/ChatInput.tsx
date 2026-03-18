@@ -85,7 +85,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={isRecording ? "Listening..." : isTranscribing ? "Transcribing..." : "Share what's on your mind..."}
+        placeholder={isRecording ? "Listening..." : "Share what's on your mind..."}
         disabled={disabled || isRecording}
         rows={1}
         className="w-full resize-none bg-transparent px-5 py-4 pr-24 text-lg leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 rounded-2xl"
