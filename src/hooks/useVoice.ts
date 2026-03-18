@@ -1,4 +1,32 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+
+// Cache the selected voice so it stays consistent across calls
+let cachedVoice: SpeechSynthesisVoice | null = null;
+
+function getPreferredVoice(): SpeechSynthesisVoice | null {
+  if (cachedVoice) return cachedVoice;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+
+  // Priority order for natural-sounding English voices
+  const preferred = [
+    "Samantha", "Karen", "Moira", "Tessa", // Apple
+    "Google UK English Female", "Google US English",
+    "Microsoft Zira", "Microsoft Jenny",
+  ];
+
+  for (const name of preferred) {
+    const v = voices.find((voice) => voice.name.includes(name));
+    if (v) { cachedVoice = v; return v; }
+  }
+
+  // Fallback: first English voice
+  const english = voices.find((v) => v.lang.startsWith("en"));
+  if (english) { cachedVoice = english; return english; }
+
+  cachedVoice = voices[0];
+  return cachedVoice;
+}
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
@@ -7,7 +35,16 @@ export function useVoice() {
   const recognitionRef = useRef<any>(null);
   const resolveRef = useRef<((text: string | null) => void) | null>(null);
   const finalTranscriptRef = useRef("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Pre-load voices on mount
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return;
+    // Voices may load async
+    const loadVoices = () => getPreferredVoice();
+    loadVoices();
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    return () => window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+  }, []);
 
   const startListening = useCallback(async (): Promise<string | null> => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -52,7 +89,6 @@ export function useVoice() {
     recognitionRef.current?.stop();
     setIsListening(false);
 
-    // Give a small delay for final results to arrive
     await new Promise((r) => setTimeout(r, 300));
 
     const text = finalTranscriptRef.current || liveTranscript || null;
@@ -61,41 +97,30 @@ export function useVoice() {
   }, [liveTranscript]);
 
   const speak = useCallback(async (text: string) => {
+    if (!("speechSynthesis" in window)) return;
     setIsSpeaking(true);
-    try {
-      if ('speechSynthesis' in window) {
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.lang = "en-US";
-        
-        // Try to pick a nice voice
-        const voices = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v => v.name.includes("Samantha") || v.name.includes("Google") || v.name.includes("Female"));
-        if (preferred) utterance.voice = preferred;
 
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        
-        window.speechSynthesis.speak(utterance);
-      } else {
-        setIsSpeaking(false);
-      }
-    } catch {
-      setIsSpeaking(false);
-    }
+    // Cancel any ongoing speech first
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95; // Slightly slower for warmth
+    utterance.pitch = 1.05; // Slightly higher for friendliness
+
+    // Use the cached voice for consistency
+    const voice = getPreferredVoice();
+    if (voice) utterance.voice = voice;
+
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-    }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
     }
     setIsSpeaking(false);
   }, []);
