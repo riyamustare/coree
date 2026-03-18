@@ -93,7 +93,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       <div className="absolute right-3 bottom-3 flex items-center gap-1.5">
         <button
           onClick={toggleRecording}
-          disabled={disabled || isTranscribing}
+          disabled={disabled}
           className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
             isRecording
               ? "bg-destructive text-destructive-foreground animate-pulse"
