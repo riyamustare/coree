@@ -98,11 +98,12 @@ const Index = () => {
 
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
-      stopListening();
+      const text = await stopListening();
+      // stopListening resolves the promise which already returns text
     } else {
       const transcript = await startListening();
-      if (transcript) {
-        await sendMessage(transcript);
+      if (transcript && transcript.trim()) {
+        await sendMessage(transcript.trim());
       }
     }
   }, [isListening, startListening, stopListening, sendMessage]);

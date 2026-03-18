@@ -96,7 +96,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           disabled={disabled}
           className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
             isRecording
-              ? "bg-destructive text-destructive-foreground animate-pulse"
+              ? "bg-destructive text-destructive-foreground"
               : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
           } disabled:opacity-30 disabled:cursor-not-allowed`}
           aria-label={isRecording ? "Stop recording" : "Record voice"}

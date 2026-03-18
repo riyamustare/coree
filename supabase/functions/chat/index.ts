@@ -6,25 +6,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CALMI_SYSTEM_PROMPT = `You are Calmi, a warm and empathetic conversational AI companion. Your purpose is to provide a safe, supportive space for people to share their feelings and reflect on their experiences.
+const CALMI_SYSTEM_PROMPT = `You are Calmi, a warm and empathetic emotional support companion.
 
-Guidelines:
-- Respond with genuine empathy and warmth
-- Validate feelings without judgment
-- Ask thoughtful, open-ended questions to encourage reflection
-- Keep responses short and conversational (2-4 sentences max) since conversations may happen through voice
-- Never diagnose, treat, or act as a therapist or medical professional
-- Never provide medical or psychological advice
-- Encourage users to seek professional support when appropriate
-- Use a calm, gentle tone
+STRICT RULES:
+- You ONLY discuss emotional well-being, mental health, feelings, relationships, stress, self-care, personal growth, and life challenges.
+- If the user asks about anything unrelated (coding, math, trivia, news, recipes, etc.), gently redirect: "I'm here to support you emotionally. What's been on your mind lately?"
+- NEVER answer factual questions, do homework, write code, or discuss topics outside emotional support.
+- Keep responses to 1-2 sentences. Only use 3-4 sentences when the user shares something deeply emotional that needs validation.
+- ALWAYS end your response with an open-ended question that invites the user to go deeper or explore their feelings.
+- Use a calm, warm, conversational tone — like a caring friend, not a clinical professional.
+- Validate feelings without judgment. Never minimize or dismiss.
+- Never diagnose, prescribe, or act as a therapist/medical professional.
+- You are NOT a replacement for therapy. You are a supportive companion for reflection and emotional expression.
 
-Safety: If the user expresses self-harm thoughts, suicidal language, or severe distress:
-- Respond with deep empathy and care
-- Gently encourage them to reach out to someone they trust
-- Suggest professional resources (e.g., crisis hotlines, therapists)
-- Never attempt to act as a crisis counselor
-
-You are NOT a replacement for therapy. You are a supportive companion for reflection and emotional expression.`;
+Safety: If the user expresses self-harm, suicidal thoughts, or severe distress:
+- Respond with deep empathy
+- Gently encourage reaching out to a trusted person or crisis hotline (988 Suicide & Crisis Lifeline in US)
+- Never attempt to act as a crisis counselor`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,10 +34,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Get auth user for memory retrieval
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
-
     let userIntent: string | null = null;
 
     if (authHeader) {
@@ -50,12 +46,10 @@ serve(async (req) => {
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
-        // Get user from token
         const token = authHeader.replace("Bearer ", "");
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
-          // Get user's onboarding intent
           const { data: profileData } = await supabase
             .from("profiles")
             .select("onboarding_intent")
@@ -65,34 +59,16 @@ serve(async (req) => {
             userIntent = profileData.onboarding_intent;
           }
 
-          // Generate embedding for the message to search memories
-          const embedResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
-              messages: [
-                { role: "system", content: "Extract the key emotional theme or topic from this message in 1-2 sentences. Be concise." },
-                { role: "user", content: message },
-              ],
-            }),
-          });
+          // Simple memory retrieval (last 3)
+          const { data: memoryData } = await supabase
+            .from("memories")
+            .select("content")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(3);
 
-          if (embedResponse.ok) {
-            // For now, do a simple text search on memories
-            const { data: memoryData } = await supabase
-              .from("memories")
-              .select("content")
-              .eq("user_id", user.id)
-              .order("created_at", { ascending: false })
-              .limit(3);
-
-            if (memoryData) {
-              memories = memoryData.map((m: any) => m.content);
-            }
+          if (memoryData) {
+            memories = memoryData.map((m: any) => m.content);
           }
         }
       } catch (err) {
@@ -100,34 +76,32 @@ serve(async (req) => {
       }
     }
 
-    // Build messages array
     const llmMessages = [
       { role: "system", content: CALMI_SYSTEM_PROMPT },
     ];
 
     if (userIntent) {
       const intentPrompts: Record<string, string> = {
-        "unlock insights about myself": "The user wants to gain self-awareness and personal insights. Focus on reflective questions, patterns in their thoughts, and helping them understand themselves better.",
-        "process my emotions": "The user wants help processing emotions. Focus on validating feelings, exploring emotional experiences, and helping them work through what they're feeling.",
-        "set and achieve my goals": "The user wants support with goals. Help them clarify what they want, break things down into steps, and stay motivated while being emotionally supportive.",
-        "just need to vent": "The user needs to vent. Be a great listener — validate, empathize, and don't try to fix things unless asked. Let them express freely.",
-        "i don't know yet": "The user is exploring. Be gently curious and let the conversation flow naturally without pushing any direction.",
+        "unlock insights about myself": "The user wants self-awareness. Ask reflective questions about patterns and self-understanding.",
+        "process my emotions": "The user wants to process emotions. Validate feelings and help them explore what they're experiencing.",
+        "set and achieve my goals": "The user wants goal support. Help them clarify desires while being emotionally supportive.",
+        "just need to vent": "The user needs to vent. Listen actively, validate, don't fix unless asked.",
+        "i don't know yet": "The user is exploring. Be gently curious and let it flow naturally.",
       };
       const intentContext = intentPrompts[userIntent] || `The user's stated intent: ${userIntent}`;
       llmMessages.push({
         role: "system",
-        content: `User personalization context:\n${intentContext}`,
+        content: `User context:\n${intentContext}`,
       });
     }
 
     if (memories.length > 0) {
       llmMessages.push({
         role: "system",
-        content: `Relevant memories from previous sessions with this user:\n${memories.map((m) => `- ${m}`).join("\n")}\n\nUse these to provide more personalized, contextual support. Reference them naturally only if relevant.`,
+        content: `Previous session memories:\n${memories.map((m) => `- ${m}`).join("\n")}\n\nReference naturally only if relevant.`,
       });
     }
 
-    // Add conversation context (last 5 exchanges)
     if (contextMessages && contextMessages.length > 0) {
       llmMessages.push(...contextMessages);
     }
