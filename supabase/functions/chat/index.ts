@@ -113,6 +113,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: llmMessages,
         stream: true,
+        max_tokens: 120,
       }),
     });
 
