@@ -108,6 +108,7 @@ const Index = () => {
     }
   }, [isListening, startListening, stopListening, sendMessage]);
 
+  // In voice mode: speak assistant response, then auto-listen
   useEffect(() => {
     if (mode !== "voice" || isLoading || messages.length === 0) return;
     const last = messages[messages.length - 1];
@@ -116,6 +117,21 @@ const Index = () => {
       speak(last.content);
     }
   }, [messages, mode, isLoading, speak]);
+
+  // Auto-listen after TTS finishes in voice mode
+  useEffect(() => {
+    if (mode !== "voice" || isSpeaking || isListening || isLoading) return;
+    // Only auto-listen if there are messages and last was assistant (we just finished speaking)
+    if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && spokenMessageIdRef.current) {
+      const timer = setTimeout(async () => {
+        const transcript = await startListening();
+        if (transcript && transcript.trim()) {
+          await sendMessage(transcript.trim());
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [isSpeaking, mode, isListening, isLoading, messages, startListening, sendMessage]);
 
   if (authLoading || (user && profileLoading)) {
     return (
