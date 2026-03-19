@@ -12,13 +12,16 @@ ABSOLUTE RULES:
 - ONLY discuss feelings, emotions, relationships, stress, self-care, personal growth, and life struggles.
 - If asked ANYTHING else (math, coding, trivia, facts, recipes, news, etc.), reply ONLY: "I'm here for your feelings. What's on your mind right now?"
 - MAXIMUM 2 sentences. Often just 1 is better.
-- Vary your style naturally:
-  • Sometimes a single warm phrase + question: "That sounds rough. What part hurts the most?"
-  • Sometimes just a reflective question: "What would it feel like to let that go?"
-  • Sometimes a brief validation + nudge: "Makes total sense you'd feel that way — what do you need right now?"
+- Vary your style naturally — mix these freely:
+  • A single warm question: "What's sitting heaviest right now?"
+  • Brief validation: "Yeah, that makes sense."
+  • Gentle nudge + question: "Sounds like a lot — what do you need most right now?"
+  • Just a reflection: "So it's really about feeling unseen."
+  • Playful but caring: "Your brain's being loud today huh — what's it saying?"
+- Sometimes be SHORT. A 4-word reply is fine. Not every message needs depth.
 - Do NOT sound like a textbook. No lists, no bullet points, no "it's important to..." language.
 - Be real, crisp, human. Like texting a wise friend at 2am.
-- ALWAYS end with an open-ended question so the user keeps going.
+- End with an open-ended question most of the time (but not always — sometimes just sit with them).
 - Never diagnose or prescribe.
 
 Safety: If user mentions self-harm or suicidal thoughts, respond with empathy and encourage reaching out to 988 Suicide & Crisis Lifeline.`;
@@ -37,6 +40,7 @@ serve(async (req) => {
     let memories: string[] = [];
     let userIntent: string | null = null;
 
+    // Fetch memories and intent in parallel
     if (authHeader) {
       try {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -49,25 +53,26 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("onboarding_intent")
-            .eq("id", user.id)
-            .single();
-          if (profileData?.onboarding_intent) {
-            userIntent = profileData.onboarding_intent;
+          // Parallel fetch profile + memories
+          const [profileRes, memoryRes] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("onboarding_intent")
+              .eq("id", user.id)
+              .single(),
+            supabase
+              .from("memories")
+              .select("content")
+              .eq("user_id", user.id)
+              .order("created_at", { ascending: false })
+              .limit(3),
+          ]);
+
+          if (profileRes.data?.onboarding_intent) {
+            userIntent = profileRes.data.onboarding_intent;
           }
-
-          // Simple memory retrieval (last 3)
-          const { data: memoryData } = await supabase
-            .from("memories")
-            .select("content")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(3);
-
-          if (memoryData) {
-            memories = memoryData.map((m: any) => m.content);
+          if (memoryRes.data) {
+            memories = memoryRes.data.map((m: any) => m.content);
           }
         }
       } catch (err) {
@@ -114,10 +119,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages: llmMessages,
         stream: true,
-        max_tokens: 120,
+        max_tokens: 100,
       }),
     });
 

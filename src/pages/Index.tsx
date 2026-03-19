@@ -17,9 +17,15 @@ import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
 
-type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights";
+type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending";
 
 const GREETING = "How are you feeling right now?";
+
+const ENDING_MESSAGES = [
+  "You did great today ✨",
+  "Wrapping up your session…",
+  "Summarising your thoughts…",
+];
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -38,6 +44,7 @@ const Index = () => {
   const [screen, setScreen] = useState<AppScreen>("landing");
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
+  const [endingText, setEndingText] = useState(ENDING_MESSAGES[0]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
 
@@ -61,6 +68,17 @@ const Index = () => {
     }
   }, [messages]);
 
+  // Cycle ending messages
+  useEffect(() => {
+    if (screen !== "ending") return;
+    let i = 0;
+    const interval = setInterval(() => {
+      i = (i + 1) % ENDING_MESSAGES.length;
+      setEndingText(ENDING_MESSAGES[i]);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [screen]);
+
   const handleOnboardingComplete = useCallback(async (intent: string) => {
     await completeOnboarding(intent);
     setScreen("home");
@@ -73,6 +91,7 @@ const Index = () => {
 
   const handleEndSession = useCallback(async () => {
     stopSpeaking();
+    setScreen("ending");
     const result = await endSession();
     setSummaryData(result);
     setScreen("summary");
@@ -99,7 +118,6 @@ const Index = () => {
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
       const text = await stopListening();
-      // stopListening resolves the promise which already returns text
     } else {
       const transcript = await startListening();
       if (transcript && transcript.trim()) {
@@ -121,7 +139,6 @@ const Index = () => {
   // Auto-listen after TTS finishes in voice mode
   useEffect(() => {
     if (mode !== "voice" || isSpeaking || isListening || isLoading) return;
-    // Only auto-listen if there are messages and last was assistant (we just finished speaking)
     if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && spokenMessageIdRef.current) {
       const timer = setTimeout(async () => {
         const transcript = await startListening();
@@ -158,6 +175,31 @@ const Index = () => {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
+  // Ending / loading state
+  if (screen === "ending") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-6">
+        <motion.div
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className="h-12 w-12 rounded-full bg-primary/20"
+        />
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={endingText}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            className="text-lg font-medium text-foreground"
+          >
+            {endingText}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   if (screen === "summary" && summaryData) {
     return (
       <SummaryScreen
@@ -188,20 +230,24 @@ const Index = () => {
     );
   }
 
-  // Chat
+  // Chat — fixed header + fixed input, scrollable messages
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-chat flex-1 flex-col px-4">
-        <SessionHeader
-          mode={mode}
-          onModeChange={setMode}
-          onEndSession={handleEndSession}
-          sessionStart={sessionStart}
-        />
+    <div className="flex h-[100dvh] flex-col bg-background">
+      <div className="mx-auto flex w-full max-w-chat flex-col h-full px-4">
+        {/* Fixed header */}
+        <div className="flex-shrink-0">
+          <SessionHeader
+            mode={mode}
+            onModeChange={setMode}
+            onEndSession={handleEndSession}
+            sessionStart={sessionStart}
+          />
+        </div>
 
+        {/* Scrollable messages */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto calmi-scroll py-4 space-y-3"
+          className="flex-1 min-h-0 overflow-y-auto calmi-scroll py-4 space-y-3"
         >
           {messages.length === 0 && (
             <motion.div
@@ -241,7 +287,8 @@ const Index = () => {
           )}
         </div>
 
-        <div className="pb-6 pt-2">
+        {/* Fixed input area */}
+        <div className="flex-shrink-0 pb-6 pt-2">
           <AnimatePresence mode="wait">
             {mode === "text" ? (
               <motion.div
