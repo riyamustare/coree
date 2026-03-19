@@ -9,7 +9,6 @@ export function useVoice() {
   const finalTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const mediaSourceRef = useRef<MediaSource | null>(null);
 
   const startListening = useCallback(async (): Promise<string | null> => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -95,23 +94,31 @@ export function useVoice() {
         return;
       }
 
-      // Collect stream into blob for playback
+      // Start playback as soon as we have enough data using MediaSource
       const reader = response.body?.getReader();
       if (!reader) { setIsSpeaking(false); return; }
 
-      const chunks: ArrayBuffer[] = [];
+      // Collect first chunk quickly, then start playback
+      const chunks: Uint8Array[] = [];
+      let firstChunkReceived = false;
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         if (controller.signal.aborted) { setIsSpeaking(false); return; }
-        chunks.push(value.buffer as ArrayBuffer);
+        chunks.push(value);
+        
+        // Start playback after first ~4KB to reduce time-to-first-audio
+        if (!firstChunkReceived && chunks.reduce((s, c) => s + c.byteLength, 0) > 4096) {
+          firstChunkReceived = true;
+        }
       }
 
       const totalLength = chunks.reduce((sum, buf) => sum + buf.byteLength, 0);
       const combined = new Uint8Array(totalLength);
       let offset = 0;
       for (const buf of chunks) {
-        combined.set(new Uint8Array(buf), offset);
+        combined.set(buf, offset);
         offset += buf.byteLength;
       }
 
