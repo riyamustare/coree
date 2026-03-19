@@ -9,6 +9,7 @@ export function useVoice() {
   const finalTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const mediaSourceRef = useRef<MediaSource | null>(null);
 
   const startListening = useCallback(async (): Promise<string | null> => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -53,8 +54,7 @@ export function useVoice() {
     recognitionRef.current?.stop();
     setIsListening(false);
 
-    // Small delay to capture final results
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 150));
 
     const text = finalTranscriptRef.current || liveTranscript || null;
     setLiveTranscript(text || "");
@@ -64,7 +64,7 @@ export function useVoice() {
   const speak = useCallback(async (text: string) => {
     setIsSpeaking(true);
 
-    // Abort any in-flight TTS request
+    // Abort any in-flight request
     abortRef.current?.abort();
     if (audioRef.current) {
       audioRef.current.pause();
@@ -95,8 +95,28 @@ export function useVoice() {
         return;
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
+      // Collect stream into blob for playback
+      const reader = response.body?.getReader();
+      if (!reader) { setIsSpeaking(false); return; }
+
+      const chunks: ArrayBuffer[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (controller.signal.aborted) { setIsSpeaking(false); return; }
+        chunks.push(value.buffer as ArrayBuffer);
+      }
+
+      const totalLength = chunks.reduce((sum, buf) => sum + buf.byteLength, 0);
+      const combined = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const buf of chunks) {
+        combined.set(new Uint8Array(buf), offset);
+        offset += buf.byteLength;
+      }
+
+      const blob = new Blob([combined], { type: "audio/mpeg" });
+      const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
 

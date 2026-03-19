@@ -6,7 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Calm, warm voice
 const VOICE_ID = "FGY2WhTYpPnrIDTdsKH5"; // Laura
 
 serve(async (req) => {
@@ -20,8 +19,9 @@ serve(async (req) => {
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY is not configured");
     if (!text) throw new Error("No text provided");
 
+    // Use streaming endpoint for lower latency
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream?output_format=mp3_22050_32&optimize_streaming_latency=4`,
       {
         method: "POST",
         headers: {
@@ -48,12 +48,12 @@ serve(async (req) => {
       throw new Error(`TTS failed: ${response.status}`);
     }
 
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
+    // Stream the audio directly back
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (e) {
