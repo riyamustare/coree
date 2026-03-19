@@ -99,15 +99,23 @@ export function useVoice() {
       const reader = response.body?.getReader();
       if (!reader) { setIsSpeaking(false); return; }
 
-      const chunks: Uint8Array[] = [];
+      const chunks: ArrayBuffer[] = [];
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         if (controller.signal.aborted) { setIsSpeaking(false); return; }
-        chunks.push(value);
+        chunks.push(value.buffer as ArrayBuffer);
       }
 
-      const blob = new Blob(chunks, { type: "audio/mpeg" });
+      const totalLength = chunks.reduce((sum, buf) => sum + buf.byteLength, 0);
+      const combined = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const buf of chunks) {
+        combined.set(new Uint8Array(buf), offset);
+        offset += buf.byteLength;
+      }
+
+      const blob = new Blob([combined], { type: "audio/mpeg" });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
