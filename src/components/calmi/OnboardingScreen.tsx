@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Lock, EyeOff, Fingerprint } from "lucide-react";
+import * as events from "@/lib/events";
 
 const INTENT_OPTIONS = [
   "unlock insights about myself",
@@ -20,10 +21,13 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const handleContinue = () => {
     if (step === 0) {
+      events.onboardingStarted();
       setStep(1);
     } else if (step === 1 && selectedIntent) {
+      events.onboardingIntentSelected(selectedIntent);
       setStep(2);
     } else if (step === 2) {
+      events.onboardingCompleted();
       onComplete(selectedIntent!);
     }
   };
@@ -71,7 +75,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
               <div className="space-y-5 text-lg leading-relaxed text-foreground">
                 <p className="font-medium">hi friend</p>
-                <p>we created calmi because life can be... a lot</p>
+                <p>we created core because life can be... a lot</p>
                 <p>sometimes you just need someone to talk to</p>
                 <p>
                   whether you're navigating a rough day,
@@ -108,7 +112,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           >
             <div>
               <h1 className="text-2xl font-semibold text-foreground mb-8">
-                what brings you to calmi?
+                what brings you to core?
               </h1>
               <div className="space-y-3">
                 {INTENT_OPTIONS.map((option) => (
@@ -170,7 +174,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                   <div>
                     <p className="font-semibold text-foreground">no peeking</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      your convos aren't used to train or improve calmi.
+                      your convos aren't used to train or improve core.
                     </p>
                   </div>
                 </div>

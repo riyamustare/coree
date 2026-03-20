@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import * as events from "@/lib/events";
 
 interface AuthScreenProps {
   onBack?: () => void;
@@ -22,21 +23,26 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
 
     try {
       if (isSignUp) {
+        events.authSignUpStarted();
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+        events.authSignUpSuccess();
         toast({ title: "Check your email", description: "We sent you a confirmation link." });
       } else {
+        events.authLoginStarted();
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
         if (error) throw error;
+        events.authLoginSuccess();
       }
     } catch (err: any) {
+      if (!isSignUp) events.authLoginFailed(err.message);
       toast({
         title: "Something went wrong",
         description: err.message,
@@ -73,7 +79,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
             {isSignUp ? "Create your account" : "Welcome back"}
           </h1>
           <p className="mt-2 text-base text-muted-foreground leading-relaxed">
-            {isSignUp ? "Start your journey with Calmi." : "A quiet space for reflection and support."}
+            {isSignUp ? "Start your journey with Core." : "A quiet space for reflection and support."}
           </p>
         </div>
 
