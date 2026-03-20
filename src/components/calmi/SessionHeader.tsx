@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Mic, MessageSquare, LogOut } from "lucide-react";
-import * as events from "@/lib/events";
 
 interface SessionHeaderProps {
   mode: "text" | "voice";
@@ -23,16 +22,10 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
     return () => clearInterval(interval);
   }, [sessionStart]);
 
-  const handleModeChange = (newMode: "text" | "voice") => {
-    if (newMode === "text") events.modeSwitchedToText();
-    else events.modeSwitchedToVoice();
-    onModeChange(newMode);
-  };
-
   return (
     <div className="flex items-center justify-between px-2 py-3">
       <div className="flex items-center gap-3">
-        <h1 className="text-base font-medium tracking-tight text-foreground">Core</h1>
+        <h1 className="text-base font-medium tracking-tight text-foreground">Calmi</h1>
         {sessionStart && (
           <span className="text-xs tabular-nums text-muted-foreground">{elapsed}</span>
         )}
@@ -42,7 +35,7 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
         {/* Mode toggle */}
         <div className="flex items-center rounded-xl bg-secondary p-1 gap-0.5">
           <button
-            onClick={() => handleModeChange("text")}
+            onClick={() => onModeChange("text")}
             className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
               mode === "text"
                 ? "bg-surface shadow-soft text-foreground"
@@ -53,7 +46,7 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
             <MessageSquare className="h-4 w-4" />
           </button>
           <button
-            onClick={() => handleModeChange("voice")}
+            onClick={() => onModeChange("voice")}
             className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
               mode === "voice"
                 ? "bg-surface shadow-soft text-foreground"

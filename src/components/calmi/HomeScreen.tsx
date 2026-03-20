@@ -3,7 +3,6 @@ import { MessageSquare, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHea
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackModal } from "./FeedbackModal";
-import * as events from "@/lib/events";
 
 interface PastSession {
   id: string;
@@ -17,11 +16,10 @@ interface HomeScreenProps {
   onSignOut: () => void;
   onViewHistory: () => void;
   onViewInsights: () => void;
-  onOpenSession: (session: PastSession) => void;
   userId: string;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, userId }: HomeScreenProps) {
+export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, userId }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -30,7 +28,6 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   useEffect(() => {
-    events.screenViewed("home");
     const fetchSessions = async () => {
       const { data } = await supabase
         .from("sessions")
@@ -70,16 +67,6 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
     return `${mins} min`;
   };
 
-  const handleOpenSession = (session: PastSession) => {
-    events.historyCardOpened(session.id);
-    onOpenSession(session);
-  };
-
-  const handleSignOut = () => {
-    events.authSignedOut();
-    onSignOut();
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-8">
       <div className="mx-auto w-full max-w-sm flex-1">
@@ -112,7 +99,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            onClick={() => { events.sessionStarted("pending"); onStartConversation(); }}
+            onClick={onStartConversation}
             className="mt-8 inline-flex items-center gap-3 rounded-2xl bg-surface px-8 py-4 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -133,14 +120,14 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="mt-8 flex gap-3"
         >
           <button
-            onClick={() => { events.insightsViewed(); onViewInsights(); }}
+            onClick={onViewInsights}
             className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
           >
             <BarChart2 className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">Insights</span>
           </button>
           <button
-            onClick={() => { events.feedbackOpened(); setFeedbackOpen(true); }}
+            onClick={() => setFeedbackOpen(true)}
             className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
           >
             <MessageCircleHeart className="h-4 w-4 text-primary" />
@@ -148,18 +135,18 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </button>
         </motion.div>
 
-        {/* Past sessions — always show section, min 3 cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-8"
-        >
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="text-sm font-medium text-muted-foreground">
-              Past conversations
-            </h2>
-            {pastSessions.length > 0 && (
+        {/* Past sessions */}
+        {pastSessions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-8"
+          >
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                Past conversations
+              </h2>
               <button
                 onClick={onViewHistory}
                 className="flex items-center gap-0.5 text-xs font-medium text-primary hover:text-primary/80 transition"
@@ -167,76 +154,38 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                 See all
                 <ChevronRight className="h-3 w-3" />
               </button>
-            )}
-          </div>
-          <div className="space-y-2">
-            {pastSessions.length === 0 ? (
-              // Show 3 placeholder cards when no sessions
-              Array.from({ length: 3 }).map((_, i) => (
+            </div>
+            <div className="space-y-2">
+              {pastSessions.slice(0, 3).map((session, i) => (
                 <motion.div
-                  key={`placeholder-${i}`}
+                  key={session.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                  className="rounded-2xl bg-surface px-5 py-4 shadow-soft opacity-50"
+                  className="rounded-2xl bg-surface px-5 py-4 shadow-soft"
                 >
-                  <p className="text-sm text-muted-foreground">
-                    {i === 0 ? "Your first conversation will appear here" : i === 1 ? "Each session gets a summary" : "Track your journey over time"}
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm text-foreground line-clamp-2 flex-1">
+                      {session.summary || "A moment of reflection"}
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 mt-0.5">
+                      <Clock className="h-3 w-3" />
+                      {session.ended_at && formatDuration(session.started_at, session.ended_at)}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {formatDate(session.started_at)}
                   </p>
                 </motion.div>
-              ))
-            ) : (
-              // Show actual sessions (pad to min 3 if fewer)
-              Array.from({ length: Math.max(3, pastSessions.length) }).map((_, i) => {
-                const session = pastSessions[i];
-                if (!session) {
-                  return (
-                    <motion.div
-                      key={`empty-${i}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                      className="rounded-2xl bg-surface px-5 py-4 shadow-soft opacity-30"
-                    >
-                      <p className="text-sm text-muted-foreground">More conversations to come</p>
-                    </motion.div>
-                  );
-                }
-                return (
-                  <motion.button
-                    key={session.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                    onClick={() => handleOpenSession(session)}
-                    className="w-full text-left rounded-2xl bg-surface px-5 py-4 shadow-soft hover:shadow-active transition-shadow"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm text-foreground line-clamp-2 flex-1">
-                        {session.summary || "A moment of reflection"}
-                      </p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 mt-0.5">
-                        <Clock className="h-3 w-3" />
-                        {session.ended_at && formatDuration(session.started_at, session.ended_at)}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-1.5">
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(session.started_at)}
-                      </p>
-                      <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                  </motion.button>
-                );
-              })
-            )}
-          </div>
-        </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Sign out */}
         <div className="mt-8 text-center">
           <button
-            onClick={handleSignOut}
+            onClick={onSignOut}
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <LogOut className="h-3 w-3" />

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import * as events from "@/lib/events";
 
 interface FeedbackModalProps {
   userId: string;
@@ -24,7 +23,6 @@ export function FeedbackModal({ userId, open, onClose }: FeedbackModalProps) {
     if (error) {
       toast.error("Failed to send feedback");
     } else {
-      events.feedbackSubmitted();
       toast.success("Thanks for your feedback!");
       setContent("");
       onClose();
@@ -52,7 +50,7 @@ export function FeedbackModal({ userId, open, onClose }: FeedbackModalProps) {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="how can we improve core?"
+              placeholder="how can we improve calmi?"
               className="w-full resize-y rounded-xl border border-border bg-background p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               autoFocus
             />

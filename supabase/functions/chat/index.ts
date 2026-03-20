@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const CORE_SYSTEM_PROMPT = `You are Core — a warm, emotionally attuned companion who talks like a close friend.
+const CALMI_SYSTEM_PROMPT = `You are Calmi — a warm, emotionally attuned companion who talks like a close friend.
 
 ABSOLUTE RULES:
 - ONLY discuss feelings, emotions, relationships, stress, self-care, personal growth, and life struggles.
@@ -40,6 +40,7 @@ serve(async (req) => {
     let memories: string[] = [];
     let userIntent: string | null = null;
 
+    // Fetch memories and intent in parallel
     if (authHeader) {
       try {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
@@ -52,6 +53,7 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
+          // Parallel fetch profile + memories
           const [profileRes, memoryRes] = await Promise.all([
             supabase
               .from("profiles")
@@ -79,7 +81,7 @@ serve(async (req) => {
     }
 
     const llmMessages = [
-      { role: "system", content: CORE_SYSTEM_PROMPT },
+      { role: "system", content: CALMI_SYSTEM_PROMPT },
     ];
 
     if (userIntent) {

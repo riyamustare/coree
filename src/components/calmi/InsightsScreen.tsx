@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, MessageCircle, Smile } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import * as events from "@/lib/events";
 import {
   Radar,
   RadarChart,
@@ -53,10 +52,6 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
   const { start, end } = useMemo(() => getWeekRange(weekOffset), [weekOffset]);
 
   useEffect(() => {
-    events.screenViewed("insights");
-  }, []);
-
-  useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       const { data } = await supabase
@@ -76,6 +71,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
         });
         setSessions(filtered);
 
+        // Count total messages for these sessions
         if (filtered.length > 0) {
           const ids = filtered.map((s) => s.id);
           const { count } = await supabase
@@ -95,6 +91,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
   const hasEnoughConvos = sessions.length >= 3;
   const convosNeeded = Math.max(0, 3 - sessions.length);
 
+  // Aggregate emotions across sessions
   const moodData = useMemo(() => {
     if (!hasEnoughConvos) return [];
     const totals: Record<string, number[]> = {};
@@ -122,6 +119,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-6">
       <div className="mx-auto w-full max-w-sm flex-1">
+        {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={onBack}
@@ -132,6 +130,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
           <h1 className="text-lg font-medium tracking-tight text-foreground">Insights</h1>
         </div>
 
+        {/* Week navigation */}
         <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 shadow-soft mb-6">
           <button
             onClick={() => setWeekOffset((o) => o - 1)}
@@ -162,6 +161,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
             transition={{ duration: 0.4 }}
             className="space-y-6"
           >
+            {/* Your week header */}
             <div>
               <h2 className="text-xl font-semibold tracking-tight text-foreground mb-1">your week</h2>
               <p className="text-sm text-muted-foreground">
@@ -174,6 +174,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
               )}
             </div>
 
+            {/* Stats */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
@@ -191,6 +192,7 @@ export function InsightsScreen({ userId, onBack }: InsightsScreenProps) {
               </div>
             </div>
 
+            {/* Mood radar */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Smile className="h-4 w-4 text-muted-foreground" />

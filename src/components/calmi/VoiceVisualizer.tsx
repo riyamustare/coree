@@ -36,7 +36,7 @@ export function VoiceVisualizer({ isActive, isSpeaking, transcription }: VoiceVi
       </motion.div>
 
       <p className="text-sm text-muted-foreground tracking-wide">
-        {isSpeaking ? "Core is speaking..." : isActive ? "Listening..." : "Tap to start"}
+        {isSpeaking ? "Calmi is speaking..." : isActive ? "Listening..." : "Tap to start"}
       </p>
 
       {/* Live transcription display */}

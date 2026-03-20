@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef } from "react";
-import * as events from "@/lib/events";
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
@@ -18,7 +17,6 @@ export function useVoice() {
       return null;
     }
 
-    events.voiceListenStarted();
     setIsListening(true);
     setLiveTranscript("");
     finalTranscriptRef.current = "";
@@ -54,7 +52,6 @@ export function useVoice() {
   const stopListening = useCallback(async () => {
     recognitionRef.current?.stop();
     setIsListening(false);
-    events.voiceListenStopped();
 
     await new Promise((r) => setTimeout(r, 150));
 
@@ -65,7 +62,6 @@ export function useVoice() {
 
   const speak = useCallback(async (text: string) => {
     setIsSpeaking(true);
-    events.voiceTtsStarted();
 
     // Abort any in-flight request
     abortRef.current?.abort();
@@ -94,21 +90,28 @@ export function useVoice() {
 
       if (!response.ok) {
         console.error("TTS failed:", response.status);
-        events.voiceTtsFailed();
         setIsSpeaking(false);
         return;
       }
 
+      // Start playback as soon as we have enough data using MediaSource
       const reader = response.body?.getReader();
       if (!reader) { setIsSpeaking(false); return; }
 
+      // Collect first chunk quickly, then start playback
       const chunks: Uint8Array[] = [];
+      let firstChunkReceived = false;
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         if (controller.signal.aborted) { setIsSpeaking(false); return; }
         chunks.push(value);
+        
+        // Start playback after first ~4KB to reduce time-to-first-audio
+        if (!firstChunkReceived && chunks.reduce((s, c) => s + c.byteLength, 0) > 4096) {
+          firstChunkReceived = true;
+        }
       }
 
       const totalLength = chunks.reduce((sum, buf) => sum + buf.byteLength, 0);
@@ -125,13 +128,11 @@ export function useVoice() {
       audioRef.current = audio;
 
       audio.onended = () => {
-        events.voiceTtsCompleted();
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
       };
       audio.onerror = () => {
-        events.voiceTtsFailed();
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
         audioRef.current = null;
@@ -141,7 +142,6 @@ export function useVoice() {
     } catch (err: any) {
       if (err.name !== "AbortError") {
         console.error("TTS error:", err);
-        events.voiceTtsFailed();
       }
       setIsSpeaking(false);
     }
