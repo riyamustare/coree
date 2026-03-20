@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Shield, Heart, MessageSquare, Mic, ArrowRight } from "lucide-react";
+import * as events from "@/lib/events";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -7,16 +8,25 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
+  const handleGetStarted = () => {
+    events.landingGetStarted();
+    onGetStarted();
+  };
+  const handleLogin = () => {
+    events.landingSignIn();
+    onLogin();
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-primary shadow-[0_0_20px_rgba(34,197,94,0.2)]" />
-          <span className="text-lg font-medium tracking-tight text-foreground">Calmi</span>
+          <span className="text-lg font-medium tracking-tight text-foreground">Core</span>
         </div>
         <button
-          onClick={onLogin}
+          onClick={handleLogin}
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           Sign in
@@ -57,14 +67,14 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStarted}
               className="inline-flex items-center gap-2 rounded-2xl bg-primary px-8 py-4 text-base font-medium text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] shadow-[0_0_30px_rgba(34,197,94,0.15)]"
             >
               Get started
               <ArrowRight className="h-4 w-4" />
             </button>
             <button
-              onClick={onLogin}
+              onClick={handleLogin}
               className="inline-flex items-center gap-2 rounded-2xl bg-surface px-8 py-4 text-base font-medium text-foreground shadow-soft transition-all hover:shadow-active active:scale-[0.98]"
             >
               I have an account
@@ -82,7 +92,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           {[
             { icon: Heart, title: "Empathetic listening", desc: "Responds with genuine care and understanding" },
             { icon: MessageSquare, title: "Text or voice", desc: "Type or speak — whatever feels right" },
-            { icon: Shield, title: "Private & safe", desc: "Your conversations stay between you and Calmi" },
+            { icon: Shield, title: "Private & safe", desc: "Your conversations stay between you and Core" },
           ].map((feature, i) => (
             <motion.div
               key={feature.title}

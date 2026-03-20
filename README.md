@@ -1,4 +1,4 @@
-# Calmi — AI Therapy Companion
+# Core — AI Therapy Companion
 
 A warm, emotionally attuned AI companion for mental wellness conversations. Built with React, Supabase, and ElevenLabs.
 
@@ -28,6 +28,13 @@ A warm, emotionally attuned AI companion for mental wellness conversations. Buil
 │  │ Summary  │  │ History  │  │ Insights  │             │
 │  │ Screen   │  │ Screen   │  │ Screen    │             │
 │  └──────────┘  └──────────┘  └───────────┘             │
+│                                                         │
+│  ┌──────────────────────────────────────────┐           │
+│  │         Analytics (src/lib/events.ts)    │           │
+│  │  Structured event tracking on all user   │           │
+│  │  and backend actions. Console-logged now, │           │
+│  │  swap with any provider (Mixpanel, etc.) │           │
+│  └──────────────────────────────────────────┘           │
 └──────────────────┬──────────────────────────────────────┘
                    │
                    ▼
@@ -95,6 +102,36 @@ A warm, emotionally attuned AI companion for mental wellness conversations. Buil
 2. Fetches all messages, generates summary + emotion analysis via LLM
 3. Extracts memories for future session context (RAG)
 4. Returns summary to client → shown on Summary Screen
+
+## Event Tracking
+
+All user and backend actions are tracked via `src/lib/events.ts`. Events are short, descriptive identifiers logged to the console. To integrate with an analytics provider, swap the `track()` function implementation.
+
+### Event Catalog
+
+| Event | Trigger |
+|-------|---------|
+| `auth_signup_started` | User clicks sign up |
+| `auth_signup_success` | Account created |
+| `auth_login_started` | User clicks sign in |
+| `auth_login_success` | Login succeeds |
+| `auth_login_failed` | Login fails |
+| `auth_signed_out` | User signs out |
+| `onboarding_started` | Onboarding begins |
+| `onboarding_intent_selected` | User picks intent |
+| `onboarding_completed` | Onboarding finished |
+| `session_started` | New chat session |
+| `session_ended` | Session ends |
+| `message_sent` | User sends message |
+| `response_received` | LLM responds |
+| `mode_switched_text` | Switch to text |
+| `mode_switched_voice` | Switch to voice |
+| `voice_listen_started` | Mic activated |
+| `voice_tts_started` | TTS begins |
+| `voice_tts_completed` | TTS finishes |
+| `history_card_opened` | Past session opened |
+| `feedback_submitted` | Feedback sent |
+| `screen_viewed` | Screen navigation |
 
 ## Key Design Decisions
 

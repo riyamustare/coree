@@ -1,7 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ChevronRight, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import * as events from "@/lib/events";
 
 interface PastSession {
   id: string;
@@ -20,16 +21,18 @@ interface ChatMessage {
 interface HistoryScreenProps {
   userId: string;
   onBack: () => void;
+  initialSession?: PastSession | null;
 }
 
-export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
+export function HistoryScreen({ userId, onBack, initialSession }: HistoryScreenProps) {
   const [sessions, setSessions] = useState<PastSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<PastSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<PastSession | null>(initialSession || null);
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
+    events.screenViewed("history");
     const fetchAll = async () => {
       const { data } = await supabase
         .from("sessions")
@@ -51,7 +54,15 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
     fetchAll();
   }, [userId]);
 
+  // Open initial session if provided
+  useEffect(() => {
+    if (initialSession) {
+      openSession(initialSession);
+    }
+  }, [initialSession]);
+
   const openSession = async (session: PastSession) => {
+    events.historyCardOpened(session.id);
     setSelectedSession(session);
     setChatLoading(true);
     const { data } = await supabase
@@ -82,7 +93,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
     return (
       <div className="flex min-h-screen flex-col bg-background px-4 py-6">
         <div className="mx-auto w-full max-w-sm flex-1">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => setSelectedSession(null)}
@@ -101,7 +111,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
             </div>
           </div>
 
-          {/* Summary */}
           {selectedSession.summary && (
             <div className="rounded-2xl bg-primary/5 border border-primary/10 px-5 py-4 mb-4">
               <p className="text-xs font-medium text-primary mb-1.5">Summary</p>
@@ -109,7 +118,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
             </div>
           )}
 
-          {/* Chat log */}
           <div className="space-y-2.5">
             {chatLoading ? (
               <div className="flex justify-center py-12">

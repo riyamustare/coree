@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import * as events from "@/lib/events";
 
 export interface ChatMessage {
   id: string;
@@ -30,6 +31,7 @@ export function useSession(userId: string | undefined) {
       console.error("Failed to create session:", error);
       return;
     }
+    events.sessionStarted(data.id);
     setSessionId(data.id);
     setSessionStart(new Date());
     setMessages([]);
@@ -43,13 +45,11 @@ export function useSession(userId: string | undefined) {
       : 0;
     const messageCount = messages.length;
 
-    // Summarize session via edge function
     try {
       const { data } = await supabase.functions.invoke("end-session", {
         body: { sessionId },
       });
 
-      // Fetch the updated session to get summary
       const { data: sessionData } = await supabase
         .from("sessions")
         .select("summary")
@@ -58,6 +58,9 @@ export function useSession(userId: string | undefined) {
 
       const summary = sessionData?.summary || "You took a moment to reflect today. That matters.";
 
+      events.sessionEnded(sessionId, duration);
+      events.sessionSummaryReceived(sessionId);
+
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
@@ -65,6 +68,7 @@ export function useSession(userId: string | undefined) {
       return { summary, messageCount, duration };
     } catch (err) {
       console.error("Failed to end session:", err);
+      events.sessionEnded(sessionId, duration);
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
@@ -75,6 +79,8 @@ export function useSession(userId: string | undefined) {
   const sendMessage = useCallback(
     async (content: string): Promise<void> => {
       if (!sessionId || !userId) return;
+
+      events.messageSent(sessionId);
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -169,6 +175,7 @@ export function useSession(userId: string | undefined) {
         }
 
         if (assistantContent) {
+          events.responseReceived(sessionId);
           await supabase.from("messages").insert({
             session_id: sessionId,
             user_id: userId,
@@ -178,6 +185,7 @@ export function useSession(userId: string | undefined) {
         }
       } catch (err) {
         console.error("Chat error:", err);
+        events.responseFailed(sessionId);
         setMessages((prev) => [
           ...prev,
           {
