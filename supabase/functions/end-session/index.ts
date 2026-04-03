@@ -49,7 +49,7 @@ serve(async (req) => {
     if (!session) throw new Error("Session not found");
 
     const conversationText = messages
-      .map((m: any) => `${m.role === "user" ? "User" : "Calmi"}: ${m.content}`)
+      .map((m: any) => `${m.role === "user" ? "User" : "Core"}: ${m.content}`)
       .join("\n");
 
     // Run summary and emotion extraction in parallel for speed
