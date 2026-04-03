@@ -1,4 +1,4 @@
-# Calmi — AI Therapy Companion
+# Core — AI Therapy Companion
 
 A warm, emotionally attuned AI companion for mental wellness conversations. Built with React, Supabase, and ElevenLabs.
 
@@ -28,6 +28,13 @@ A warm, emotionally attuned AI companion for mental wellness conversations. Buil
 │  │ Summary  │  │ History  │  │ Insights  │             │
 │  │ Screen   │  │ Screen   │  │ Screen    │             │
 │  └──────────┘  └──────────┘  └───────────┘             │
+│                                                         │
+│  ┌──────────────────────────────────────────┐           │
+│  │         Analytics (src/lib/analytics.ts)  │           │
+│  │  • Event tracking for all user actions   │           │
+│  │  • User properties (user_id, session_id) │           │
+│  │  • Ready for Amplitude / Mixpanel / etc  │           │
+│  └──────────────────────────────────────────┘           │
 └──────────────────┬──────────────────────────────────────┘
                    │
                    ▼
@@ -95,6 +102,12 @@ A warm, emotionally attuned AI companion for mental wellness conversations. Buil
 2. Fetches all messages, generates summary + emotion analysis via LLM
 3. Extracts memories for future session context (RAG)
 4. Returns summary to client → shown on Summary Screen
+
+## Analytics
+
+All user and backend actions are tracked via `src/lib/analytics.ts`. See `docs/EVENTS.md` for the full event catalog with descriptions and properties.
+
+Events are currently logged to `console.debug`. To integrate with Amplitude, Mixpanel, or PostHog, replace the `dispatch()` function in `analytics.ts` with the appropriate SDK call.
 
 ## Key Design Decisions
 

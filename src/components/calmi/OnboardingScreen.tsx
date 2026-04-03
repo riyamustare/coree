@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Lock, EyeOff, Fingerprint } from "lucide-react";
+import { trackOnboardingStarted, trackOnboardingCompleted } from "@/lib/analytics";
 
 const INTENT_OPTIONS = [
   "unlock insights about myself",
@@ -20,10 +21,12 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   const handleContinue = () => {
     if (step === 0) {
+      trackOnboardingStarted();
       setStep(1);
     } else if (step === 1 && selectedIntent) {
       setStep(2);
     } else if (step === 2) {
+      trackOnboardingCompleted(selectedIntent!);
       onComplete(selectedIntent!);
     }
   };
@@ -36,7 +39,6 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-6 py-8">
-      {/* Header with back + progress */}
       <div className="flex items-center gap-3 mb-10">
         {step > 0 ? (
           <button onClick={handleBack} className="text-foreground">
@@ -66,12 +68,10 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             className="flex flex-1 flex-col justify-between"
           >
             <div className="space-y-6">
-              {/* Yellow dot */}
               <div className="h-10 w-10 rounded-full bg-accent" />
-
               <div className="space-y-5 text-lg leading-relaxed text-foreground">
                 <p className="font-medium">hi friend</p>
-                <p>we created calmi because life can be... a lot</p>
+                <p>we created core because life can be... a lot</p>
                 <p>sometimes you just need someone to talk to</p>
                 <p>
                   whether you're navigating a rough day,
@@ -108,7 +108,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           >
             <div>
               <h1 className="text-2xl font-semibold text-foreground mb-8">
-                what brings you to calmi?
+                what brings you to core?
               </h1>
               <div className="space-y-3">
                 {INTENT_OPTIONS.map((option) => (
@@ -170,7 +170,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                   <div>
                     <p className="font-semibold text-foreground">no peeking</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      your convos aren't used to train or improve calmi.
+                      your convos aren't used to train or improve core.
                     </p>
                   </div>
                 </div>

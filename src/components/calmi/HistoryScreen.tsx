@@ -1,7 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, ChevronRight, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
 
 interface PastSession {
   id: string;
@@ -20,9 +21,10 @@ interface ChatMessage {
 interface HistoryScreenProps {
   userId: string;
   onBack: () => void;
+  initialSessionId?: string | null;
 }
 
-export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
+export function HistoryScreen({ userId, onBack, initialSessionId }: HistoryScreenProps) {
   const [sessions, setSessions] = useState<PastSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<PastSession | null>(null);
@@ -30,6 +32,7 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
   const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
+    trackScreenViewed("history");
     const fetchAll = async () => {
       const { data } = await supabase
         .from("sessions")
@@ -45,15 +48,22 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
           return duration > 5 * 60 * 1000;
         });
         setSessions(filtered);
+
+        // Auto-open if initialSessionId provided
+        if (initialSessionId) {
+          const target = filtered.find((s) => s.id === initialSessionId);
+          if (target) openSession(target);
+        }
       }
       setLoading(false);
     };
     fetchAll();
-  }, [userId]);
+  }, [userId, initialSessionId]);
 
   const openSession = async (session: PastSession) => {
     setSelectedSession(session);
     setChatLoading(true);
+    trackHistoryOpened(session.id);
     const { data } = await supabase
       .from("messages")
       .select("id, role, content, created_at")
@@ -77,12 +87,10 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
     return new Date(dateStr).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   };
 
-  // Detail view
   if (selectedSession) {
     return (
       <div className="flex min-h-screen flex-col bg-background px-4 py-6">
         <div className="mx-auto w-full max-w-sm flex-1">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => setSelectedSession(null)}
@@ -101,7 +109,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
             </div>
           </div>
 
-          {/* Summary */}
           {selectedSession.summary && (
             <div className="rounded-2xl bg-primary/5 border border-primary/10 px-5 py-4 mb-4">
               <p className="text-xs font-medium text-primary mb-1.5">Summary</p>
@@ -109,7 +116,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
             </div>
           )}
 
-          {/* Chat log */}
           <div className="space-y-2.5">
             {chatLoading ? (
               <div className="flex justify-center py-12">
@@ -140,7 +146,6 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
     );
   }
 
-  // List view
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-6">
       <div className="mx-auto w-full max-w-sm flex-1">
