@@ -25,14 +25,13 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
   return (
     <div className="flex items-center justify-between px-2 py-3">
       <div className="flex items-center gap-3">
-        <h1 className="text-base font-medium tracking-tight text-foreground">Calmi</h1>
+        <h1 className="text-base font-medium tracking-tight text-foreground">Core</h1>
         {sessionStart && (
           <span className="text-xs tabular-nums text-muted-foreground">{elapsed}</span>
         )}
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Mode toggle */}
         <div className="flex items-center rounded-xl bg-secondary p-1 gap-0.5">
           <button
             onClick={() => onModeChange("text")}

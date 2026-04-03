@@ -16,6 +16,20 @@ import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import { Mic, MicOff } from "lucide-react";
+import {
+  setUserProperties,
+  resetUserProperties,
+  trackSignOut,
+  trackSessionStarted,
+  trackSessionEnded,
+  trackMessageSent,
+  trackResponseReceived,
+  trackModeChanged,
+  trackVoiceListenStart,
+  trackVoiceListenStop,
+  trackTtsPlayed,
+  trackScreenViewed,
+} from "@/lib/analytics";
 
 type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending";
 
@@ -45,8 +59,24 @@ const Index = () => {
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
   const [endingText, setEndingText] = useState(ENDING_MESSAGES[0]);
+  const [historySessionId, setHistorySessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
+
+  // Set user properties for analytics
+  useEffect(() => {
+    if (user) {
+      setUserProperties({ user_id: user.id });
+    } else {
+      resetUserProperties();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (sessionId) {
+      setUserProperties({ session_id: sessionId });
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -68,7 +98,6 @@ const Index = () => {
     }
   }, [messages]);
 
-  // Cycle ending messages
   useEffect(() => {
     if (screen !== "ending") return;
     let i = 0;
@@ -86,16 +115,22 @@ const Index = () => {
 
   const handleStartConversation = useCallback(async () => {
     await startSession();
+    trackSessionStarted(sessionId || "pending");
     setScreen("chat");
-  }, [startSession]);
+    trackScreenViewed("chat");
+  }, [startSession, sessionId]);
 
   const handleEndSession = useCallback(async () => {
     stopSpeaking();
     setScreen("ending");
     const result = await endSession();
+    if (result) {
+      trackSessionEnded(sessionId || "", result.duration, result.messageCount);
+    }
     setSummaryData(result);
     setScreen("summary");
-  }, [endSession, stopSpeaking]);
+    trackScreenViewed("summary");
+  }, [endSession, stopSpeaking, sessionId]);
 
   const handleGoHome = useCallback(() => {
     setSummaryData(null);
@@ -108,23 +143,44 @@ const Index = () => {
     setScreen("chat");
   }, [startSession]);
 
+  const handleSignOut = useCallback(async () => {
+    trackSignOut();
+    await signOut();
+  }, [signOut]);
+
+  const handleModeChange = useCallback((newMode: "text" | "voice") => {
+    setMode(newMode);
+    trackModeChanged(newMode);
+  }, []);
+
+  const handleOpenSession = useCallback((sid: string) => {
+    setHistorySessionId(sid);
+    setScreen("history");
+  }, []);
+
   const handleSendText = useCallback(
     async (content: string) => {
+      trackMessageSent(sessionId || "", "text");
       await sendMessage(content);
+      trackResponseReceived(sessionId || "");
     },
-    [sendMessage]
+    [sendMessage, sessionId]
   );
 
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
+      trackVoiceListenStop();
       const text = await stopListening();
     } else {
+      trackVoiceListenStart();
       const transcript = await startListening();
       if (transcript && transcript.trim()) {
+        trackMessageSent(sessionId || "", "voice");
         await sendMessage(transcript.trim());
+        trackResponseReceived(sessionId || "");
       }
     }
-  }, [isListening, startListening, stopListening, sendMessage]);
+  }, [isListening, startListening, stopListening, sendMessage, sessionId]);
 
   // In voice mode: speak assistant response, then auto-listen
   useEffect(() => {
@@ -132,6 +188,7 @@ const Index = () => {
     const last = messages[messages.length - 1];
     if (last.role === "assistant" && last.id !== spokenMessageIdRef.current) {
       spokenMessageIdRef.current = last.id;
+      trackTtsPlayed();
       speak(last.content);
     }
   }, [messages, mode, isLoading, speak]);
@@ -175,7 +232,6 @@ const Index = () => {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
-  // Ending / loading state
   if (screen === "ending") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-6">
@@ -211,7 +267,13 @@ const Index = () => {
   }
 
   if (screen === "history" && user) {
-    return <HistoryScreen userId={user.id} onBack={() => setScreen("home")} />;
+    return (
+      <HistoryScreen
+        userId={user.id}
+        onBack={() => { setHistorySessionId(null); setScreen("home"); }}
+        initialSessionId={historySessionId}
+      />
+    );
   }
 
   if (screen === "insights" && user) {
@@ -222,29 +284,28 @@ const Index = () => {
     return (
       <HomeScreen
         onStartConversation={handleStartConversation}
-        onSignOut={signOut}
-        onViewHistory={() => setScreen("history")}
+        onSignOut={handleSignOut}
+        onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
         onViewInsights={() => setScreen("insights")}
+        onOpenSession={handleOpenSession}
         userId={user.id}
       />
     );
   }
 
-  // Chat — fixed header + fixed input, scrollable messages
+  // Chat
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       <div className="mx-auto flex w-full max-w-chat flex-col h-full px-4">
-        {/* Fixed header */}
         <div className="flex-shrink-0">
           <SessionHeader
             mode={mode}
-            onModeChange={setMode}
+            onModeChange={handleModeChange}
             onEndSession={handleEndSession}
             sessionStart={sessionStart}
           />
         </div>
 
-        {/* Scrollable messages */}
         <div
           ref={scrollRef}
           className="flex-1 min-h-0 overflow-y-auto calmi-scroll py-4 space-y-3"
@@ -287,7 +348,6 @@ const Index = () => {
           )}
         </div>
 
-        {/* Fixed input area */}
         <div className="flex-shrink-0 pb-6 pt-2">
           <AnimatePresence mode="wait">
             {mode === "text" ? (

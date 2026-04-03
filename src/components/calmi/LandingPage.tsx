@@ -9,11 +9,10 @@ interface LandingPageProps {
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-primary shadow-[0_0_20px_rgba(34,197,94,0.2)]" />
-          <span className="text-lg font-medium tracking-tight text-foreground">Calmi</span>
+          <span className="text-lg font-medium tracking-tight text-foreground">Core</span>
         </div>
         <button
           onClick={onLogin}
@@ -23,7 +22,6 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
         </button>
       </nav>
 
-      {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -72,7 +70,6 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           </motion.div>
         </motion.div>
 
-        {/* Features */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -82,7 +79,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           {[
             { icon: Heart, title: "Empathetic listening", desc: "Responds with genuine care and understanding" },
             { icon: MessageSquare, title: "Text or voice", desc: "Type or speak — whatever feels right" },
-            { icon: Shield, title: "Private & safe", desc: "Your conversations stay between you and Calmi" },
+            { icon: Shield, title: "Private & safe", desc: "Your conversations stay between you and Core" },
           ].map((feature, i) => (
             <motion.div
               key={feature.title}
