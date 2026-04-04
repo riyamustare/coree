@@ -41,12 +41,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         .limit(5);
 
       if (data) {
-        const filtered = data.filter((s) => {
-          if (!s.ended_at || !s.started_at) return false;
-          const duration = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-          return duration > 5 * 60 * 1000;
-        });
-        setPastSessions(filtered);
+        setPastSessions(data);
       }
     };
     fetchSessions();
