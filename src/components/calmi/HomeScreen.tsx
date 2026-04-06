@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart } from "lucide-react";
+import { MessageSquare, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart, Settings, BookOpen, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackModal } from "./FeedbackModal";
@@ -18,10 +18,14 @@ interface HomeScreenProps {
   onViewHistory: () => void;
   onViewInsights: () => void;
   onOpenSession: (sessionId: string) => void;
+  onOpenSettings: () => void;
+  onOpenNotes: () => void;
   userId: string;
+  genzMode: boolean;
+  onGenzToggle: (enabled: boolean) => void;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, userId }: HomeScreenProps) {
+export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, userId, genzMode, onGenzToggle }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -73,6 +77,16 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-8">
       <div className="mx-auto w-full max-w-sm flex-1">
+        {/* Top bar: settings */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={onOpenSettings}
+            className="h-9 w-9 rounded-full bg-surface shadow-soft flex items-center justify-center hover:shadow-active transition"
+          >
+            <Settings className="h-4 w-4 text-foreground" />
+          </button>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -95,12 +109,32 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             Take a moment whenever you're ready.
           </p>
 
+          {/* Gen-Z mode toggle */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="mt-4 flex items-center justify-center gap-2"
+          >
+            <button
+              onClick={() => onGenzToggle(!genzMode)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
+                genzMode
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                  : "bg-surface text-muted-foreground shadow-soft hover:shadow-active"
+              }`}
+            >
+              <Sparkles className="h-3 w-3" />
+              {genzMode ? "gen-z mode on 🔥" : "gen-z mode"}
+            </button>
+          </motion.div>
+
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
             onClick={onStartConversation}
-            className="mt-8 inline-flex items-center gap-3 rounded-2xl bg-surface px-8 py-4 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
+            className="mt-6 inline-flex items-center gap-3 rounded-2xl bg-surface px-8 py-4 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <MessageSquare className="h-5 w-5 text-primary" />
@@ -116,7 +150,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-8 flex gap-3"
+          className="mt-6 flex gap-3"
         >
           <button
             onClick={onViewInsights}
@@ -124,6 +158,13 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           >
             <BarChart2 className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">Insights</span>
+          </button>
+          <button
+            onClick={onOpenNotes}
+            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
+          >
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Journal</span>
           </button>
           <button
             onClick={() => setFeedbackOpen(true)}
@@ -134,7 +175,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </button>
         </motion.div>
 
-        {/* Past sessions - always show section, min 3 cards */}
+        {/* Past sessions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -157,7 +198,6 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
           <div className="space-y-2">
             {pastSessions.length === 0 ? (
-              // Show 3 placeholder cards
               Array.from({ length: 3 }).map((_, i) => (
                 <motion.div
                   key={`placeholder-${i}`}
@@ -171,7 +211,6 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                 </motion.div>
               ))
             ) : (
-              // Show actual sessions, pad to min 3
               Array.from({ length: Math.max(3, pastSessions.length) }).map((_, i) => {
                 const session = pastSessions[i];
                 if (!session) {

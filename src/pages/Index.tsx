@@ -11,6 +11,8 @@ import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
 import { SummaryScreen } from "@/components/calmi/SummaryScreen";
 import { HistoryScreen } from "@/components/calmi/HistoryScreen";
 import { InsightsScreen } from "@/components/calmi/InsightsScreen";
+import { SettingsScreen } from "@/components/calmi/SettingsScreen";
+import { NotesScreen } from "@/components/calmi/NotesScreen";
 import { SessionHeader } from "@/components/calmi/SessionHeader";
 import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
@@ -31,7 +33,7 @@ import {
   trackScreenViewed,
 } from "@/lib/analytics";
 
-type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending";
+type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending" | "settings" | "notes";
 
 const GREETING = "How are you feeling right now?";
 
@@ -43,7 +45,7 @@ const ENDING_MESSAGES = [
 
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { profile, loading: profileLoading, completeOnboarding } = useProfile(user?.id);
+  const { profile, loading: profileLoading, completeOnboarding, setGenzMode, setTheme } = useProfile(user?.id);
   const {
     sessionId,
     sessionStart,
@@ -62,6 +64,15 @@ const Index = () => {
   const [historySessionId, setHistorySessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
+
+  // Dark mode: apply class to document
+  useEffect(() => {
+    if (profile?.theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [profile?.theme]);
 
   // Set user properties for analytics
   useEffect(() => {
@@ -158,13 +169,17 @@ const Index = () => {
     setScreen("history");
   }, []);
 
+  const handleThemeChange = useCallback((theme: "light" | "dark") => {
+    setTheme(theme);
+  }, [setTheme]);
+
   const handleSendText = useCallback(
     async (content: string) => {
       trackMessageSent(sessionId || "", "text");
-      await sendMessage(content);
+      await sendMessage(content, profile?.genz_mode || false);
       trackResponseReceived(sessionId || "");
     },
-    [sendMessage, sessionId]
+    [sendMessage, sessionId, profile?.genz_mode]
   );
 
   const handleVoiceToggleFixed = useCallback(async () => {
@@ -176,11 +191,11 @@ const Index = () => {
       const transcript = await startListening();
       if (transcript && transcript.trim()) {
         trackMessageSent(sessionId || "", "voice");
-        await sendMessage(transcript.trim());
+        await sendMessage(transcript.trim(), profile?.genz_mode || false);
         trackResponseReceived(sessionId || "");
       }
     }
-  }, [isListening, startListening, stopListening, sendMessage, sessionId]);
+  }, [isListening, startListening, stopListening, sendMessage, sessionId, profile?.genz_mode]);
 
   // In voice mode: speak assistant response, then auto-listen
   useEffect(() => {
@@ -200,12 +215,12 @@ const Index = () => {
       const timer = setTimeout(async () => {
         const transcript = await startListening();
         if (transcript && transcript.trim()) {
-          await sendMessage(transcript.trim());
+          await sendMessage(transcript.trim(), profile?.genz_mode || false);
         }
       }, 400);
       return () => clearTimeout(timer);
     }
-  }, [isSpeaking, mode, isListening, isLoading, messages, startListening, sendMessage]);
+  }, [isSpeaking, mode, isListening, isLoading, messages, startListening, sendMessage, profile?.genz_mode]);
 
   if (authLoading || (user && profileLoading)) {
     return (
@@ -280,6 +295,23 @@ const Index = () => {
     return <InsightsScreen userId={user.id} onBack={() => setScreen("home")} />;
   }
 
+  if (screen === "settings" && user) {
+    return (
+      <SettingsScreen
+        userId={user.id}
+        userEmail={user.email || ""}
+        theme={(profile?.theme as "light" | "dark") || "light"}
+        onThemeChange={handleThemeChange}
+        onBack={() => setScreen("home")}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (screen === "notes" && user) {
+    return <NotesScreen userId={user.id} onBack={() => setScreen("home")} />;
+  }
+
   if (screen === "home" && user) {
     return (
       <HomeScreen
@@ -288,7 +320,11 @@ const Index = () => {
         onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
         onViewInsights={() => setScreen("insights")}
         onOpenSession={handleOpenSession}
+        onOpenSettings={() => setScreen("settings")}
+        onOpenNotes={() => setScreen("notes")}
         userId={user.id}
+        genzMode={profile?.genz_mode || false}
+        onGenzToggle={(enabled) => setGenzMode(enabled)}
       />
     );
   }
