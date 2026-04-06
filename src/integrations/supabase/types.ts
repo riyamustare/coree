@@ -105,24 +105,57 @@ export type Database = {
           },
         ]
       }
+      notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
+          genz_mode: boolean
           id: string
           onboarding_completed: boolean
           onboarding_intent: string | null
+          theme: string
         }
         Insert: {
           created_at?: string
+          genz_mode?: boolean
           id: string
           onboarding_completed?: boolean
           onboarding_intent?: string | null
+          theme?: string
         }
         Update: {
           created_at?: string
+          genz_mode?: boolean
           id?: string
           onboarding_completed?: boolean
           onboarding_intent?: string | null
+          theme?: string
         }
         Relationships: []
       }
