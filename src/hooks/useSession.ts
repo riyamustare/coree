@@ -73,7 +73,7 @@ export function useSession(userId: string | undefined) {
   }, [sessionId, sessionStart, messages.length]);
 
   const sendMessage = useCallback(
-    async (content: string): Promise<void> => {
+    async (content: string, genzMode: boolean = false): Promise<void> => {
       if (!sessionId || !userId) return;
 
       const userMsg: ChatMessage = {
@@ -109,6 +109,7 @@ export function useSession(userId: string | undefined) {
             message: content,
             sessionId,
             contextMessages,
+            genzMode,
           }),
         });
 

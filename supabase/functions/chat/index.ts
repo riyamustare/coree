@@ -32,7 +32,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, sessionId, contextMessages } = await req.json();
+    const { message, sessionId, contextMessages, genzMode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -78,8 +78,12 @@ serve(async (req) => {
       }
     }
 
+    const systemPrompt = genzMode
+      ? `${CORE_SYSTEM_PROMPT}\n\nIMPORTANT OVERRIDE — Gen-Z mode is ON. Talk using gen-z slang, abbreviations, and internet speak. Use words like "fr", "no cap", "lowkey", "highkey", "slay", "bestie", "bruh", "ngl", "deadass", "vibe check", "sending me", "ate that", "period", "it's giving". Keep the emotional support core but make it sound like a gen-z bestie texting. Still max 2 sentences.`
+      : CORE_SYSTEM_PROMPT;
+
     const llmMessages = [
-      { role: "system", content: CORE_SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
     ];
 
     if (userIntent) {
