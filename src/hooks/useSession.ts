@@ -41,7 +41,18 @@ export function useSession(userId: string | undefined) {
     const duration = sessionStart
       ? Math.floor((Date.now() - sessionStart.getTime()) / 1000)
       : 0;
+    const userMessageCount = messages.filter((m) => m.role === "user").length;
     const messageCount = messages.length;
+
+    // If convo is < 60s and has 0-1 user messages, delete it silently
+    if (duration < 60 && userMessageCount <= 1) {
+      await supabase.from("messages").delete().eq("session_id", sessionId);
+      await supabase.from("sessions").delete().eq("id", sessionId);
+      setSessionId(null);
+      setSessionStart(null);
+      setMessages([]);
+      return { summary: "Session was too short to save.", messageCount, duration };
+    }
 
     // Summarize session via edge function
     try {
@@ -70,7 +81,7 @@ export function useSession(userId: string | undefined) {
       setMessages([]);
       return { summary: "You took a moment to reflect today. That matters.", messageCount, duration };
     }
-  }, [sessionId, sessionStart, messages.length]);
+  }, [sessionId, sessionStart, messages]);
 
   const sendMessage = useCallback(
     async (content: string, genzMode: boolean = false): Promise<void> => {
