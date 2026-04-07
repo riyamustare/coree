@@ -15,12 +15,30 @@ serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY is not configured");
 
-    const formData = await req.formData();
-    const audioFile = formData.get("audio") as File;
-    if (!audioFile) throw new Error("No audio file provided");
+    const contentType = req.headers.get("content-type") || "";
+    let audioFile: File | Blob;
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const file = formData.get("audio") as File;
+      if (!file) throw new Error("No audio file provided");
+      audioFile = file;
+    } else {
+      // JSON body with base64 audio
+      const body = await req.json();
+      const { audio, mimeType } = body;
+      if (!audio) throw new Error("No audio data provided");
+      
+      const binaryStr = atob(audio);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      audioFile = new Blob([bytes], { type: mimeType || "audio/webm;codecs=opus" });
+    }
 
     const apiFormData = new FormData();
-    apiFormData.append("file", audioFile);
+    apiFormData.append("file", audioFile, "audio.webm");
     apiFormData.append("model_id", "scribe_v2");
     apiFormData.append("language_code", "eng");
 
