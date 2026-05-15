@@ -52,7 +52,7 @@ serve(async (req) => {
         const { data: { user } } = await supabase.auth.getUser(token);
 
         if (user) {
-          const [profileRes, memoryRes] = await Promise.all([
+          const [profileRes, memoryRes, sessionRes] = await Promise.all([
             supabase
               .from("profiles")
               .select("onboarding_intent")
@@ -63,6 +63,13 @@ serve(async (req) => {
               .select("content")
               .eq("user_id", user.id)
               .order("created_at", { ascending: false })
+              .limit(5),
+            supabase
+              .from("sessions")
+              .select("summary, emotions, ended_at")
+              .eq("user_id", user.id)
+              .not("ended_at", "is", null)
+              .order("ended_at", { ascending: false })
               .limit(3),
           ]);
 
@@ -71,6 +78,9 @@ serve(async (req) => {
           }
           if (memoryRes.data) {
             memories = memoryRes.data.map((m: any) => m.content);
+          }
+          if (sessionRes.data && sessionRes.data.length > 0) {
+            recentSessions = sessionRes.data;
           }
         }
       } catch (err) {
