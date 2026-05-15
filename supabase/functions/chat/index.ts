@@ -39,6 +39,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
     let userIntent: string | null = null;
+    let recentSessions: Array<{ summary: string | null; emotions: any; ended_at: string | null }> = [];
 
     if (authHeader) {
       try {
@@ -115,6 +116,27 @@ serve(async (req) => {
       llmMessages.push({
         role: "system",
         content: `Previous session memories:\n${memories.map((m) => `- ${m}`).join("\n")}\n\nReference naturally only if relevant.`,
+      });
+    }
+
+    if (recentSessions.length > 0) {
+      const emotionalArc = recentSessions
+        .map((s, i) => {
+          const when = s.ended_at ? new Date(s.ended_at).toLocaleDateString() : "recent";
+          const emo = s.emotions
+            ? Object.entries(s.emotions)
+                .filter(([, v]) => typeof v === "number" && (v as number) >= 30)
+                .sort((a, b) => (b[1] as number) - (a[1] as number))
+                .slice(0, 3)
+                .map(([k, v]) => `${k} ${v}`)
+                .join(", ")
+            : "";
+          return `(${when}) ${s.summary || ""}${emo ? ` — felt: ${emo}` : ""}`;
+        })
+        .join("\n");
+      llmMessages.push({
+        role: "system",
+        content: `Emotional history (most recent first) — use to gently track patterns and continuity, never recite verbatim:\n${emotionalArc}`,
       });
     }
 
