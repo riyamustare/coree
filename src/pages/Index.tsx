@@ -208,19 +208,7 @@ const Index = () => {
     }
   }, [messages, mode, isLoading, speak]);
 
-  // Auto-listen after TTS finishes in voice mode
-  useEffect(() => {
-    if (mode !== "voice" || isSpeaking || isListening || isLoading) return;
-    if (messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && spokenMessageIdRef.current) {
-      const timer = setTimeout(async () => {
-        const transcript = await startListening();
-        if (transcript && transcript.trim()) {
-          await sendMessage(transcript.trim(), profile?.genz_mode || false);
-        }
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [isSpeaking, mode, isListening, isLoading, messages, startListening, sendMessage, profile?.genz_mode]);
+  // Mic stays off by default — user must tap to start listening
 
   if (authLoading || (user && profileLoading)) {
     return (
