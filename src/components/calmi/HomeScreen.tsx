@@ -198,7 +198,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
           <div className="space-y-2">
             {pastSessions.length === 0 ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <motion.div
                   key={`placeholder-${i}`}
                   initial={{ opacity: 0, y: 10 }}
@@ -211,7 +211,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                 </motion.div>
               ))
             ) : (
-              Array.from({ length: Math.max(3, pastSessions.length) }).map((_, i) => {
+              Array.from({ length: Math.max(5, pastSessions.length) }).map((_, i) => {
                 const session = pastSessions[i];
                 if (!session) {
                   return (
