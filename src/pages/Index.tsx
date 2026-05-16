@@ -124,7 +124,9 @@ const Index = () => {
     setScreen("home");
   }, [completeOnboarding]);
 
-  const handleStartConversation = useCallback(async () => {
+  const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+    setMode(selectedMode);
+    trackModeChanged(selectedMode);
     await startSession();
     trackSessionStarted(sessionId || "pending");
     setScreen("chat");
@@ -327,6 +329,7 @@ const Index = () => {
             onModeChange={handleModeChange}
             onEndSession={handleEndSession}
             sessionStart={sessionStart}
+            showModeToggle={false}
           />
         </div>
 
