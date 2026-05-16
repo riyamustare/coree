@@ -14,9 +14,13 @@ export function useProfile(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) {
+      setProfile(null);
       setLoading(false);
       return;
     }
+
+    setProfile(null);
+    setLoading(true);
 
     const fetchProfile = async () => {
       const { data, error } = await supabase
