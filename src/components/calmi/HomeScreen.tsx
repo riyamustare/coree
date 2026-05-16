@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageSquare, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart, Settings, BookOpen, Sparkles } from "lucide-react";
+import { MessageSquare, Mic, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart, Settings, BookOpen, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedbackModal } from "./FeedbackModal";
@@ -13,7 +13,7 @@ interface PastSession {
 }
 
 interface HomeScreenProps {
-  onStartConversation: () => void;
+  onStartConversation: (mode: "text" | "voice") => void;
   onSignOut: () => void;
   onViewHistory: () => void;
   onViewInsights: () => void;
@@ -135,21 +135,31 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             </button>
           </motion.div>
 
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            onClick={onStartConversation}
-            className="mt-6 inline-flex items-center gap-3 rounded-2xl bg-surface px-8 py-4 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
+            className="mt-6 flex gap-3 justify-center"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <MessageSquare className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-left">
-              <p className="text-base font-medium text-foreground">Start a conversation</p>
-              <p className="text-xs text-muted-foreground">Text or voice — your choice</p>
-            </div>
-          </motion.button>
+            <button
+              onClick={() => onStartConversation("text")}
+              className="inline-flex items-center gap-2 rounded-2xl bg-surface px-5 py-3 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                <MessageSquare className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-foreground">Text mode</span>
+            </button>
+            <button
+              onClick={() => onStartConversation("voice")}
+              className="inline-flex items-center gap-2 rounded-2xl bg-surface px-5 py-3 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                <Mic className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-foreground">Voice mode</span>
+            </button>
+          </motion.div>
         </motion.div>
 
         <motion.div
@@ -204,36 +214,21 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
           <div className="space-y-2">
             {pastSessions.length === 0 ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <motion.div
-                  key={`placeholder-${i}`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                  className="rounded-2xl bg-surface px-5 py-4 shadow-soft opacity-50"
-                >
-                  <p className="text-sm text-muted-foreground italic">No conversation yet</p>
-                  <p className="text-xs text-muted-foreground mt-1.5">—</p>
-                </motion.div>
-              ))
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.45 }}
+                className="rounded-2xl bg-surface px-5 py-6 shadow-soft text-center"
+              >
+                <p className="text-sm text-foreground">
+                  All your sessions will live here ✨
+                </p>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Start a conversation whenever you're ready.
+                </p>
+              </motion.div>
             ) : (
-              Array.from({ length: Math.max(5, pastSessions.length) }).map((_, i) => {
-                const session = pastSessions[i];
-                if (!session) {
-                  return (
-                    <motion.div
-                      key={`placeholder-${i}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                      className="rounded-2xl bg-surface px-5 py-4 shadow-soft opacity-50"
-                    >
-                      <p className="text-sm text-muted-foreground italic">No conversation yet</p>
-                      <p className="text-xs text-muted-foreground mt-1.5">—</p>
-                    </motion.div>
-                  );
-                }
-                return (
+              pastSessions.map((session, i) => (
                   <motion.button
                     key={session.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -255,8 +250,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                       {formatDate(session.started_at)}
                     </p>
                   </motion.button>
-                );
-              })
+              ))
             )}
           </div>
         </motion.div>
