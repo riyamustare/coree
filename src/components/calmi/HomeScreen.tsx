@@ -103,9 +103,9 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10"
+            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-muted"
           >
-            <div className="h-8 w-8 rounded-full bg-primary shadow-[0_0_30px_rgba(34,197,94,0.2)]" />
+            <div className="h-8 w-8 rounded-full bg-primary" />
           </motion.div>
 
           <h1 className="text-2xl font-medium tracking-tight text-foreground">
@@ -126,7 +126,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
               onClick={() => onGenzToggle(!genzMode)}
               className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
                 genzMode
-                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-surface text-muted-foreground shadow-soft hover:shadow-active"
               }`}
             >
