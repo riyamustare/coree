@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ChatMessage {
@@ -18,6 +18,15 @@ export function useSession(userId: string | undefined) {
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Reset all session state when the authenticated user changes
+  // (sign in/out, switching accounts) to avoid bleeding state across users.
+  useEffect(() => {
+    setSessionId(null);
+    setSessionStart(null);
+    setMessages([]);
+    setIsLoading(false);
+  }, [userId]);
 
   const startSession = useCallback(async () => {
     if (!userId) return;
