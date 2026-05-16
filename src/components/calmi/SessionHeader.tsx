@@ -6,9 +6,10 @@ interface SessionHeaderProps {
   onModeChange: (mode: "text" | "voice") => void;
   onEndSession: () => void;
   sessionStart: Date | null;
+  showModeToggle?: boolean;
 }
 
-export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }: SessionHeaderProps) {
+export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart, showModeToggle = true }: SessionHeaderProps) {
   const [elapsed, setElapsed] = useState("0:00");
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
       </div>
 
       <div className="flex items-center gap-2">
+        {showModeToggle && (
         <div className="flex items-center rounded-xl bg-secondary p-1 gap-0.5">
           <button
             onClick={() => onModeChange("text")}
@@ -56,6 +58,7 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart }
             <Mic className="h-4 w-4" />
           </button>
         </div>
+        )}
 
         {sessionStart && (
           <button
