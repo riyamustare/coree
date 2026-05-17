@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Mic, Sparkles, Lock, BarChart3, NotebookPen } from "lucide-react";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -12,7 +11,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
       {/* Floating header */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl">
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-[#FAF7F2]/60 backdrop-blur-md border border-white/40 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
           <button
@@ -88,36 +87,30 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {[
                 {
-                  icon: MessageCircle,
                   title: "text mode",
                   desc: "type it out at your pace. coree replies in short, warm sentences — no walls of advice.",
                 },
                 {
-                  icon: Mic,
                   title: "voice mode",
                   desc: "talk like you would with a friend. natural voice in, natural voice back.",
                 },
                 {
-                  icon: Sparkles,
                   title: "remembers you",
                   desc: "picks up where you left off — your moods, themes, and what's been weighing on you.",
                 },
                 {
-                  icon: BarChart3,
                   title: "weekly insights",
                   desc: "a gentle mood radar from your chats and journal — patterns, not judgments.",
                 },
                 {
-                  icon: NotebookPen,
                   title: "private journal",
                   desc: "drop a quick note or voice memo. yours alone, encrypted and yours to delete anytime.",
                 },
                 {
-                  icon: Lock,
                   title: "private by design",
                   desc: "end-to-end encrypted. no ads, no sharing, no diagnosing. just a safe space.",
                 },
-              ].map(({ icon: Icon, title, desc }, i) => (
+              ].map(({ title, desc }, i) => (
                 <motion.article
                   key={title}
                   initial={{ opacity: 0, y: 12 }}
@@ -126,9 +119,6 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                   transition={{ duration: 0.4, delay: i * 0.05, ease: [0.4, 0, 0.2, 1] }}
                   className="bg-white border border-gray-200/70 rounded-2xl p-5 sm:p-6 hover:border-gray-300 hover:shadow-sm transition-all"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-[#FAF7F2] border border-gray-200/70 flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5 text-[#277BD9]" strokeWidth={1.8} aria-hidden="true" />
-                  </div>
                   <h3 className="text-base font-semibold text-gray-900 mb-1.5">
                     {title}
                   </h3>
