@@ -89,7 +89,7 @@ export function useSession(userId: string | undefined) {
         .single();
 
       const summary = sessionData?.summary || "You took a moment to reflect today. That matters.";
-      const emotions = sessionData?.emotions || null;
+      const emotions = (sessionData?.emotions as Record<string, number> | null) || null;
 
       setSessionId(null);
       setSessionStart(null);

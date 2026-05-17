@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useToast } from "@/hooks/use-toast";
 import { trackSignUp, trackSignIn } from "@/lib/analytics";
 
@@ -10,6 +11,7 @@ interface AuthScreenProps {
 
 export function AuthScreen({ onBack }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,10 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
+    if (isSignUp && !name.trim()) {
+      setError("Please enter your name");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -27,7 +33,10 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { display_name: name.trim() },
+          },
         });
         if (error) throw error;
         trackSignUp();
@@ -57,11 +66,10 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
     setLoading(true);
     setError("");
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
-      if (error) throw error;
+      if (result.error) throw result.error;
     } catch (err: any) {
       const errorMsg = err.message || "Failed to sign in with Google";
       setError(errorMsg);
@@ -99,17 +107,32 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
         </div>
         
         <form onSubmit={handleAuth} className="space-y-4">
+          {isSignUp && (
+            <div>
+              <label className="block text-sm text-gray-700 mb-2">your name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="name"
+                maxLength={80}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                required
+              />
+            </div>
+          )}
+
           {/* Email Input */}
           <div>
-            <label className="block text-sm text-gray-700 mb-2">
-              {isSignUp ? "your name" : "enter your email"}
-            </label>
+            <label className="block text-sm text-gray-700 mb-2">enter your email</label>
             <input
-              type={isSignUp ? "text" : "email"}
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={isSignUp ? "name" : "email"}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm"
+              placeholder="email"
+              autoComplete="email"
+              maxLength={255}
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
               required
             />
           </div>
@@ -124,6 +147,8 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="password"
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              minLength={6}
               className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
               required
             />
