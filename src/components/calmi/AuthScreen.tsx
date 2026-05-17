@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
 import { trackSignUp, trackSignIn } from "@/lib/analytics";
 
 interface AuthScreenProps {
@@ -14,12 +13,14 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { toast } = useToast();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
     setLoading(true);
+    setError("");
 
     try {
       if (isSignUp) {
@@ -40,9 +41,11 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
         trackSignIn();
       }
     } catch (err: any) {
+      const errorMsg = err.message || "Something went wrong";
+      setError(errorMsg);
       toast({
         title: "Something went wrong",
-        description: err.message,
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -50,71 +53,133 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      const errorMsg = err.message || "Failed to sign in with Google";
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="fixed inset-0 bg-[#FAF7F2] flex items-center justify-center z-50 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
         className="w-full max-w-sm"
       >
+        {/* Close Button */}
         {onBack && (
-          <button
+          <button 
             onClick={onBack}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back
+            ×
           </button>
         )}
 
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-            <div className="h-6 w-6 rounded-full bg-primary" />
-          </div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground">
-            {isSignUp ? "Create your account" : "Welcome back"}
-          </h1>
-          <p className="mt-2 text-base text-muted-foreground leading-relaxed">
-            {isSignUp ? "Start your journey with Core." : "A quiet space for reflection and support."}
+        {/* Header Text */}
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {isSignUp ? "Start your journey with coree." : "all ears, always"}
+          </h2>
+          <p className="text-sm text-gray-600">
+            {isSignUp ? "your space to be heard" : "your space to be heard"}
           </p>
         </div>
-
-        <form onSubmit={handleAuth} className="space-y-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            required
-            className="w-full rounded-xl bg-surface px-4 py-3 text-base text-foreground shadow-soft placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-            minLength={6}
-            className="w-full rounded-xl bg-surface px-4 py-3 text-base text-foreground shadow-soft placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
+        
+        <form onSubmit={handleAuth} className="space-y-4">
+          {/* Email Input */}
+          <div>
+            <label className="block text-sm text-gray-700 mb-2">
+              {isSignUp ? "your name" : "enter your email"}
+            </label>
+            <input
+              type={isSignUp ? "text" : "email"}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={isSignUp ? "name" : "email"}
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm"
+              required
+            />
+          </div>
+          
+          {/* Password Input */}
+          <div>
+            <label className="block text-sm text-gray-700 mb-2">
+              password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="password"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+              required
+            />
+          </div>
+          
+          {error && (
+            <div className="text-red-600 text-sm">{error}</div>
+          )}
+          
+          {/* Auth Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-primary py-3 text-base font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            className="w-full bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
           >
-            {loading ? "..." : isSignUp ? "Create account" : "Sign in"}
+            {loading ? (isSignUp ? "creating account..." : "logging in...") : (isSignUp ? "sign up" : "login")}
           </button>
+
+          {/* Toggle Link */}
+          <div className="text-center">
+            <span className="text-gray-600 text-sm">
+              {isSignUp ? "already have an account? " : "don't have an account? "}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError("");
+              }}
+              className="text-black hover:text-gray-700 font-medium text-sm underline"
+            >
+              {isSignUp ? "login" : "signup"}
+            </button>
+          </div>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-primary hover:underline"
-          >
-            {isSignUp ? "Sign in" : "Sign up"}
-          </button>
+        {/* OR Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">or</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+        
+        {/* Google Sign In */}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+        >
+          google
+        </button>
+
+        {/* Footer Text */}
+        <p className="text-sm text-gray-500 text-center mt-6 leading-relaxed">
+          by signing up you agree to our <strong>terms of service</strong>,<br />
+          <strong>privacy policy</strong> and acknowledge <strong>ai disclaimer.</strong>
         </p>
       </motion.div>
     </div>

@@ -78,39 +78,48 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="relative bg-surface shadow-soft rounded-2xl"
+      className="relative bg-white shadow-sm rounded-2xl border border-gray-200"
     >
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={isRecording ? "Listening..." : "Share what's on your mind..."}
-        disabled={disabled || isRecording}
-        rows={1}
-        className="w-full resize-none bg-transparent px-5 py-4 pr-24 text-lg leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 rounded-2xl"
-      />
-      <div className="absolute right-3 bottom-3 flex items-center gap-1.5">
-        <button
-          onClick={toggleRecording}
-          disabled={disabled}
-          className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 ${
-            isRecording
-              ? "bg-destructive text-destructive-foreground"
-              : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-          } disabled:opacity-30 disabled:cursor-not-allowed`}
-          aria-label={isRecording ? "Stop recording" : "Record voice"}
-        >
-          {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={!value.trim() || disabled || isRecording}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all duration-200 hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
-          aria-label="Send"
-        >
-          <ArrowUp className="h-4 w-4" />
-        </button>
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* Input */}
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={isRecording ? "Listening..." : "type your message..."}
+          disabled={disabled || isRecording}
+          rows={1}
+          className="flex-1 resize-none bg-transparent text-base leading-relaxed text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:opacity-50 rounded-lg"
+        />
+
+        {/* Voice/Send Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleRecording}
+            disabled={disabled}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
+              isRecording
+                ? "bg-red-100 text-red-600"
+                : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+            aria-label={isRecording ? "Stop recording" : "Record voice"}
+          >
+            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
+
+          {/* Send Button */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!value.trim() || disabled || isRecording}
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#277BD9] text-white transition-all duration-200 hover:bg-[#2e90ff] disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Send"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

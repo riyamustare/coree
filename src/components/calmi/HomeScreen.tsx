@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { MessageSquare, Mic, LogOut, Clock, ChevronRight, BarChart2, MessageCircleHeart, Settings, BookOpen, Sparkles } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { FeedbackModal } from "./FeedbackModal";
+import { CalmiShell } from "./CalmiShell";
 import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
 
 interface PastSession {
@@ -20,14 +20,16 @@ interface HomeScreenProps {
   onOpenSession: (sessionId: string) => void;
   onOpenSettings: () => void;
   onOpenNotes: () => void;
+  onGoHome: () => void;
   userId: string;
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
+  theme: "light" | "dark";
+  onThemeToggle: () => void;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, userId, genzMode, onGenzToggle }: HomeScreenProps) {
+export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const hour = new Date().getHours();
   const greeting =
@@ -81,131 +83,79 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-4 py-8">
-      <div className="mx-auto w-full max-w-sm flex-1">
-        {/* Top bar: settings */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={onOpenSettings}
-            className="h-9 w-9 rounded-full bg-surface shadow-soft flex items-center justify-center hover:shadow-active transition"
-          >
-            <Settings className="h-4 w-4 text-foreground" />
-          </button>
-        </div>
-
+    <CalmiShell
+      userId={userId}
+      genzMode={genzMode}
+      onGenzToggle={onGenzToggle}
+      onGoHome={onGoHome}
+      onViewInsights={onViewInsights}
+      onViewHistory={onViewHistory}
+      onOpenNotes={onOpenNotes}
+      onOpenSettings={onOpenSettings}
+      onSignOut={onSignOut}
+      theme={theme}
+      onThemeToggle={onThemeToggle}
+    >
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="text-center"
+          transition={{ duration: 0.5 }}
+          className="flex items-center gap-4 mb-8"
         >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-muted"
-          >
-            <div className="h-8 w-8 rounded-full bg-primary" />
-          </motion.div>
-
-          <h1 className="text-2xl font-medium tracking-tight text-foreground">
-            {greeting}
+          <div className="h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0">
+            <img
+              src="/logo-icon.svg"
+              alt="coree"
+              className="h-8 w-8 object-contain"
+            />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {greeting}?
           </h1>
-          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-            Take a moment whenever you're ready.
-          </p>
-
-          {/* Gen-Z mode toggle */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="mt-4 flex items-center justify-center gap-2"
-          >
-            <button
-              onClick={() => onGenzToggle(!genzMode)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-medium transition-all ${
-                genzMode
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-surface text-muted-foreground shadow-soft hover:shadow-active"
-              }`}
-            >
-              <Sparkles className="h-3 w-3" />
-              {genzMode ? "gen-z mode on 🔥" : "gen-z mode"}
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-6 flex gap-3 justify-center"
-          >
-            <button
-              onClick={() => onStartConversation("text")}
-              className="inline-flex items-center gap-2 rounded-2xl bg-surface px-5 py-3 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                <MessageSquare className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium text-foreground">Text mode</span>
-            </button>
-            <button
-              onClick={() => onStartConversation("voice")}
-              className="inline-flex items-center gap-2 rounded-2xl bg-surface px-5 py-3 shadow-soft transition-all duration-200 hover:shadow-active active:scale-[0.98]"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                <Mic className="h-4 w-4 text-primary" />
-              </div>
-              <span className="text-sm font-medium text-foreground">Voice mode</span>
-            </button>
-          </motion.div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-6 flex gap-3"
-        >
-          <button
-            onClick={onViewInsights}
-            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
-          >
-            <BarChart2 className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Insights</span>
-          </button>
-          <button
-            onClick={onOpenNotes}
-            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
-          >
-            <BookOpen className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Journal</span>
-          </button>
-          <button
-            onClick={() => setFeedbackOpen(true)}
-            className="flex-1 flex items-center gap-2 rounded-2xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
-          >
-            <MessageCircleHeart className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Feedback</span>
-          </button>
-        </motion.div>
-
-        {/* Past sessions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-8"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="w-full max-w-md space-y-3"
         >
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h2 className="text-sm font-medium text-muted-foreground">
-              Past conversations
-            </h2>
+          <button
+            onClick={() => onStartConversation("voice")}
+            className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:shadow-md transition-all group"
+          >
+            <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
+              voice mode
+            </p>
+            <p className="text-xs text-gray-500 mt-1">in the mood to talk?</p>
+          </button>
+
+          <button
+            onClick={() => onStartConversation("text")}
+            className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:shadow-md transition-all flex items-center justify-between group"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
+                text mode
+              </p>
+              <p className="text-xs text-gray-500 mt-1">not in the talking mood?</p>
+            </div>
+          </button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="w-full max-w-md mt-12"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-medium text-gray-600">history</h2>
             {pastSessions.length > 0 && (
               <button
                 onClick={onViewHistory}
-                className="flex items-center gap-0.5 text-xs font-medium text-primary hover:text-primary/80 transition"
+                className="flex items-center gap-1 text-xs font-medium text-[#277BD9] hover:text-[#2e90ff] transition"
               >
                 See all
                 <ChevronRight className="h-3 w-3" />
@@ -214,59 +164,29 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
           <div className="space-y-2">
             {pastSessions.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.45 }}
-                className="rounded-2xl bg-surface px-5 py-6 shadow-soft text-center"
-              >
-                <p className="text-sm text-foreground">
-                  All your sessions will live here ✨
-                </p>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Start a conversation whenever you're ready.
-                </p>
-              </motion.div>
+              <div className="rounded-lg bg-white border border-gray-200 px-4 py-4 text-center">
+                <p className="text-xs text-gray-600">start a conversation to see it here</p>
+              </div>
             ) : (
-              pastSessions.map((session, i) => (
-                  <motion.button
-                    key={session.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.45 + i * 0.05 }}
-                    onClick={() => handleSessionClick(session.id)}
-                    className="w-full text-left rounded-2xl bg-surface px-5 py-4 shadow-soft hover:shadow-active transition-shadow"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm text-foreground line-clamp-2 flex-1">
-                        {session.summary || "A moment of reflection"}
-                      </p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 mt-0.5">
-                        <Clock className="h-3 w-3" />
-                        {session.ended_at && formatDuration(session.started_at, session.ended_at)}
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      {formatDate(session.started_at)}
-                    </p>
-                  </motion.button>
+              pastSessions.slice(0, 3).map((session, i) => (
+                <motion.button
+                  key={session.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.25 + i * 0.05 }}
+                  onClick={() => handleSessionClick(session.id)}
+                  className="w-full text-left rounded-lg bg-white px-3 py-2 border border-gray-200 hover:border-gray-300 transition-all text-xs"
+                >
+                  <p className="text-gray-900 line-clamp-1 font-medium">
+                    {session.summary || "A moment of reflection"}
+                  </p>
+                  <p className="text-gray-500 mt-1">{formatDate(session.started_at)}</p>
+                </motion.button>
               ))
             )}
           </div>
         </motion.div>
-
-        <div className="mt-8 text-center">
-          <button
-            onClick={onSignOut}
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <LogOut className="h-3 w-3" />
-            Sign out
-          </button>
-        </div>
       </div>
-
-      <FeedbackModal userId={userId} open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
-    </div>
+    </CalmiShell>
   );
 }

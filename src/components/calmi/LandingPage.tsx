@@ -13,7 +13,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl">
         <div className="flex justify-between items-center px-4 py-3">
-          <div className="text-xl md:text-2xl font-bold text-black">coree</div>
+          <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
           <button
             onClick={onLogin}
             className="bg-[#277BD9] text-[#FAF7F2] w-[130px] h-[40px] rounded-full font-medium hover:bg-[#2e90ff] transition"
@@ -30,8 +30,8 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
           className="max-w-5xl mx-auto"
         >
-          <div className="max-w-3xl mb-12 sm:mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+          <div className="max-w-3xl mb-12 sm:mb-12">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
               your space to process it all.
               <br />
               <span className="font-black">that's coree.</span>
@@ -45,7 +45,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               className="inline-flex items-center px-8 py-3.5 bg-[#277BD9] text-white font-semibold rounded-xl hover:bg-[#2e90ff] transition-all shadow-md hover:shadow-lg"
             >
               <span>start talking it out</span>
-              <span className="ml-2 text-sm opacity-90">— it's free</span>
+              <span className="ml-2 text-sm opacity-90">- it's free</span>
             </button>
             <p className="mt-4 text-sm text-gray-500 font-medium">
               loved by 10,000+ people like you

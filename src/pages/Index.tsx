@@ -11,12 +11,14 @@ import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
 import { SummaryScreen } from "@/components/calmi/SummaryScreen";
 import { HistoryScreen } from "@/components/calmi/HistoryScreen";
 import { InsightsScreen } from "@/components/calmi/InsightsScreen";
-import { SettingsScreen } from "@/components/calmi/SettingsScreen";
+import { SettingsScreen } from "@/components/calmi/SettingsScreen.jsx";
 import { NotesScreen } from "@/components/calmi/NotesScreen";
 import { SessionHeader } from "@/components/calmi/SessionHeader";
 import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
+import LoadingAnimation from "@/components/LoadingAnimation";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Mic, MicOff } from "lucide-react";
 import {
   setUserProperties,
@@ -36,6 +38,7 @@ import {
 type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending" | "settings" | "notes";
 
 const GREETING = "How are you feeling right now?";
+const INITIAL_AI_MESSAGE = "Hey there! How's it going? What's on your mind today?";
 
 const ENDING_MESSAGES = [
   "You did great today ✨",
@@ -54,6 +57,7 @@ const Index = () => {
     startSession,
     endSession,
     sendMessage,
+    setMessages,
   } = useSession(user?.id);
   const { isListening, isSpeaking, liveTranscript, startListening, stopListening, speak, stopSpeaking } = useVoice();
 
@@ -62,8 +66,10 @@ const Index = () => {
   const [summaryData, setSummaryData] = useState<SessionSummary | null>(null);
   const [endingText, setEndingText] = useState(ENDING_MESSAGES[0]);
   const [historySessionId, setHistorySessionId] = useState<string | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const spokenMessageIdRef = useRef<string | null>(null);
+  const transcriptPromiseRef = useRef<Promise<string | null> | null>(null);
 
   // Dark mode: apply class to document
   useEffect(() => {
@@ -124,16 +130,28 @@ const Index = () => {
     setScreen("home");
   }, [completeOnboarding]);
 
-  const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+  const startConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
     setMode(selectedMode);
     trackModeChanged(selectedMode);
     await startSession();
     trackSessionStarted(sessionId || "pending");
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: INITIAL_AI_MESSAGE,
+      },
+    ]);
     setScreen("chat");
     trackScreenViewed("chat");
-  }, [startSession, sessionId]);
+  }, [startSession, sessionId, setMessages]);
+
+  const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+    await startConversation(selectedMode);
+  }, [startConversation]);
 
   const handleEndSession = useCallback(async () => {
+    setShowEndConfirm(false);
     stopSpeaking();
     setScreen("ending");
     const result = await endSession();
@@ -152,9 +170,8 @@ const Index = () => {
 
   const handleNewSession = useCallback(async () => {
     setSummaryData(null);
-    await startSession();
-    setScreen("chat");
-  }, [startSession]);
+    await startConversation(mode);
+  }, [startConversation, mode]);
 
   const handleSignOut = useCallback(async () => {
     trackSignOut();
@@ -187,15 +204,28 @@ const Index = () => {
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
       trackVoiceListenStop();
-      const text = await stopListening();
-    } else {
-      trackVoiceListenStart();
-      const transcript = await startListening();
+      // stop listening which will resolve the promise returned by startListening
+      await stopListening();
+      const transcriptPromise = transcriptPromiseRef.current;
+      let transcript: string | null = null;
+      if (transcriptPromise) {
+        try {
+          transcript = await transcriptPromise;
+        } catch (err) {
+          transcript = null;
+        }
+        transcriptPromiseRef.current = null;
+      }
+
       if (transcript && transcript.trim()) {
         trackMessageSent(sessionId || "", "voice");
         await sendMessage(transcript.trim(), profile?.genz_mode || false);
         trackResponseReceived(sessionId || "");
       }
+    } else {
+      trackVoiceListenStart();
+      // startListening returns a promise that resolves when stopListening calls resolve
+      transcriptPromiseRef.current = startListening();
     }
   }, [isListening, startListening, stopListening, sendMessage, sessionId, profile?.genz_mode]);
 
@@ -240,23 +270,20 @@ const Index = () => {
   if (screen === "ending") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-6">
+        <LoadingAnimation />
         <motion.div
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="h-12 w-12 rounded-full bg-primary/20"
-        />
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={endingText}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="text-lg font-medium text-foreground"
-          >
-            {endingText}
-          </motion.p>
-        </AnimatePresence>
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="max-w-xl text-center p-6"
+        >
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Generating your session insights</h2>
+          <p className="text-sm text-gray-600">Hang tight — we're summarizing your conversation and extracting useful insights. This may take a moment.</p>
+          <div className="mt-4 inline-flex items-center gap-3 justify-center">
+            <span className="text-2xl">✋</span>
+            <span className="text-sm text-muted-foreground">Preparing insights…</span>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -275,14 +302,37 @@ const Index = () => {
     return (
       <HistoryScreen
         userId={user.id}
-        onBack={() => { setHistorySessionId(null); setScreen("home"); }}
+        onGoHome={handleGoHome}
+        onViewInsights={() => setScreen("insights")}
+        onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
+        onOpenNotes={() => setScreen("notes")}
+        onOpenSettings={() => setScreen("settings")}
+        onSignOut={handleSignOut}
+        genzMode={profile?.genz_mode || false}
+        onGenzToggle={(enabled) => setGenzMode(enabled)}
+        theme={(profile?.theme as "light" | "dark") || "light"}
+        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
         initialSessionId={historySessionId}
       />
     );
   }
 
   if (screen === "insights" && user) {
-    return <InsightsScreen userId={user.id} onBack={() => setScreen("home")} />;
+    return (
+      <InsightsScreen
+        userId={user.id}
+        onGoHome={handleGoHome}
+        onViewInsights={() => setScreen("insights")}
+        onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
+        onOpenNotes={() => setScreen("notes")}
+        onOpenSettings={() => setScreen("settings")}
+        onSignOut={handleSignOut}
+        genzMode={profile?.genz_mode || false}
+        onGenzToggle={(enabled) => setGenzMode(enabled)}
+        theme={(profile?.theme as "light" | "dark") || "light"}
+        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+      />
+    );
   }
 
   if (screen === "settings" && user) {
@@ -292,14 +342,36 @@ const Index = () => {
         userEmail={user.email || ""}
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeChange={handleThemeChange}
+        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
         onBack={() => setScreen("home")}
+        onGoHome={handleGoHome}
+        onViewInsights={() => setScreen("insights")}
+        onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
+        onOpenNotes={() => setScreen("notes")}
+        onOpenSettings={() => setScreen("settings")}
         onSignOut={handleSignOut}
+        genzMode={profile?.genz_mode || false}
+        onGenzToggle={(enabled) => setGenzMode(enabled)}
       />
     );
   }
 
   if (screen === "notes" && user) {
-    return <NotesScreen userId={user.id} onBack={() => setScreen("home")} />;
+    return (
+      <NotesScreen
+        userId={user.id}
+        onGoHome={handleGoHome}
+        onViewInsights={() => setScreen("insights")}
+        onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
+        onOpenNotes={() => setScreen("notes")}
+        onOpenSettings={() => setScreen("settings")}
+        onSignOut={handleSignOut}
+        genzMode={profile?.genz_mode || false}
+        onGenzToggle={(enabled) => setGenzMode(enabled)}
+        theme={(profile?.theme as "light" | "dark") || "light"}
+        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+      />
+    );
   }
 
   if (screen === "home" && user) {
@@ -315,113 +387,177 @@ const Index = () => {
         userId={user.id}
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
+        onGoHome={handleGoHome}
+        theme={(profile?.theme as "light" | "dark") || "light"}
+        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
     );
   }
 
   // Chat
   return (
-    <div className="flex h-[100dvh] flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-chat flex-col h-full px-4">
-        <div className="flex-shrink-0">
-          <SessionHeader
-            mode={mode}
-            onModeChange={handleModeChange}
-            onEndSession={handleEndSession}
-            sessionStart={sessionStart}
-            showModeToggle={false}
-          />
+    <div className="flex h-[100dvh] flex-col bg-[#FAF7F2]">
+      {/* Header */}
+      <div className="px-6 py-4">
+        <div className="max-w-2xl mx-auto w-full flex justify-end items-center">
+          <button
+            type="button"
+            onClick={() => setShowEndConfirm(true)}
+            disabled={isLoading || messages.length === 1}
+            className="px-6 py-2 bg-[#277BD9] text-[#FAF7F2] rounded-xl font-medium hover:bg-[#2e90ff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            end session
+          </button>
         </div>
+      </div>
 
-        <div
-          ref={scrollRef}
-          className="flex-1 min-h-0 overflow-y-auto calmi-scroll py-4 space-y-3"
-        >
-          {messages.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="px-6 py-5 rounded-2xl bg-surface shadow-soft"
-            >
-              <p className="text-2xl font-medium leading-snug tracking-tight text-foreground">
-                {GREETING}
-              </p>
-            </motion.div>
-          )}
-
+      {/* Messages Area - Centered */}
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-6 pb-8 flex flex-col"
+      >
+        <div className="max-w-2xl mx-auto w-full space-y-6">
           {messages.map((msg, i) => (
-            <MessageBlock
-              key={msg.id}
-              role={msg.role}
-              content={msg.content}
-              isThinking={isLoading && i === messages.length - 1 && msg.role === "assistant"}
-              isOld={i < messages.length - 6}
-            />
+            <motion.div
+              key={msg.id || i}
+              
+              className={`mb-6 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              {/* Assistant Message */}
+              {msg.role === "assistant" && (
+                <div className="flex items-start gap-3 max-w-[80%]">
+                  <div className="w-8 h-8 flex-shrink-0 mt-1">
+                    <img src="/logo-icon.svg" alt="coree" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="bg-white text-gray-900 rounded-lg px-4 py-3 shadow-sm">
+                    <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* User Message */}
+              {msg.role === "user" && (
+                <div className="max-w-[80%]">
+                  <div className="bg-[#8ac4ff] text-black rounded-xl px-4 py-2 shadow-sm">
+                    <p className="text-base whitespace-pre-wrap">{msg.content}</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           ))}
 
+          {/* Loading state (inline loader in assistant avatar spot) */}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="px-6 py-5 rounded-2xl bg-surface shadow-soft animate-breathe"
+              className="flex justify-start"
             >
-              <div className="flex gap-1.5">
-                <div className="h-2 w-2 rounded-full bg-primary/40" />
-                <div className="h-2 w-2 rounded-full bg-primary/30" />
-                <div className="h-2 w-2 rounded-full bg-primary/20" />
+              <div className="flex items-start gap-3 max-w-[80%] w-full">
+                <div className="w-12 h-12 flex-shrink-0 -mt-1 -ml-2">
+                  <DotLottieReact
+                    src="https://lottie.host/83995e80-755a-4818-9fd1-b24763ccca9e/69WYSTeTY9.lottie"
+                    loop
+                    autoplay
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
             </motion.div>
           )}
         </div>
-
-        <div className="flex-shrink-0 pb-6 pt-2">
-          <AnimatePresence mode="wait">
-            {mode === "text" ? (
-              <motion.div
-                key="text"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <ChatInput onSend={handleSendText} disabled={isLoading} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="voice"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <VoiceVisualizer
-                  isActive={isListening || isSpeaking}
-                  isSpeaking={isSpeaking}
-                  transcription={isListening ? liveTranscript : undefined}
-                />
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleVoiceToggleFixed}
-                    disabled={isLoading || isSpeaking}
-                    className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
-                      isListening
-                        ? "bg-primary text-primary-foreground shadow-[0_0_30px_rgba(34,197,94,0.3)]"
-                        : "bg-surface shadow-soft text-foreground hover:shadow-active"
-                    } disabled:opacity-50`}
-                  >
-                    {isListening ? (
-                      <MicOff className="h-5 w-5" />
-                    ) : (
-                      <Mic className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
       </div>
+
+      {/* Input Section */}
+      <div className="px-6 pb-6">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
+          className="max-w-2xl mx-auto"
+        >
+          {mode === "text" ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <ChatInput onSend={handleSendText} disabled={isLoading} />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-4"
+            >
+              {isLoading && (
+                <VoiceVisualizer
+                  isActive={isSpeaking}
+                  isSpeaking={isSpeaking}
+                  transcription={undefined}
+                />
+              )}
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleVoiceToggleFixed}
+                  disabled={isLoading || isSpeaking}
+                  className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
+                    isListening
+                      ? "bg-[#277BD9] text-[#FAF7F2] shadow-lg"
+                      : "bg-white shadow-sm text-gray-600 hover:shadow-md border border-gray-200"
+                  } disabled:opacity-50`}
+                >
+                  {isListening ? (
+                    <MicOff className="h-5 w-5" />
+                  ) : (
+                    <Mic className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </form>
+      </div>
+
+      {/* End Session Confirmation Modal */}
+      {showEndConfirm && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-lg"
+          >
+              <div className="flex justify-between items-start mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">end the session?</h2>
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">are you 100% sure you want to end the session?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="px-6 py-2 border border-gray-300 text-gray-900 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+              >
+                continue
+              </button>
+              <button
+                onClick={handleEndSession}
+                disabled={isLoading}
+                className="px-6 py-2 bg-[#277BD9] text-[#FAF7F2] hover:bg-[#2e90ff] rounded-xl disabled:opacity-50 transition-colors font-medium"
+              >
+                end session
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

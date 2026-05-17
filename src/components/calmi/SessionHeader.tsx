@@ -26,7 +26,7 @@ export function SessionHeader({ mode, onModeChange, onEndSession, sessionStart, 
   return (
     <div className="flex items-center justify-between px-2 py-3">
       <div className="flex items-center gap-3">
-        <h1 className="text-base font-medium tracking-tight text-foreground">Core</h1>
+        <img src="/logo-icon.svg" alt="coree" className="h-6 w-6" />
         {sessionStart && (
           <span className="text-xs tabular-nums text-muted-foreground">{elapsed}</span>
         )}

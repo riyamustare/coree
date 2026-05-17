@@ -11,6 +11,9 @@ export interface SessionSummary {
   summary: string;
   messageCount: number;
   duration: number; // seconds
+  endedAt: string;
+  emotions?: Record<string, number> | null;
+  messages?: ChatMessage[];
 }
 
 export function useSession(userId: string | undefined) {
@@ -54,13 +57,22 @@ export function useSession(userId: string | undefined) {
     const messageCount = messages.length;
 
     // If convo is < 60s and has 0-1 user messages, delete it silently
+    const endedAt = new Date().toISOString();
+
     if (duration < 60 && userMessageCount <= 1) {
       await supabase.from("messages").delete().eq("session_id", sessionId);
       await supabase.from("sessions").delete().eq("id", sessionId);
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
-      return { summary: "Session was too short to save.", messageCount, duration };
+      return {
+        summary: "Session was too short to save.",
+        messageCount,
+        duration,
+        endedAt,
+        emotions: null,
+        messages: [],
+      };
     }
 
     // Summarize session via edge function
@@ -69,26 +81,41 @@ export function useSession(userId: string | undefined) {
         body: { sessionId },
       });
 
-      // Fetch the updated session to get summary
+      // Fetch the updated session to get summary and emotions
       const { data: sessionData } = await supabase
         .from("sessions")
-        .select("summary")
+        .select("summary, emotions")
         .eq("id", sessionId)
         .single();
 
       const summary = sessionData?.summary || "You took a moment to reflect today. That matters.";
+      const emotions = sessionData?.emotions || null;
 
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
 
-      return { summary, messageCount, duration };
+      return {
+        summary,
+        messageCount,
+        duration,
+        endedAt,
+        emotions,
+        messages,
+      };
     } catch (err) {
       console.error("Failed to end session:", err);
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
-      return { summary: "You took a moment to reflect today. That matters.", messageCount, duration };
+      return {
+        summary: "You took a moment to reflect today. That matters.",
+        messageCount,
+        duration,
+        endedAt,
+        emotions: null,
+        messages,
+      };
     }
   }, [sessionId, sessionStart, messages]);
 

@@ -53,7 +53,7 @@ export function FeedbackModal({ userId, open, onClose }: FeedbackModalProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="how can we improve core?"
-              className="w-full resize-y rounded-xl border border-border bg-background p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
+              className="w-full resize-y rounded-xl border border-border-color bg-background p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary min-h-[120px]"
               autoFocus
             />
             <div className="flex items-center justify-between mt-4">

@@ -3,17 +3,26 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackScreenViewed } from "@/lib/analytics";
+import { CalmiShell } from "./CalmiShell";
 
 interface SettingsScreenProps {
   userId: string;
   userEmail: string;
   theme: "light" | "dark";
   onThemeChange: (theme: "light" | "dark") => void;
+  onThemeToggle: () => void;
   onBack: () => void;
+  onGoHome: () => void;
+  onViewInsights: () => void;
+  onViewHistory: () => void;
+  onOpenNotes: () => void;
+  onOpenSettings: () => void;
   onSignOut: () => void;
+  genzMode: boolean;
+  onGenzToggle: (enabled: boolean) => void;
 }
 
-export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack, onSignOut }: SettingsScreenProps) {
+export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onThemeToggle, onBack, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle }: SettingsScreenProps) {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
@@ -57,24 +66,32 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-4 py-6">
-      <div className="mx-auto w-full max-w-md">
-        <button onClick={onBack} className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+    <CalmiShell
+      userId={userId}
+      genzMode={genzMode}
+      onGenzToggle={onGenzToggle}
+      onGoHome={onGoHome}
+      onViewInsights={onViewInsights}
+      onViewHistory={onViewHistory}
+      onOpenNotes={onOpenNotes}
+      onOpenSettings={onOpenSettings}
+      onSignOut={onSignOut}
+      theme={theme}
+      onThemeToggle={onThemeToggle}
+    >
+      <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
+        <div className="mx-auto w-full max-w-md">
+          
 
-        {/* User info */}
+          {/* User info */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-lg font-medium text-primary">{userEmail[0]?.toUpperCase()}</span>
-            </div>
+            <div className="h-12 w-12 rounded-full bg-primary" aria-hidden="true" />
             <p className="text-sm text-foreground">{userEmail}</p>
           </div>
         </motion.div>
 
-        <hr className="border-border mb-6" />
+        <hr className="border-border-color mb-6" />
 
         {/* Theme */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-8">
@@ -88,7 +105,7 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
           </button>
         </motion.div>
 
-        <hr className="border-border mb-6" />
+        <hr className="border-border-color mb-6" />
 
         {/* Usage analytics */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
@@ -107,7 +124,7 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
           </div>
         </motion.div>
 
-        <hr className="border-border mb-6" />
+        <hr className="border-border-color mb-6" />
 
         {/* Danger zone */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-8">
@@ -120,7 +137,7 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
               <div>
                 <button
                   onClick={() => setResetConfirm(true)}
-                  className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
+                  className="rounded-xl border border-border-color px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
                 >
                   reset chat history
                 </button>
@@ -141,7 +158,7 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
                 <div className="flex gap-3">
                   <button
                     onClick={() => setResetConfirm(false)}
-                    className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
+                    className="rounded-xl border border-border-color px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
                   >
                     cancel
                   </button>
@@ -181,7 +198,7 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
                 <div className="flex gap-3">
                   <button
                     onClick={() => setDeleteConfirm(false)}
-                    className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
+                    className="rounded-xl border border-border-color px-4 py-2 text-sm font-medium text-foreground hover:bg-surface transition"
                   >
                     cancel
                   </button>
@@ -207,5 +224,6 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onBack
         </div>
       </div>
     </div>
+  </CalmiShell>
   );
 }

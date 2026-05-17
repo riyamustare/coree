@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, Trash2, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackScreenViewed } from "@/lib/analytics";
+import { CalmiShell } from "./CalmiShell";
 
 interface Note {
   id: string;
@@ -14,10 +15,19 @@ interface Note {
 
 interface NotesScreenProps {
   userId: string;
-  onBack: () => void;
+  onGoHome: () => void;
+  onViewInsights: () => void;
+  onViewHistory: () => void;
+  onOpenNotes: () => void;
+  onOpenSettings: () => void;
+  onSignOut: () => void;
+  genzMode: boolean;
+  onGenzToggle: (enabled: boolean) => void;
+  theme: "light" | "dark";
+  onThemeToggle: () => void;
 }
 
-export function NotesScreen({ userId, onBack }: NotesScreenProps) {
+export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: NotesScreenProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -131,69 +141,93 @@ export function NotesScreen({ userId, onBack }: NotesScreenProps) {
   // Note editor view
   if (isEditing && selectedNote) {
     return (
-      <div className="flex h-[100dvh] flex-col bg-background">
-        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-          <button onClick={() => { handleSave(); setIsEditing(false); setSelectedNote(null); }} className="text-sm text-muted-foreground hover:text-foreground transition flex items-center gap-1">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleVoiceInput}
-              className={`h-9 w-9 rounded-full flex items-center justify-center transition ${
-                isRecording ? "bg-primary text-primary-foreground" : "bg-surface shadow-soft text-foreground"
-              }`}
-            >
-              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+      <CalmiShell
+        userId={userId}
+        genzMode={genzMode}
+        onGenzToggle={onGenzToggle}
+        onGoHome={onGoHome}
+        onViewInsights={onViewInsights}
+        onViewHistory={onViewHistory}
+        onOpenNotes={onOpenNotes}
+        onOpenSettings={onOpenSettings}
+        onSignOut={onSignOut}
+        theme={theme}
+        onThemeToggle={onThemeToggle}
+      >
+        <div className="flex h-full flex-col bg-[#FAF7F2]">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-border-color bg-white shadow-soft">
+            <button onClick={() => { handleSave(); setIsEditing(false); setSelectedNote(null); }} className="text-sm text-muted-foreground hover:text-foreground transition flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            <button onClick={handleSave} className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground">
-              Save
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleVoiceInput}
+                className={`h-9 w-9 rounded-full flex items-center justify-center transition ${
+                  isRecording ? "bg-primary text-primary-foreground" : "bg-surface shadow-soft text-foreground"
+                }`}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
+              <button onClick={handleSave} className="rounded-xl bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground">
+                Save
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 bg-[#FAF7F2]">
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Title"
+              className="w-full text-xl font-semibold text-foreground bg-white rounded-3xl border border-border-color px-4 py-3 outline-none mb-4 placeholder:text-muted-foreground"
+            />
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              placeholder="Write your thoughts here..."
+              className="w-full flex-1 min-h-[60vh] text-base text-foreground bg-white rounded-[2rem] border border-border-color px-4 py-4 outline-none resize-none leading-relaxed placeholder:text-muted-foreground"
+              autoFocus
+            />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <input
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            placeholder="Title"
-            className="w-full text-xl font-semibold text-foreground bg-transparent border-none outline-none mb-4 placeholder:text-muted-foreground"
-          />
-          <textarea
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            placeholder="Write your thoughts here..."
-            className="w-full flex-1 min-h-[60vh] text-base text-foreground bg-transparent border-none outline-none resize-none leading-relaxed placeholder:text-muted-foreground"
-            autoFocus
-          />
-        </div>
-      </div>
+      </CalmiShell>
     );
   }
 
   // Notes list
   return (
-    <div className="flex min-h-screen flex-col bg-background px-4 py-6">
-      <div className="mx-auto w-full max-w-md">
+    <CalmiShell
+      userId={userId}
+      genzMode={genzMode}
+      onGenzToggle={onGenzToggle}
+      onGoHome={onGoHome}
+      onViewInsights={onViewInsights}
+      onViewHistory={onViewHistory}
+      onOpenNotes={() => {}}
+      onOpenSettings={onOpenSettings}
+      onSignOut={onSignOut}
+      theme={theme}
+      onThemeToggle={onThemeToggle}
+    >
+      <div className="mx-auto w-full max-w-xl px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
+          <div />
           <button
             onClick={handleNewNote}
-            className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shadow-soft hover:opacity-90 transition"
+            className="h-11 w-11 rounded-full bg-primary flex items-center justify-center shadow-soft hover:opacity-90 transition"
           >
             <Plus className="h-4 w-4 text-primary-foreground" />
           </button>
         </div>
 
-        <h1 className="text-2xl font-semibold text-foreground mb-1">Journal</h1>
+        <h1 className="text-3xl font-semibold text-foreground mb-1">Journal</h1>
         <p className="text-sm text-muted-foreground mb-6">Your private space to write your thoughts</p>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <AnimatePresence>
             {notes.length === 0 ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-                <p className="text-muted-foreground text-sm">No entries yet</p>
-                <p className="text-muted-foreground text-xs mt-1">Tap + to start writing</p>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center rounded-[2rem] bg-white px-6 py-8 shadow-soft">
+                <p className="text-sm text-muted-foreground">No entries yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Tap + to start writing</p>
               </motion.div>
             ) : (
               notes.map((note) => (
@@ -202,7 +236,7 @@ export function NotesScreen({ userId, onBack }: NotesScreenProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
-                  className="rounded-2xl bg-surface px-5 py-4 shadow-soft flex items-start justify-between gap-3"
+                  className="rounded-[2rem] bg-white px-5 py-5 shadow-soft flex items-start justify-between gap-3"
                 >
                   <button onClick={() => openNote(note)} className="flex-1 text-left">
                     <p className="text-sm font-medium text-foreground line-clamp-1">{note.title || "Untitled"}</p>
@@ -221,6 +255,6 @@ export function NotesScreen({ userId, onBack }: NotesScreenProps) {
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </CalmiShell>
   );
 }
