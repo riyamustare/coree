@@ -96,21 +96,21 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
       theme={theme}
       onThemeToggle={onThemeToggle}
     >
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-4 mb-8"
+          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
         >
-          <div className="h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center flex-shrink-0">
             <img
               src="/logo-icon.svg"
               alt="coree"
-              className="h-8 w-8 object-contain"
+              className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
             {greeting}?
           </h1>
         </motion.div>
@@ -119,11 +119,11 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="w-full max-w-md space-y-3"
+          className="w-full max-w-md space-y-3 px-1"
         >
           <button
             onClick={() => onStartConversation("voice")}
-            className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:shadow-md transition-all group"
+            className="w-full rounded-xl border border-gray-200 bg-white p-4 sm:p-5 text-left hover:border-gray-300 hover:shadow-md transition-all group active:scale-[0.99]"
           >
             <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
               voice mode
@@ -133,7 +133,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
 
           <button
             onClick={() => onStartConversation("text")}
-            className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left hover:border-gray-300 hover:shadow-md transition-all flex items-center justify-between group"
+            className="w-full rounded-xl border border-gray-200 bg-white p-4 sm:p-5 text-left hover:border-gray-300 hover:shadow-md transition-all flex items-center justify-between group active:scale-[0.99]"
           >
             <div>
               <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
@@ -148,7 +148,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-md mt-12"
+          className="w-full max-w-md mt-8 sm:mt-12 px-1"
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-medium text-gray-600">history</h2>
