@@ -48,7 +48,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               <span className="ml-2 text-sm opacity-90">- it's free</span>
             </button>
             <p className="mt-4 text-sm text-gray-500 font-medium">
-              loved by 10,000+ people like you
+              loved by 10+ people like you
             </p>
           </div>
 
