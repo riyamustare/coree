@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sun, Moon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackScreenViewed } from "@/lib/analytics";
 import { CalmiShell } from "./CalmiShell";
@@ -8,10 +7,6 @@ import { CalmiShell } from "./CalmiShell";
 interface SettingsScreenProps {
   userId: string;
   userEmail: string;
-  theme: "light" | "dark";
-  onThemeChange: (theme: "light" | "dark") => void;
-  onThemeToggle: () => void;
-  onBack: () => void;
   onGoHome: () => void;
   onViewInsights: () => void;
   onViewHistory: () => void;
@@ -22,7 +17,7 @@ interface SettingsScreenProps {
   onGenzToggle: (enabled: boolean) => void;
 }
 
-export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onThemeToggle, onBack, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle }: SettingsScreenProps) {
+export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle }: SettingsScreenProps) {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
@@ -61,10 +56,6 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onThem
     await supabase.auth.signOut();
   };
 
-  const toggleTheme = () => {
-    onThemeChange(theme === "light" ? "dark" : "light");
-  };
-
   return (
     <CalmiShell
       userId={userId}
@@ -76,8 +67,6 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onThem
       onOpenNotes={onOpenNotes}
       onOpenSettings={onOpenSettings}
       onSignOut={onSignOut}
-      theme={theme}
-      onThemeToggle={onThemeToggle}
     >
       <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
         <div className="mx-auto w-full max-w-md">
@@ -91,21 +80,6 @@ export function SettingsScreen({ userId, userEmail, theme, onThemeChange, onThem
           </div>
         </motion.div>
 
-        <hr className="border-border-color mb-6" />
-
-        {/* Theme */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-8">
-          <h2 className="text-base font-semibold text-foreground mb-1">theme</h2>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2 rounded-xl bg-surface px-4 py-3 shadow-soft transition hover:shadow-active"
-          >
-            {theme === "light" ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
-            <span className="text-sm text-foreground">{theme}</span>
-          </button>
-        </motion.div>
-
-        <hr className="border-border-color mb-6" />
 
         {/* Usage analytics */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">

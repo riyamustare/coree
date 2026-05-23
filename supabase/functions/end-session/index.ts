@@ -7,6 +7,30 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const GOOGLE_API_URL = (apiKey: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+async function callGemini(apiKey: string, systemPrompt: string, userText: string, maxTokens = 300): Promise<string> {
+  const resp = await fetch(GOOGLE_API_URL(apiKey), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: [{ text: userText }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.2 },
+    }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    console.error("Gemini error:", resp.status, err);
+    return "";
+  }
+
+  const json = await resp.json();
+  return json?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,8 +38,8 @@ serve(async (req) => {
 
   try {
     const { sessionId } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
+    if (!GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is not configured");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -29,12 +53,9 @@ serve(async (req) => {
       .order("created_at", { ascending: true });
 
     if (msgError) throw msgError;
-    if (!messages || messages.length === 0) {
-      await supabase
-        .from("sessions")
-        .update({ ended_at: new Date().toISOString() })
-        .eq("id", sessionId);
 
+    if (!messages || messages.length === 0) {
+      await supabase.from("sessions").update({ ended_at: new Date().toISOString() }).eq("id", sessionId);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -52,81 +73,45 @@ serve(async (req) => {
       .map((m: any) => `${m.role === "user" ? "User" : "Core"}: ${m.content}`)
       .join("\n");
 
-    // Run summary and emotion extraction in parallel for speed
-    const [summaryResponse, emotionResponse] = await Promise.all([
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            {
-              role: "system",
-              content: `Summarize this emotional support conversation in 2-3 concise sentences. Focus on the user's main emotions, concerns, and any coping methods or goals mentioned.`,
-            },
-            { role: "user", content: conversationText },
-          ],
-        }),
-      }),
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
-          messages: [
-            {
-              role: "system",
-              content: `Analyze this conversation and rate the following emotions on a scale of 0-100 based on how present they were in the USER's messages only. Return ONLY a valid JSON object, no other text. Keys: happiness, sadness, anger, fear, surprise, disgust. Example: {"happiness":20,"sadness":60,"anger":10,"fear":30,"surprise":5,"disgust":0}`,
-            },
-            { role: "user", content: conversationText },
-          ],
-        }),
-      }),
+    // Run summary and emotion extraction in parallel
+    const [summaryText, emotionText] = await Promise.all([
+      callGemini(
+        GOOGLE_API_KEY,
+        "Summarize this emotional support conversation in 2-3 concise sentences. Focus on the user's main emotions, concerns, and any coping methods or goals mentioned.",
+        conversationText,
+        300
+      ),
+      callGemini(
+        GOOGLE_API_KEY,
+        `Analyze this conversation and rate the following emotions on a scale of 0-100 based on how present they were in the USER's messages only. Return ONLY a valid JSON object, no other text. Keys: happiness, sadness, anger, fear, surprise, disgust. Example: {"happiness":20,"sadness":60,"anger":10,"fear":30,"surprise":5,"disgust":0}`,
+        conversationText,
+        200
+      ),
     ]);
 
-    let summary = "";
+    const summary = summaryText.trim();
+
     let emotions = null;
-
-    if (summaryResponse.ok) {
-      const summaryData = await summaryResponse.json();
-      summary = summaryData.choices?.[0]?.message?.content || "";
-    }
-
-    if (emotionResponse.ok) {
-      try {
-        const emotionData = await emotionResponse.json();
-        const emotionText = emotionData.choices?.[0]?.message?.content || "";
-        // Try to extract JSON from the response
-        const jsonMatch = emotionText.match(/\{[\s\S]*?\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          // Validate it has the expected keys
-          const keys = ["happiness", "sadness", "anger", "fear", "surprise", "disgust"];
-          const valid = keys.every((k) => typeof parsed[k] === "number");
-          if (valid) {
-            emotions = parsed;
-          }
+    try {
+      const jsonMatch = emotionText.match(/\{[\s\S]*?\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        const keys = ["happiness", "sadness", "anger", "fear", "surprise", "disgust"];
+        if (keys.every((k) => typeof parsed[k] === "number")) {
+          emotions = parsed;
         }
-      } catch (err) {
-        console.error("Emotion extraction parse error:", err);
       }
+    } catch (err) {
+      console.error("Emotion parse error:", err);
     }
 
     console.log("Session end - summary length:", summary.length, "emotions:", JSON.stringify(emotions));
 
-    // Update session
     await supabase
       .from("sessions")
       .update({ ended_at: new Date().toISOString(), summary, emotions })
       .eq("id", sessionId);
 
-    // Store memory
     if (summary) {
       await supabase.from("memories").insert({
         user_id: session.user_id,

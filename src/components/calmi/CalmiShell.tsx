@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Clock, LogOut, Settings, Sparkles, ThumbsUp, Sun, Moon } from "lucide-react";
+import { BookOpen, Clock, LogOut, Settings, Sparkles, ThumbsUp } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
 
 interface CalmiShellProps {
@@ -13,8 +13,6 @@ interface CalmiShellProps {
   onOpenNotes: () => void;
   onOpenSettings: () => void;
   onSignOut: () => void;
-  theme: "light" | "dark";
-  onThemeToggle: () => void;
 }
 
 export function CalmiShell({
@@ -28,8 +26,6 @@ export function CalmiShell({
   onOpenNotes,
   onOpenSettings,
   onSignOut,
-  theme,
-  onThemeToggle,
 }: CalmiShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -131,10 +127,6 @@ export function CalmiShell({
           </button>
           {settingsOpen && (
             <div data-settings-menu className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-56 z-50">
-              <div className="flex items-center gap-2 pb-4 border-b border-gray-200">
-                <Settings className="h-5 w-5 text-gray-700" />
-                <span className="font-semibold text-gray-900">settings</span>
-              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -145,19 +137,6 @@ export function CalmiShell({
               >
                 <Settings className="h-4 w-4" />
                 <span>open settings</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onThemeToggle();
-                }}
-                className="w-full text-left py-3 flex items-center justify-between gap-2 text-gray-900 hover:text-gray-700 transition"
-              >
-                <span className="flex items-center gap-2">
-                  {theme === "light" ? <Sun className="h-4 w-4 text-foreground" /> : <Moon className="h-4 w-4 text-foreground" />}
-                  theme
-                </span>
-                <span className="text-sm text-gray-500">{theme}</span>
               </button>
               <button
                 type="button"

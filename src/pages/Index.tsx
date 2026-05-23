@@ -243,11 +243,7 @@ const Index = () => {
   // Mic stays off by default — user must tap to start listening
 
   if (authLoading || (user && profileLoading)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 rounded-full bg-primary/20 animate-breathe" />
-      </div>
-    );
+    return <LoadingAnimation />;
   }
 
   if (screen === "landing" && !user) {
@@ -340,10 +336,6 @@ const Index = () => {
       <SettingsScreen
         userId={user.id}
         userEmail={user.email || ""}
-        theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeChange={handleThemeChange}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
-        onBack={() => setScreen("home")}
         onGoHome={handleGoHome}
         onViewInsights={() => setScreen("insights")}
         onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}

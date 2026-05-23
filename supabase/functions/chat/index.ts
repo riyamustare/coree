@@ -33,8 +33,8 @@ serve(async (req) => {
 
   try {
     const { message, sessionId, contextMessages, genzMode } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
+    if (!GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is not configured");
 
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
@@ -44,45 +44,30 @@ serve(async (req) => {
     if (authHeader) {
       try {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-        const supabase = createClient(
+        // Use service role for DB queries, but validate user token separately
+        const supabaseAdmin = createClient(
           Deno.env.get("SUPABASE_URL")!,
           Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
         const token = authHeader.replace("Bearer ", "");
-        const { data: { user } } = await supabase.auth.getUser(token);
+        // getUser with admin client validates the JWT correctly
+        const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+        if (userError) {
+          console.error("Auth error (non-fatal):", userError.message);
+        }
 
         if (user) {
           const [profileRes, memoryRes, sessionRes] = await Promise.all([
-            supabase
-              .from("profiles")
-              .select("onboarding_intent")
-              .eq("id", user.id)
-              .single(),
-            supabase
-              .from("memories")
-              .select("content")
-              .eq("user_id", user.id)
-              .order("created_at", { ascending: false })
-              .limit(5),
-            supabase
-              .from("sessions")
-              .select("summary, emotions, ended_at")
-              .eq("user_id", user.id)
-              .not("ended_at", "is", null)
-              .order("ended_at", { ascending: false })
-              .limit(3),
+            supabaseAdmin.from("profiles").select("onboarding_intent").eq("id", user.id).single(),
+            supabaseAdmin.from("memories").select("content").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
+            supabaseAdmin.from("sessions").select("summary, emotions, ended_at").eq("user_id", user.id).not("ended_at", "is", null).order("ended_at", { ascending: false }).limit(3),
           ]);
 
-          if (profileRes.data?.onboarding_intent) {
-            userIntent = profileRes.data.onboarding_intent;
-          }
-          if (memoryRes.data) {
-            memories = memoryRes.data.map((m: any) => m.content);
-          }
-          if (sessionRes.data && sessionRes.data.length > 0) {
-            recentSessions = sessionRes.data;
-          }
+          if (profileRes.data?.onboarding_intent) userIntent = profileRes.data.onboarding_intent;
+          if (memoryRes.data) memories = memoryRes.data.map((m: any) => m.content);
+          if (sessionRes.data && sessionRes.data.length > 0) recentSessions = sessionRes.data;
         }
       } catch (err) {
         console.error("Memory retrieval error:", err);
@@ -93,9 +78,7 @@ serve(async (req) => {
       ? `${CORE_SYSTEM_PROMPT}\n\nIMPORTANT OVERRIDE — Gen-Z mode is ON. Talk using gen-z slang, abbreviations, and internet speak. Use words like "fr", "no cap", "lowkey", "highkey", "slay", "bestie", "bruh", "ngl", "deadass", "vibe check", "sending me", "ate that", "period", "it's giving". Keep the emotional support core but make it sound like a gen-z bestie texting. Still max 2 sentences.`
       : CORE_SYSTEM_PROMPT;
 
-    const llmMessages = [
-      { role: "system", content: systemPrompt },
-    ];
+    let fullSystemPrompt = systemPrompt;
 
     if (userIntent) {
       const intentPrompts: Record<string, string> = {
@@ -105,83 +88,81 @@ serve(async (req) => {
         "just need to vent": "The user needs to vent. Listen actively, validate, don't fix unless asked.",
         "i don't know yet": "The user is exploring. Be gently curious and let it flow naturally.",
       };
-      const intentContext = intentPrompts[userIntent] || `The user's stated intent: ${userIntent}`;
-      llmMessages.push({
-        role: "system",
-        content: `User context:\n${intentContext}`,
-      });
+      fullSystemPrompt += `\n\nUser context:\n${intentPrompts[userIntent] || userIntent}`;
     }
 
     if (memories.length > 0) {
-      llmMessages.push({
-        role: "system",
-        content: `Previous session memories:\n${memories.map((m) => `- ${m}`).join("\n")}\n\nReference naturally only if relevant.`,
-      });
+      fullSystemPrompt += `\n\nPrevious session memories:\n${memories.map((m) => `- ${m}`).join("\n")}\n\nReference naturally only if relevant.`;
     }
 
     if (recentSessions.length > 0) {
-      const emotionalArc = recentSessions
-        .map((s, i) => {
-          const when = s.ended_at ? new Date(s.ended_at).toLocaleDateString() : "recent";
-          const emo = s.emotions
-            ? Object.entries(s.emotions)
-                .filter(([, v]) => typeof v === "number" && (v as number) >= 30)
-                .sort((a, b) => (b[1] as number) - (a[1] as number))
-                .slice(0, 3)
-                .map(([k, v]) => `${k} ${v}`)
-                .join(", ")
-            : "";
-          return `(${when}) ${s.summary || ""}${emo ? ` — felt: ${emo}` : ""}`;
-        })
-        .join("\n");
-      llmMessages.push({
-        role: "system",
-        content: `Emotional history (most recent first) — use to gently track patterns and continuity, never recite verbatim:\n${emotionalArc}`,
-      });
+      const emotionalArc = recentSessions.map((s) => {
+        const when = s.ended_at ? new Date(s.ended_at).toLocaleDateString() : "recent";
+        const emo = s.emotions
+          ? Object.entries(s.emotions)
+              .filter(([, v]) => typeof v === "number" && (v as number) >= 30)
+              .sort((a, b) => (b[1] as number) - (a[1] as number))
+              .slice(0, 3)
+              .map(([k, v]) => `${k} ${v}`)
+              .join(", ")
+          : "";
+        return `(${when}) ${s.summary || ""}${emo ? ` — felt: ${emo}` : ""}`;
+      }).join("\n");
+      fullSystemPrompt += `\n\nEmotional history (most recent first):\n${emotionalArc}`;
     }
 
+    const contents: any[] = [];
     if (contextMessages && contextMessages.length > 0) {
-      llmMessages.push(...contextMessages);
+      for (const m of contextMessages) {
+        if (m.role === "system") continue;
+        contents.push({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        });
+      }
     }
+    contents.push({ role: "user", parts: [{ text: message }] });
 
-    llmMessages.push({ role: "user", content: message });
+    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const gResp = await fetch(googleUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: llmMessages,
-        stream: true,
-        max_tokens: 100,
+        systemInstruction: { parts: [{ text: fullSystemPrompt }] },
+        contents,
+        generationConfig: { maxOutputTokens: 100, temperature: 0.7 },
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    if (!gResp.ok) {
+      const text = await gResp.text();
+      console.error("Google API error:", gResp.status, text);
+      if (gResp.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Usage limit reached." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(response.body, {
+    const gJson = await gResp.json();
+    const outText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+    const stream = new ReadableStream({
+      start(controller) {
+        const chunk = JSON.stringify({ choices: [{ delta: { content: outText } }] });
+        controller.enqueue(new TextEncoder().encode(`data: ${chunk}\n\n`));
+        controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
