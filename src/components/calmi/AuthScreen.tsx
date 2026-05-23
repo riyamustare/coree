@@ -22,6 +22,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
+  const appOrigin = import.meta.env.VITE_APP_URL ?? window.location.origin;
 
   if (loading) {
     return <LoadingAnimation />;
@@ -143,7 +144,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: appOrigin,
         },
       });
       if (error) throw error;
