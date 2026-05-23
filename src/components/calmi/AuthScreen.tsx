@@ -22,7 +22,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
-  const appOrigin = import.meta.env.VITE_APP_URL ?? window.location.origin;
+  const appOrigin = import.meta.env.VITE_APP_URL ?? (window.location.origin.includes("localhost") ? "https://thecoree.com" : window.location.origin);
 
   if (loading) {
     return <LoadingAnimation />;
