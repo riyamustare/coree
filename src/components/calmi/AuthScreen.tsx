@@ -66,8 +66,9 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
     setLoading(true);
     setError("");
     try {
+      const callback = `${window.location.origin}/auth/callback`;
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: callback,
       });
       if (result.error) throw result.error;
     } catch (err: any) {
