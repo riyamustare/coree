@@ -22,7 +22,9 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
-  const appOrigin = import.meta.env.VITE_APP_URL ?? (window.location.origin.includes("localhost") ? "https://thecoree.com" : window.location.origin);
+  const appOrigin =
+    import.meta.env.VITE_APP_URL ||
+    (import.meta.env.MODE === "development" ? window.location.origin : "https://www.thecoree.com");
 
   if (loading) {
     return <LoadingAnimation />;
@@ -44,7 +46,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: appOrigin,
             data: { display_name: name.trim() },
           },
         });
