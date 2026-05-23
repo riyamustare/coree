@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import Index from "./pages/Index.tsx";
-import AuthCallback from "./pages/AuthCallback.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient({
@@ -28,7 +27,6 @@ const App = () => (
         <Suspense fallback={<LoadingAnimation />}>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
