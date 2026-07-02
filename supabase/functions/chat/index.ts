@@ -139,7 +139,7 @@ serve(async (req) => {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: fullSystemPrompt }] },
         contents,
-        generationConfig: { maxOutputTokens: 100, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 180, temperature: 0.75 },
       }),
     });
 
