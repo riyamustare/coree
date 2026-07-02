@@ -14,7 +14,7 @@ interface CalmiShellProps {
   onOpenSettings: () => void;
   onSignOut: () => void;
   theme?: "light" | "dark";
-  onThemeToggle?: () => void;
+  onThemeToggle?: (event?: React.MouseEvent) => void;
 }
 
 export function CalmiShell({
@@ -183,12 +183,15 @@ export function CalmiShell({
               {onThemeToggle && (
                 <button
                   type="button"
-                  onClick={onThemeToggle}
-                  className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-muted transition text-foreground"
+                  onClick={(e) => onThemeToggle(e)}
+                  className="h-10 w-10 rounded-full flex items-center justify-center bg-card border-2 border-border hover:border-primary/60 transition text-foreground active:translate-y-0.5"
+                  style={{ boxShadow: "0 3px 0 0 hsl(var(--border))" }}
                   aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                   title={theme === "dark" ? "Light mode" : "Dark mode"}
                 >
-                  {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                  {theme === "dark"
+                    ? <Sun className="h-5 w-5" strokeWidth={2.5} />
+                    : <Moon className="h-5 w-5" strokeWidth={2.5} />}
                 </button>
               )}
             </div>
