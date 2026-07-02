@@ -157,21 +157,21 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="w-full max-w-md mt-8 sm:mt-12 px-1"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-medium text-muted-foreground">history</h2>
+            <h2 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">history</h2>
             {pastSessions.length > 0 && (
               <button
                 onClick={onViewHistory}
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition"
+                className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary hover:opacity-80 transition"
               >
-                See all
+                see all
                 <ChevronRight className="h-3 w-3" />
               </button>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {pastSessions.length === 0 ? (
-              <div className="rounded-lg bg-card border border-border px-4 py-4 text-center">
-                <p className="text-xs text-muted-foreground">start a conversation — all your sessions will live here</p>
+              <div className="card-duo px-4 py-5 text-center">
+                <p className="text-xs text-muted-foreground font-medium lowercase">start a conversation - all your sessions will live here</p>
               </div>
             ) : (
               pastSessions.slice(0, 3).map((session, i) => (
@@ -181,12 +181,12 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 + i * 0.05 }}
                   onClick={() => handleSessionClick(session.id)}
-                  className="w-full text-left rounded-lg bg-card px-3 py-2 border border-border hover:border-primary/50 transition-all text-xs"
+                  className="card-duo w-full text-left px-4 py-3 text-xs"
                 >
-                  <p className="text-foreground line-clamp-1 font-medium">
+                  <p className="text-foreground line-clamp-1 font-bold lowercase">
                     {session.summary || "A moment of reflection"}
                   </p>
-                  <p className="text-muted-foreground mt-1">{formatDate(session.started_at)}</p>
+                  <p className="text-muted-foreground mt-1 font-medium lowercase">{formatDate(session.started_at)}</p>
                 </motion.button>
               ))
             )}
