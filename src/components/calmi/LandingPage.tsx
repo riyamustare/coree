@@ -20,20 +20,14 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   }, []);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header: inline at top, floats when scrolled */}
-      <header
-        className={
-          scrolled
-            ? "fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm transition-all duration-300"
-            : "absolute top-0 left-0 right-0 w-full z-50 bg-transparent transition-all duration-300"
-        }
-      >
+      {/* Header: fixed pill that smoothly tightens on scroll */}
+      <header className="fixed left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl top-4">
         <div
-          className={
+          className={`flex justify-between items-center px-4 sm:px-6 transition-all duration-300 ease-out rounded-3xl border ${
             scrolled
-              ? "flex justify-between items-center px-4 py-3"
-              : "flex justify-between items-center max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5"
-          }
+              ? "py-3 bg-background/70 backdrop-blur-md border-border/60 shadow-sm"
+              : "py-4 bg-transparent border-transparent"
+          }`}
         >
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
           <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
