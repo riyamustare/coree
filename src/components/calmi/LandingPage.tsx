@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, Mic, Brain, LineChart, BookHeart, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 
@@ -10,20 +11,34 @@ interface LandingPageProps {
 // Visual design ported from the user's Hero.jsx reference:
 // warm cream background (#FAF7F2), bold gray-900 headline, blue CTA (#277BD9).
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Floating header */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm">
-        <div className="flex justify-between items-center px-4 py-3">
+      {/* Header: inline at top, floats when scrolled */}
+      <header
+        className={
+          scrolled
+            ? "fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm transition-all duration-300"
+            : "absolute top-0 left-0 right-0 w-full z-50 bg-transparent transition-all duration-300"
+        }
+      >
+        <div
+          className={
+            scrolled
+              ? "flex justify-between items-center px-4 py-3"
+              : "flex justify-between items-center max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5"
+          }
+        >
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
-          <div className="flex items-center gap-2">
-            <button onClick={onLogin} className="text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground px-3 py-2 transition">
-              log in
-            </button>
-            <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
-              get started
-            </button>
-          </div>
+          <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
+            get started
+          </button>
         </div>
       </header>
 
@@ -200,19 +215,9 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             </div>
           </div>
 
-          {/* Feature highlights — bento-style engaging layout */}
+          {/* Feature highlights - bento-style engaging layout */}
           <section aria-labelledby="features-heading" className="mt-20 sm:mt-28">
-            <div className="max-w-3xl mb-10 sm:mb-12">
-              <span className="inline-block text-[11px] font-black uppercase tracking-widest text-primary mb-3">what you get</span>
-              <h2 id="features-heading" className="text-3xl sm:text-5xl font-black text-foreground leading-[1.05] mb-4 lowercase">
-                everything you need
-                <br />
-                to feel <span className="text-primary italic">heard.</span>
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase">
-                small features, big calm. built for short check-ins or the long days.
-              </p>
-            </div>
+            <h2 id="features-heading" className="sr-only">features</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 auto-rows-[minmax(180px,auto)] gap-4 sm:gap-5">
               {/* Big hero card — voice mode */}
