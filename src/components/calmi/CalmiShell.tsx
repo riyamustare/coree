@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookHeart, Compass, History, LogOut, MessageSquareHeart, Moon, Settings, Sun } from "lucide-react";
+import { BookHeart, Compass, History, LogOut, Menu, MessageSquareHeart, Moon, Settings, Sun, X } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
 
 interface CalmiShellProps {
@@ -33,6 +33,12 @@ export function CalmiShell({
 }: CalmiShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const wrap = (fn: () => void) => () => {
+    fn();
+    setMobileOpen(false);
+  };
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -50,10 +56,41 @@ export function CalmiShell({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="w-20 bg-background flex flex-col items-center py-6 gap-6">
+      {/* Mobile hamburger */}
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-40 h-10 w-10 rounded-2xl bg-card border-2 border-border-color flex items-center justify-center text-foreground"
+        style={{ boxShadow: "0 3px 0 0 hsl(var(--border))" }}
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" strokeWidth={2.5} />
+      </button>
+
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } md:translate-x-0 fixed md:static top-0 left-0 z-50 h-full w-20 bg-background flex flex-col items-center py-6 gap-6 transition-transform duration-200 md:transition-none border-r-2 border-border-color md:border-r-0`}
+      >
         <button
           type="button"
-          onClick={onGoHome}
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden absolute top-3 right-[-44px] h-9 w-9 rounded-xl bg-card border-2 border-border-color flex items-center justify-center text-foreground"
+          aria-label="Close menu"
+        >
+          <X className="h-4 w-4" strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          onClick={wrap(onGoHome)}
           className="h-10 w-10 rounded-full flex items-center justify-center transition hover:bg-muted"
           aria-label="Go home"
         >
@@ -66,10 +103,10 @@ export function CalmiShell({
 
         <nav className="flex flex-col gap-3">
           {[
-            { icon: Compass, label: "insights", onClick: onViewInsights },
-            { icon: History, label: "history", onClick: onViewHistory },
-            { icon: BookHeart, label: "journal", onClick: onOpenNotes },
-            { icon: MessageSquareHeart, label: "feedback", onClick: () => setFeedbackOpen(true) },
+            { icon: Compass, label: "insights", onClick: wrap(onViewInsights) },
+            { icon: History, label: "history", onClick: wrap(onViewHistory) },
+            { icon: BookHeart, label: "journal", onClick: wrap(onOpenNotes) },
+            { icon: MessageSquareHeart, label: "feedback", onClick: wrap(() => setFeedbackOpen(true)) },
           ].map(({ icon: Icon, label, onClick }) => (
             <div key={label} className="group relative">
               <button

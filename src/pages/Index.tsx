@@ -275,7 +275,13 @@ const Index = () => {
     }
 
     if (screen === "onboarding") {
-      return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+      const nameFromMeta =
+        (user?.user_metadata as any)?.full_name ||
+        (user?.user_metadata as any)?.name ||
+        (user?.user_metadata as any)?.first_name ||
+        "";
+      const displayName = profile?.display_name || nameFromMeta || "";
+      return <OnboardingScreen onComplete={handleOnboardingComplete} displayName={displayName} />;
     }
 
     if (screen === "ending") {
