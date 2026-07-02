@@ -71,14 +71,16 @@ const Index = () => {
   const spokenMessageIdRef = useRef<string | null>(null);
   const transcriptPromiseRef = useRef<Promise<string | null> | null>(null);
 
-  // Dark mode: apply class to document
+  // Dark mode: apply class to document. Dark is the default when no profile
+  // is loaded (landing/auth) or when the profile says dark.
   useEffect(() => {
-    if (profile?.theme === "dark") {
+    const isDark = !profile || profile.theme !== "light";
+    if (isDark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, [profile?.theme]);
+  }, [profile]);
 
   // Set user properties for analytics
   useEffect(() => {
@@ -388,7 +390,7 @@ const Index = () => {
 
   // Chat
   return (
-    <div className="flex h-[100dvh] flex-col bg-[#FAF7F2]">
+    <div className="flex h-[100dvh] flex-col bg-background text-foreground">
       {/* Header */}
       <div className="px-6 py-4">
         <div className="max-w-2xl mx-auto w-full flex justify-end items-center">
@@ -396,7 +398,7 @@ const Index = () => {
             type="button"
             onClick={() => setShowEndConfirm(true)}
             disabled={isLoading || messages.length === 1}
-            className="px-6 py-2 bg-[#277BD9] text-[#FAF7F2] rounded-xl font-medium hover:bg-[#2e90ff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             end session
           </button>
@@ -421,7 +423,7 @@ const Index = () => {
                   <div className="w-8 h-8 flex-shrink-0 mt-1">
                     <img src="/logo-icon.svg" alt="coree" className="w-full h-full object-contain" />
                   </div>
-                  <div className="bg-white text-gray-900 rounded-lg px-4 py-3 shadow-sm">
+                  <div className="bg-card text-card-foreground rounded-lg px-4 py-3 shadow-sm border border-border">
                     <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </div>
@@ -430,7 +432,7 @@ const Index = () => {
               {/* User Message */}
               {msg.role === "user" && (
                 <div className="max-w-[80%]">
-                  <div className="bg-[#8ac4ff] text-black rounded-xl px-4 py-2 shadow-sm">
+                  <div className="bg-primary text-primary-foreground rounded-xl px-4 py-2 shadow-sm">
                     <p className="text-base whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </div>
@@ -497,8 +499,8 @@ const Index = () => {
                   disabled={isLoading || isSpeaking}
                   className={`flex h-14 w-14 items-center justify-center rounded-full transition-all duration-200 ${
                     isListening
-                      ? "bg-[#277BD9] text-[#FAF7F2] shadow-lg"
-                      : "bg-white shadow-sm text-gray-600 hover:shadow-md border border-gray-200"
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "bg-card shadow-sm text-muted-foreground hover:shadow-md border border-border"
                   } disabled:opacity-50`}
                 >
                   {isListening ? (
@@ -520,29 +522,29 @@ const Index = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-lg"
+            className="bg-card text-card-foreground rounded-2xl p-6 max-w-md w-full shadow-lg border border-border"
           >
               <div className="flex justify-between items-start mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">end the session?</h2>
+              <h2 className="text-lg font-semibold text-foreground">end the session?</h2>
               <button
                 onClick={() => setShowEndConfirm(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none"
+                className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
               >
                 ×
               </button>
             </div>
-            <p className="text-gray-600 mb-6">are you 100% sure you want to end the session?</p>
+            <p className="text-muted-foreground mb-6">are you 100% sure you want to end the session?</p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowEndConfirm(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-900 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                className="px-6 py-2 border border-border text-foreground rounded-xl hover:bg-muted transition-colors font-medium"
               >
                 continue
               </button>
               <button
                 onClick={handleEndSession}
                 disabled={isLoading}
-                className="px-6 py-2 bg-[#277BD9] text-[#FAF7F2] hover:bg-[#2e90ff] rounded-xl disabled:opacity-50 transition-colors font-medium"
+                className="px-6 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-xl disabled:opacity-50 transition-colors font-medium"
               >
                 end session
               </button>
