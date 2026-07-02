@@ -565,6 +565,23 @@ const Index = () => {
         </div>
       )}
     </div>
+    );
+  };
+
+  return (
+    <>
+      {renderScreen()}
+      <PaywallModal
+        open={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        userEmail={user?.email}
+        userName={(user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name}
+        onSuccess={async () => {
+          setShowPaywall(false);
+          await subscription.refresh();
+        }}
+      />
+    </>
   );
 };
 
