@@ -14,6 +14,7 @@ import {
 
 interface InsightsScreenProps {
   userId: string;
+  userCreatedAt?: string | null;
   onGoHome: () => void;
   onViewInsights: () => void;
   onViewHistory: () => void;
@@ -198,7 +199,7 @@ function getEmotionTags(emotions: Record<string, number> | null): EmotionTag[] {
   return tags;
 }
 
-export function InsightsScreen({ userId, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: InsightsScreenProps) {
+export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: InsightsScreenProps) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [sessions, setSessions] = useState<WeekSession[]>([]);
   const [sessionMessages, setSessionMessages] = useState<Record<string, ChatLogMessage[]>>({});
@@ -296,6 +297,18 @@ export function InsightsScreen({ userId, onGoHome, onViewInsights, onViewHistory
   }, [sessions, hasEnoughActivity]);
 
   const isCurrentWeek = weekOffset === 0;
+  // Prevent navigating to weeks before the user signed up.
+  const signupWeekStart = useMemo(() => {
+    if (!userCreatedAt) return null;
+    const d = new Date(userCreatedAt);
+    const day = d.getDay();
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  }, [userCreatedAt]);
+  const atSignupWeek = signupWeekStart ? start.getTime() <= signupWeekStart.getTime() : false;
 
   return (
     <CalmiShell
@@ -319,7 +332,9 @@ export function InsightsScreen({ userId, onGoHome, onViewInsights, onViewHistory
         <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 shadow-soft mb-6">
           <button
             onClick={() => setWeekOffset((o) => o - 1)}
-            className="p-1 rounded-full hover:bg-secondary transition"
+            disabled={atSignupWeek}
+            className="p-1 rounded-full hover:bg-secondary transition disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="previous week"
           >
             <ChevronLeft className="h-4 w-4 text-foreground" />
           </button>

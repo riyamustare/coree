@@ -26,14 +26,28 @@ interface HomeScreenProps {
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
   onThemeToggle: (event?: import("react").MouseEvent) => void;
+  displayName?: string | null;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle }: HomeScreenProps) {
+export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle, displayName }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
 
   const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = (displayName || "").trim().split(/\s+/)[0] || "";
+  const timeGreeting =
+    hour < 5 ? "still up" :
+    hour < 12 ? "good morning" :
+    hour < 17 ? "good afternoon" :
+    hour < 21 ? "good evening" : "hey night owl";
+  const greeting = firstName ? `${timeGreeting}, ${firstName.toLowerCase()}` : timeGreeting;
+  const subGreetings = [
+    "what's alive in you right now?",
+    "how's your heart today?",
+    "what's taking up space in your head?",
+    "how are you, really?",
+    "what do you want to unpack today?",
+  ];
+  const subGreeting = subGreetings[new Date().getDate() % subGreetings.length];
 
   useEffect(() => {
     trackScreenViewed("home");
@@ -97,18 +111,17 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
+          className="flex flex-col items-center gap-2 mb-6 sm:mb-8 text-center"
         >
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center flex-shrink-0">
-            <img
-              src="/logo-icon.svg"
-              alt="coree"
-              className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
-            />
+          <div className="h-12 w-12 rounded-full flex items-center justify-center mb-1">
+            <img src="/logo-icon.svg" alt="coree" className="h-8 w-8 object-contain" />
           </div>
-          <h1 className="text-xl sm:text-3xl font-bold text-foreground">
-            {greeting}?
+          <h1 className="text-2xl sm:text-3xl font-black text-foreground lowercase">
+            {greeting}
           </h1>
+          <p className="text-sm sm:text-base text-muted-foreground font-medium">
+            {subGreeting}
+          </p>
         </motion.div>
 
         <motion.div

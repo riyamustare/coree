@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Clock, LogOut, Moon, Settings, Sparkles, Sun, ThumbsUp } from "lucide-react";
+import { BookHeart, Compass, History, LogOut, MessageSquareHeart, Moon, Settings, Sun } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
 
 interface CalmiShellProps {
@@ -64,59 +64,28 @@ export function CalmiShell({
           />
         </button>
 
-        <div className="flex flex-col gap-4">
-          <div className="group relative">
-            <button
-              type="button"
-              onClick={onViewInsights}
-              className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
-            >
-              <Sparkles className="h-5 w-5" strokeWidth={2.5} />
-            </button>
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
-              <span className="text-sm font-medium text-foreground">insights</span>
+        <nav className="flex flex-col gap-3">
+          {[
+            { icon: Compass, label: "insights", onClick: onViewInsights },
+            { icon: History, label: "history", onClick: onViewHistory },
+            { icon: BookHeart, label: "journal", onClick: onOpenNotes },
+            { icon: MessageSquareHeart, label: "feedback", onClick: () => setFeedbackOpen(true) },
+          ].map(({ icon: Icon, label, onClick }) => (
+            <div key={label} className="group relative">
+              <button
+                type="button"
+                onClick={onClick}
+                className="h-11 w-11 rounded-2xl flex items-center justify-center bg-transparent border-2 border-transparent text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/30 active:translate-y-0.5 transition-all duration-150"
+                aria-label={label}
+              >
+                <Icon className="h-[22px] w-[22px]" strokeWidth={2.5} />
+              </button>
+              <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border-2 border-border rounded-xl px-3 py-1.5 whitespace-nowrap z-50 shadow-md">
+                <span className="text-xs font-bold uppercase tracking-wide text-foreground">{label}</span>
+              </div>
             </div>
-          </div>
-
-          <div className="group relative">
-            <button
-              type="button"
-              onClick={onViewHistory}
-              className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
-            >
-              <Clock className="h-5 w-5" strokeWidth={2.5} />
-            </button>
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
-              <span className="text-sm font-medium text-foreground">history</span>
-            </div>
-          </div>
-
-          <div className="group relative">
-            <button
-              type="button"
-              onClick={() => setFeedbackOpen(true)}
-              className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
-            >
-              <ThumbsUp className="h-5 w-5" strokeWidth={2.5} />
-            </button>
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
-              <span className="text-sm font-medium text-foreground">feedback</span>
-            </div>
-          </div>
-
-          <div className="group relative">
-            <button
-              type="button"
-              onClick={onOpenNotes}
-              className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
-            >
-              <BookOpen className="h-5 w-5" strokeWidth={2.5} />
-            </button>
-            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
-              <span className="text-sm font-medium text-foreground">journal</span>
-            </div>
-          </div>
-        </div>
+          ))}
+        </nav>
 
         <div className="flex-1" />
 
@@ -124,10 +93,10 @@ export function CalmiShell({
           <button
             type="button"
             onClick={() => setSettingsOpen((prev) => !prev)}
-            className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
+            className="h-11 w-11 rounded-2xl flex items-center justify-center bg-transparent border-2 border-transparent text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/30 active:translate-y-0.5 transition-all duration-150"
             aria-label="Settings"
           >
-            <Settings className="h-5 w-5" strokeWidth={2.5} />
+            <Settings className="h-[22px] w-[22px]" strokeWidth={2.5} />
           </button>
           {settingsOpen && (
             <div data-settings-menu className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-4 w-56 z-50">
