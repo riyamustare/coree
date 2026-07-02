@@ -116,12 +116,12 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
         {chatLoading ? (
           <LoadingAnimation />
         ) : (
-          <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
+          <div className="flex min-h-screen flex-col bg-background px-4 py-6">
             <div className="mx-auto w-full max-w-xl flex-1">
               <div className="flex items-center gap-3 mb-5">
                 <button
                   onClick={() => setSelectedSession(null)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-soft transition hover:shadow-active"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-card shadow-soft transition hover:shadow-active"
                 >
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </button>
@@ -137,7 +137,7 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
               </div>
 
               {selectedSession.summary && (
-                <div className="rounded-[2rem] bg-white border border-border-color px-5 py-5 mb-5 shadow-soft">
+                <div className="rounded-[2rem] bg-card border border-border-color px-5 py-5 mb-5 shadow-soft">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
                     summary
                   </p>
@@ -190,7 +190,7 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
       {loading ? (
         <LoadingAnimation />
       ) : (
-        <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
+        <div className="flex min-h-screen flex-col bg-background px-4 py-6">
           <div className="mx-auto w-full max-w-xl flex-1">
             <div className="mb-6">
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">All conversations</h1>
@@ -209,7 +209,7 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.03 }}
                     onClick={() => openSession(session)}
-                    className="w-full text-left rounded-[2rem] bg-white px-5 py-5 shadow-soft hover:shadow-active transition-shadow"
+                    className="w-full text-left rounded-[2rem] bg-card px-5 py-5 shadow-soft hover:shadow-active transition-shadow"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm text-foreground line-clamp-2 flex-1">

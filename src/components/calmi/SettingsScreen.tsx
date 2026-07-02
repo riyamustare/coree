@@ -68,7 +68,7 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
       onOpenSettings={onOpenSettings}
       onSignOut={onSignOut}
     >
-      <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
+      <div className="flex min-h-screen flex-col bg-background px-4 py-6">
         <div className="mx-auto w-full max-w-md">
           
 

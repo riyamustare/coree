@@ -151,14 +151,14 @@ function SettingsScreen(_a) {
         <framer_motion_1.motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-8">
           <h2 className="text-base font-semibold text-foreground mb-1">privacy settings</h2>
           <p className="text-sm text-muted-foreground mb-4">manage your tracking preferences</p>
-          <div className="rounded-[2rem] bg-white border border-border-color/80 p-4 shadow-soft space-y-4">
+          <div className="rounded-[2rem] bg-card border border-border-color/80 p-4 shadow-soft space-y-4">
             <div className="flex items-center justify-between gap-4 rounded-3xl border border-border-color/80 bg-surface px-4 py-4">
               <div>
                 <p className="text-sm font-semibold text-foreground">necessary cookies</p>
                 <p className="text-xs text-muted-foreground">required for the website to function properly. cannot be disabled.</p>
               </div>
               <div className="flex h-8 w-14 items-center rounded-full bg-gray-200 p-1">
-                <span className="ml-auto inline-flex h-6 w-6 rounded-full bg-white shadow-sm transition-transform"/>
+                <span className="ml-auto inline-flex h-6 w-6 rounded-full bg-card shadow-sm transition-transform"/>
               </div>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-3xl border border-border-color/80 bg-surface px-4 py-4">
@@ -166,8 +166,8 @@ function SettingsScreen(_a) {
                 <p className="text-sm font-semibold text-foreground">analytics cookies</p>
                 <p className="text-xs text-muted-foreground">help us understand how visitors interact with our website using posthog analytics.</p>
               </div>
-              <button onClick={function () { return setAnalyticsConsent(function (prev) { return !prev; }); }} className={"relative h-8 w-14 rounded-full transition ".concat(analyticsConsent ? "bg-[#277BD9]" : "bg-gray-200")}>
-                <span className={"absolute top-1 h-6 w-6 rounded-full bg-white shadow-sm transition-transform ".concat(analyticsConsent ? "translate-x-6" : "translate-x-1")}/>
+              <button onClick={function () { return setAnalyticsConsent(function (prev) { return !prev; }); }} className={"relative h-8 w-14 rounded-full transition ".concat(analyticsConsent ? "bg-primary" : "bg-gray-200")}>
+                <span className={"absolute top-1 h-6 w-6 rounded-full bg-card shadow-sm transition-transform ".concat(analyticsConsent ? "translate-x-6" : "translate-x-1")}/>
               </button>
             </div>
           </div>
@@ -177,7 +177,7 @@ function SettingsScreen(_a) {
         <framer_motion_1.motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
           <h2 className="text-base font-semibold text-foreground mb-1">theme</h2>
           <p className="text-sm text-muted-foreground mb-3">switch between light and dark mode across the app</p>
-          <button onClick={toggleTheme} className="flex items-center justify-between rounded-[2rem] bg-white px-5 py-4 shadow-soft border border-border-color transition hover:shadow-active">
+          <button onClick={toggleTheme} className="flex items-center justify-between rounded-[2rem] bg-card px-5 py-4 shadow-soft border border-border-color transition hover:shadow-active">
             <span className="flex items-center gap-3 text-sm font-medium text-foreground">
               {theme === "light" ? <lucide_react_1.Sun className="h-4 w-4 text-foreground"/> : <lucide_react_1.Moon className="h-4 w-4 text-foreground"/>}
               {theme} mode
@@ -196,7 +196,7 @@ function SettingsScreen(_a) {
             <span className="rounded-full bg-[#F5F3FF] px-3 py-1 text-[11px] font-semibold uppercase text-[#5C35D9]">free</span>
           </div>
 
-          <div className="rounded-[2rem] bg-white border border-border-color/80 p-5 shadow-soft">
+          <div className="rounded-[2rem] bg-card border border-border-color/80 p-5 shadow-soft">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-muted-foreground">text usage</span>
               <span className="text-sm font-semibold text-foreground">22%</span>

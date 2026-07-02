@@ -154,8 +154,8 @@ export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, o
         theme={theme}
         onThemeToggle={onThemeToggle}
       >
-        <div className="flex h-full flex-col bg-[#FAF7F2]">
-          <div className="flex items-center justify-between px-4 py-4 border-b border-border-color bg-white shadow-soft">
+        <div className="flex h-full flex-col bg-background">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-border-color bg-card shadow-soft">
             <button onClick={() => { handleSave(); setIsEditing(false); setSelectedNote(null); }} className="text-sm text-muted-foreground hover:text-foreground transition flex items-center gap-1">
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
@@ -173,18 +173,18 @@ export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, o
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 bg-[#FAF7F2]">
+          <div className="flex-1 overflow-y-auto p-4 bg-background">
             <input
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="Title"
-              className="w-full text-xl font-semibold text-foreground bg-white rounded-3xl border border-border-color px-4 py-3 outline-none mb-4 placeholder:text-muted-foreground"
+              className="w-full text-xl font-semibold text-foreground bg-card rounded-3xl border border-border-color px-4 py-3 outline-none mb-4 placeholder:text-muted-foreground"
             />
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               placeholder="Write your thoughts here..."
-              className="w-full flex-1 min-h-[60vh] text-base text-foreground bg-white rounded-[2rem] border border-border-color px-4 py-4 outline-none resize-none leading-relaxed placeholder:text-muted-foreground"
+              className="w-full flex-1 min-h-[60vh] text-base text-foreground bg-card rounded-[2rem] border border-border-color px-4 py-4 outline-none resize-none leading-relaxed placeholder:text-muted-foreground"
               autoFocus
             />
           </div>
@@ -225,7 +225,7 @@ export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, o
         <div className="space-y-3">
           <AnimatePresence>
             {notes.length === 0 ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center rounded-[2rem] bg-white px-6 py-8 shadow-soft">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center rounded-[2rem] bg-card px-6 py-8 shadow-soft">
                 <p className="text-sm text-muted-foreground">No entries yet</p>
                 <p className="text-xs text-muted-foreground mt-1">Tap + to start writing</p>
               </motion.div>
@@ -236,7 +236,7 @@ export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, o
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100 }}
-                  className="rounded-[2rem] bg-white px-5 py-5 shadow-soft flex items-start justify-between gap-3"
+                  className="rounded-[2rem] bg-card px-5 py-5 shadow-soft flex items-start justify-between gap-3"
                 >
                   <button onClick={() => openNote(note)} className="flex-1 text-left">
                     <p className="text-sm font-medium text-foreground line-clamp-1">{note.title || "Untitled"}</p>

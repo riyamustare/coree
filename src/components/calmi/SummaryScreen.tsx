@@ -109,7 +109,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
   const emotionTags = getEmotionTags(summary.emotions || null);
   
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 py-6">
+    <div className="flex min-h-screen flex-col bg-background px-4 py-6">
       <div className="mx-auto w-full max-w-xl flex-1 flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -133,7 +133,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
               {emotionTags.map((tag) => (
                 <div
                   key={tag.name}
-                  className="inline-flex items-center gap-1 bg-gray-50 rounded-full px-3 py-1.5 border border-gray-200"
+                  className="inline-flex items-center gap-1 bg-muted rounded-full px-3 py-1.5 border border-border"
                 >
                   <span className="text-base">{tag.emoji}</span>
                   <span className="text-sm text-foreground">{tag.label}</span>
@@ -150,7 +150,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
           </div>
 
           {/* Message History Header */}
-          <div className="flex items-center gap-2 mb-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center gap-2 mb-4 mt-8 pt-6 border-t border-border">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold text-foreground">message history</h3>
           </div>
@@ -169,7 +169,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
                       className={`max-w-[85%] ${
                         isUserMessage
                           ? "bg-blue-50 border border-blue-100"
-                          : "bg-gray-50 border border-gray-100"
+                          : "bg-muted border border-border"
                       } rounded-lg px-4 py-3`}
                     >
                       <p className="text-sm text-foreground leading-relaxed">
@@ -188,7 +188,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex w-full items-center justify-center gap-3 pt-4 border-t border-gray-200"
+          className="flex w-full items-center justify-center gap-3 pt-4 border-t border-border"
         >
           <button
             onClick={onNewSession}
@@ -198,7 +198,7 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
           </button>
           <button
             onClick={onGoHome}
-            className="flex-1 rounded-2xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            className="flex-1 rounded-2xl border border-border bg-card py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             Go home
           </button>
