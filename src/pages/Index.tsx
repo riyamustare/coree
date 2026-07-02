@@ -22,6 +22,7 @@ import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Mic, MicOff } from "lucide-react";
+import { toggleThemeWithTransition } from "@/lib/themeTransition";
 import {
   setUserProperties,
   resetUserProperties,
@@ -198,9 +199,12 @@ const Index = () => {
     setScreen("history");
   }, []);
 
-  const handleThemeChange = useCallback((theme: "light" | "dark") => {
-    setTheme(theme);
-  }, [setTheme]);
+  const handleThemeChange = useCallback(
+    (theme: "light" | "dark", event?: React.MouseEvent) => {
+      toggleThemeWithTransition(event ?? null, () => setTheme(theme));
+    },
+    [setTheme]
+  );
 
   const handleSendText = useCallback(
     async (content: string) => {
