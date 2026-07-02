@@ -14,10 +14,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
-          <button
-            onClick={onLogin}
-            className="bg-primary text-primary-foreground w-[130px] h-[40px] rounded-full font-medium hover:opacity-90 transition"
-          >
+          <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
             get started
           </button>
         </div>
@@ -40,12 +37,9 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               life feels heavy sometimes. coree is your space to talk, process,
               and understand what's going on inside without any BS.
             </p>
-            <button
-              onClick={onGetStarted}
-              className="inline-flex items-center px-8 py-3.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
-            >
+            <button onClick={onGetStarted} className="btn-duo text-sm px-8 py-4">
               <span>start talking it out</span>
-              <span className="ml-2 text-sm opacity-90">- it's free</span>
+              <span className="ml-2 opacity-90 normal-case">- it's free</span>
             </button>
             <p className="mt-4 text-sm text-muted-foreground font-medium">
               loved by 20+ people like you
