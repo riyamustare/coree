@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
+  display_name: string | null;
   onboarding_intent: string | null;
   onboarding_completed: boolean;
   genz_mode: boolean;
@@ -25,13 +26,13 @@ export function useProfile(userId: string | undefined) {
     const fetchProfile = async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("onboarding_intent, onboarding_completed, genz_mode, theme")
+        .select("display_name, onboarding_intent, onboarding_completed, genz_mode, theme")
         .eq("id", userId)
         .single();
 
       if (error && error.code === "PGRST116") {
         await supabase.from("profiles").insert({ id: userId, theme: "dark" } as any);
-        setProfile({ onboarding_intent: null, onboarding_completed: false, genz_mode: false, theme: "dark" });
+        setProfile({ display_name: null, onboarding_intent: null, onboarding_completed: false, genz_mode: false, theme: "dark" });
       } else if (data) {
         setProfile({ ...(data as Profile), theme: (data as Profile).theme || "dark" });
       }
