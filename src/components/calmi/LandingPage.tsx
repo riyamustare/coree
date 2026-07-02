@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { MessageCircle, Mic, Brain, LineChart, BookHeart, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
+import { Mic, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -20,20 +20,14 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   }, []);
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header: inline at top, floats when scrolled */}
-      <header
-        className={
-          scrolled
-            ? "fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm transition-all duration-300"
-            : "absolute top-0 left-0 right-0 w-full z-50 bg-transparent transition-all duration-300"
-        }
-      >
+      {/* Header: fixed pill that smoothly tightens on scroll */}
+      <header className="fixed left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl top-4">
         <div
-          className={
+          className={`flex justify-between items-center px-4 sm:px-6 transition-all duration-300 ease-out rounded-3xl border ${
             scrolled
-              ? "flex justify-between items-center px-4 py-3"
-              : "flex justify-between items-center max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5"
-          }
+              ? "py-3 bg-background/70 backdrop-blur-md border-border/60 shadow-sm"
+              : "py-4 bg-transparent border-transparent"
+          }`}
         >
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
           <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
@@ -214,161 +208,6 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               ))}
             </div>
           </div>
-
-          {/* Feature highlights - bento-style engaging layout */}
-          <section aria-labelledby="features-heading" className="mt-20 sm:mt-28">
-            <h2 id="features-heading" className="sr-only">features</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 auto-rows-[minmax(180px,auto)] gap-4 sm:gap-5">
-              {/* Big hero card — voice mode */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45 }}
-                className="card-duo relative overflow-hidden p-6 sm:p-8 lg:col-span-4 lg:row-span-2 bg-primary text-primary-foreground border-primary"
-                style={{ boxShadow: "0 4px 0 0 hsl(211 71% 38%)" }}
-              >
-                <div className="relative z-10 flex flex-col h-full">
-                  <div className="h-11 w-11 rounded-2xl bg-primary-foreground/15 border-2 border-primary-foreground/25 flex items-center justify-center mb-4">
-                    <Mic className="h-5 w-5" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black lowercase mb-2">voice mode</h3>
-                  <p className="text-sm sm:text-base opacity-90 leading-relaxed lowercase max-w-md">
-                    talk like you would with a friend. natural voice in, natural voice back - no scripts, no waiting rooms.
-                  </p>
-                  <div className="mt-auto pt-6 flex items-end gap-1">
-                    {[24, 40, 56, 32, 64, 48, 72, 40, 56, 28, 44, 60, 36, 52, 44, 32].map((h, i) => (
-                      <span
-                        key={i}
-                        className="w-1.5 rounded-full bg-primary-foreground/80 animate-[breathe_1.6s_ease-in-out_infinite]"
-                        style={{ height: `${h}px`, animationDelay: `${i * 80}ms` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary-foreground/10 blur-2xl" />
-              </motion.article>
-
-              {/* Text mode */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45, delay: 0.05 }}
-                className="card-duo p-6 lg:col-span-2 lg:row-span-2 flex flex-col"
-              >
-                <div className="h-10 w-10 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mb-3">
-                  <MessageCircle className="h-5 w-5 text-primary" strokeWidth={2.5} />
-                </div>
-                <h3 className="text-lg font-black text-foreground mb-1.5 lowercase">text mode</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed lowercase">
-                  type at your pace. warm, short replies - no walls of advice.
-                </p>
-                <div className="mt-auto space-y-1.5 pt-5">
-                  <div className="ml-auto max-w-[80%] bg-primary text-primary-foreground rounded-2xl rounded-br-md px-3 py-2 text-xs font-medium lowercase">
-                    can we just sit with this?
-                  </div>
-                  <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-bl-md px-3 py-2 text-xs font-medium lowercase">
-                    yeah. we can.
-                  </div>
-                </div>
-              </motion.article>
-
-              {/* Remembers you */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45, delay: 0.1 }}
-                className="card-duo p-6 lg:col-span-2"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-                    <Brain className="h-5 w-5 text-primary" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-base font-black text-foreground lowercase">remembers you</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed lowercase">
-                  picks up where you left off - your moods, themes, what's weighing on you.
-                </p>
-              </motion.article>
-
-              {/* Weekly insights */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45, delay: 0.15 }}
-                className="card-duo p-6 lg:col-span-2 relative overflow-hidden"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-                    <LineChart className="h-5 w-5 text-primary" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-base font-black text-foreground lowercase">weekly insights</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed lowercase">
-                  a gentle mood radar. patterns, not judgments.
-                </p>
-                <svg viewBox="0 0 120 40" className="mt-3 w-full h-10">
-                  <polyline
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    points="2,30 18,22 34,26 50,14 66,20 82,10 98,16 118,6"
-                  />
-                </svg>
-              </motion.article>
-
-              {/* Journal */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45, delay: 0.2 }}
-                className="card-duo p-6 lg:col-span-2"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-                    <BookHeart className="h-5 w-5 text-primary" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-base font-black text-foreground lowercase">private journal</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed lowercase">
-                  quick notes or voice memos. yours to keep, yours to delete.
-                </p>
-              </motion.article>
-
-              {/* Private by design — wide accent */}
-              <motion.article
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.45, delay: 0.25 }}
-                className="card-duo p-6 lg:col-span-6 flex flex-col sm:flex-row items-start sm:items-center gap-5"
-              >
-                <div className="h-12 w-12 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center flex-shrink-0">
-                  <ShieldCheck className="h-6 w-6 text-primary" strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-black text-foreground mb-1 lowercase">private by design</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed lowercase">
-                    end-to-end encrypted. no ads, no sharing, no diagnosing. just a safe space.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {["encrypted", "no ads", "no sharing", "delete any time"].map((tag) => (
-                    <span key={tag} className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border-2 border-primary/20 rounded-full px-2.5 py-1">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </motion.article>
-            </div>
-          </section>
 
           {/* How it works */}
           <section className="mt-20 sm:mt-28">
