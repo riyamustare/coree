@@ -13,11 +13,14 @@ const INTENT_OPTIONS = [
 
 interface OnboardingScreenProps {
   onComplete: (intent: string) => void;
+  displayName?: string | null;
 }
 
-export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
+export function OnboardingScreen({ onComplete, displayName }: OnboardingScreenProps) {
   const [step, setStep] = useState(0);
   const [selectedIntent, setSelectedIntent] = useState<string | null>(null);
+
+  const firstName = (displayName || "").trim().split(/\s+/)[0]?.toLowerCase() || "friend";
 
   const handleContinue = () => {
     if (step === 0) {
@@ -60,7 +63,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
               <img src="/logo.svg" alt="coree" className="h-8 mb-6" />
 
               <div className="space-y-4 text-foreground leading-relaxed lowercase">
-                <p className="text-base font-medium">hi friend,</p>
+                <p className="text-base font-medium">hi {firstName},</p>
                 <p className="text-base font-medium">we created coree because life can be... a lot</p>
                 <p className="text-base font-medium">sometimes you just need someone to talk to</p>
                 <p className="text-base font-medium">whether you're navigating a rough day,
@@ -96,10 +99,14 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                       onClick={() => setSelectedIntent(option)}
                       className={
                         selectedIntent === option
-                          ? "card-duo w-full py-3.5 px-4 text-base text-left font-bold lowercase bg-primary text-primary-foreground border-primary"
-                          : "card-duo w-full py-3.5 px-4 text-base text-left font-bold lowercase"
+                          ? "w-full py-3.5 px-4 text-base text-left font-bold lowercase rounded-2xl border-2 border-primary bg-primary text-primary-foreground transition"
+                          : "w-full py-3.5 px-4 text-base text-left font-bold lowercase rounded-2xl border-2 border-border-color bg-card text-foreground hover:border-primary/60 transition"
                       }
-                      style={selectedIntent === option ? { boxShadow: "0 4px 0 0 hsl(211 71% 38%)" } : undefined}
+                      style={
+                        selectedIntent === option
+                          ? { boxShadow: "0 4px 0 0 hsl(211 71% 38%)" }
+                          : { boxShadow: "0 4px 0 0 hsl(var(--border))" }
+                      }
                     >
                       {option}
                     </button>
