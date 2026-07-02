@@ -324,27 +324,28 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
       theme={theme}
       onThemeToggle={onThemeToggle}
     >
-      <div className="mx-auto w-full max-w-xl flex-1 px-4 py-6">
+      <div className="mx-auto w-full max-w-xl flex-1 px-4 py-6 pt-16 md:pt-6">
         <div className="mb-6">
-          <h1 className="text-lg font-medium tracking-tight text-foreground">Insights</h1>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">your reflections</p>
+          <h1 className="text-3xl sm:text-4xl font-black lowercase tracking-tight text-foreground">insights</h1>
         </div>
 
-        <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 shadow-soft mb-6">
+        <div className="card-duo flex items-center justify-between px-4 py-3 mb-6">
           <button
             onClick={() => setWeekOffset((o) => o - 1)}
             disabled={atSignupWeek}
-            className="p-1 rounded-full hover:bg-secondary transition disabled:opacity-30 disabled:cursor-not-allowed"
+            className="h-8 w-8 rounded-xl border-2 border-border-color bg-background flex items-center justify-center hover:border-primary/60 transition disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="previous week"
           >
             <ChevronLeft className="h-4 w-4 text-foreground" />
           </button>
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-sm font-bold lowercase text-foreground">
             {formatWeekLabel(start, end)}
           </span>
           <button
             onClick={() => setWeekOffset((o) => o + 1)}
             disabled={isCurrentWeek}
-            className="p-1 rounded-full hover:bg-secondary transition disabled:opacity-30"
+            className="h-8 w-8 rounded-xl border-2 border-border-color bg-background flex items-center justify-center hover:border-primary/60 transition disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronRight className="h-4 w-4 text-foreground" />
           </button>
@@ -360,13 +361,13 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             className="space-y-6"
           >
             <div>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground mb-1">your week</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-2xl font-black lowercase tracking-tight text-foreground mb-1">your week</h2>
+              <p className="text-sm text-muted-foreground font-medium lowercase">
                 get a weekly reflection on your thoughts, patterns, and progress
               </p>
               {!hasEnoughActivity && (
-                <p className="mt-2 text-sm text-primary font-medium">
-                  you're <span className="font-bold">{activityNeeded}</span> {activityNeeded !== 1 ? "entries" : "entry"} away (convos or journal)
+                <p className="mt-3 inline-block card-duo px-3 py-2 text-xs text-primary font-bold lowercase">
+                  you're {activityNeeded} {activityNeeded !== 1 ? "entries" : "entry"} away (convos or journal)
                 </p>
               )}
             </div>
@@ -375,23 +376,23 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold text-foreground">stats</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">stats</h3>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-border-color bg-surface px-4 py-3">
-                  <p className="text-xs text-muted-foreground">convos</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{sessions.length}</p>
+                <div className="card-duo px-4 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">convos</p>
+                  <p className="text-3xl font-black text-foreground mt-1">{sessions.length}</p>
                 </div>
-                <div className="rounded-2xl border border-border-color bg-surface px-4 py-3">
-                  <p className="text-xs text-muted-foreground">messages</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{totalMessages}</p>
+                <div className="card-duo px-4 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">messages</p>
+                  <p className="text-3xl font-black text-foreground mt-1">{totalMessages}</p>
                 </div>
-                <div className="rounded-2xl border border-border-color bg-surface px-4 py-3">
+                <div className="card-duo px-4 py-3">
                   <div className="flex items-center gap-1">
                     <BookOpen className="h-3 w-3 text-muted-foreground" />
-                    <p className="text-xs text-muted-foreground">journal</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">journal</p>
                   </div>
-                  <p className="text-2xl font-bold text-foreground mt-1">{journalCount}</p>
+                  <p className="text-3xl font-black text-foreground mt-1">{journalCount}</p>
                 </div>
               </div>
             </div>
@@ -400,33 +401,33 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Smile className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold text-foreground">mood</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">mood</h3>
               </div>
-              <div className="rounded-2xl border border-border-color bg-surface p-4">
+              <div className="card-duo p-4">
                 {hasEnoughActivity && moodData.some((d) => d.value > 0) ? (
                   <ResponsiveContainer width="100%" height={280}>
                     <RadarChart data={moodData} cx="50%" cy="50%" outerRadius="70%">
                       <PolarGrid stroke="hsl(var(--border))" />
                       <PolarAngleAxis
                         dataKey="emotion"
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 700 }}
                       />
                       <Radar
                         name="mood"
                         dataKey="value"
-                        stroke="hsl(var(--warning))"
-                        fill="hsl(var(--warning))"
-                        fillOpacity={0.3}
-                        dot={{ r: 4, fill: "hsl(var(--warning))" }}
+                        stroke="hsl(var(--primary))"
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.25}
+                        dot={{ r: 4, fill: "hsl(var(--primary))" }}
                       />
                     </RadarChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="flex items-center justify-center h-40">
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-sm text-muted-foreground text-center font-medium lowercase">
                       {hasEnoughActivity
-                        ? "No mood data available yet"
-                        : `Complete ${activityNeeded} more ${activityNeeded !== 1 ? "entries" : "entry"} this week to unlock mood insights`}
+                        ? "no mood data available yet"
+                        : `complete ${activityNeeded} more ${activityNeeded !== 1 ? "entries" : "entry"} this week to unlock mood insights`}
                     </p>
                   </div>
                 )}
@@ -437,10 +438,10 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-semibold text-foreground">weekly summary</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">weekly summary</h3>
               </div>
-              <div className="rounded-2xl border border-border-color bg-card p-6 shadow-soft">
-                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+              <div className="card-duo p-6">
+                <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap font-medium">
                   {generateWeeklySummary(sessions, journalCount)}
                 </p>
               </div>
