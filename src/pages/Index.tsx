@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
 import { useProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PaywallModal } from "@/components/calmi/PaywallModal";
 import { LandingPage } from "@/components/calmi/LandingPage";
 import { AuthScreen } from "@/components/calmi/AuthScreen";
 import { HomeScreen } from "@/components/calmi/HomeScreen";
@@ -49,6 +51,8 @@ const ENDING_MESSAGES = [
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, completeOnboarding, setGenzMode, setTheme } = useProfile(user?.id);
+  const subscription = useSubscription(user?.id);
+  const [showPaywall, setShowPaywall] = useState(false);
   const {
     sessionId,
     sessionStart,
@@ -135,7 +139,7 @@ const Index = () => {
   const startConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
     setMode(selectedMode);
     trackModeChanged(selectedMode);
-    await startSession();
+    await startSession(selectedMode);
     trackSessionStarted(sessionId || "pending");
     setMessages([
       {
@@ -149,8 +153,12 @@ const Index = () => {
   }, [startSession, sessionId, setMessages]);
 
   const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+    if (selectedMode === "voice" && !subscription.loading && !subscription.canStartVoice) {
+      setShowPaywall(true);
+      return;
+    }
     await startConversation(selectedMode);
-  }, [startConversation]);
+  }, [startConversation, subscription.loading, subscription.canStartVoice]);
 
   const handleEndSession = useCallback(async () => {
     setShowEndConfirm(false);
