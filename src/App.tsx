@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import PromisePage from "./pages/PromisePage.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,9 @@ const App = () => (
         <Suspense fallback={<LoadingAnimation />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/privacy" element={<PromisePage which="privacy" />} />
+            <Route path="/encryption" element={<PromisePage which="encryption" />} />
+            <Route path="/no-diagnoses" element={<PromisePage which="no-diagnoses" />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

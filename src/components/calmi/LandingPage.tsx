@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { MessageCircle, Mic, Brain, LineChart, BookHeart, ShieldCheck, Heart, Lock, Sparkles } from "lucide-react";
 
 interface LandingPageProps {
@@ -9,7 +10,6 @@ interface LandingPageProps {
 // Visual design ported from the user's Hero.jsx reference:
 // warm cream background (#FAF7F2), bold gray-900 headline, blue CTA (#277BD9).
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
-  const currentYear = new Date().getFullYear();
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Floating header */}
@@ -27,31 +27,54 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
         </div>
       </header>
 
-      <main className="pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8">
+      <main className="relative pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* --- Creative hero background --- */}
+        {/* Spiraling curved text on the left */}
+        <div className="pointer-events-none absolute -left-24 sm:-left-16 top-24 sm:top-16 w-[380px] h-[380px] sm:w-[520px] sm:h-[520px] opacity-70">
+          <svg viewBox="0 0 500 500" className="w-full h-full animate-[spin_60s_linear_infinite]">
+            <defs>
+              <path
+                id="spiral-path"
+                d="M 250,250 m -180,0 a 180,180 0 1,1 360,0 a 180,180 0 1,1 -360,0"
+              />
+            </defs>
+            <text className="fill-muted-foreground" style={{ fontSize: 18, fontWeight: 700, letterSpacing: 2 }}>
+              <textPath href="#spiral-path" startOffset="0">
+                what's on your mind · unpack it one thought at a time · you don't have to hold it alone · 
+              </textPath>
+            </text>
+          </svg>
+        </div>
+
+        {/* Floating soft blobs */}
+        <div className="pointer-events-none absolute top-40 right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl animate-[breathe_6s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute bottom-40 left-1/3 w-52 h-52 rounded-full bg-primary/5 blur-3xl animate-[breathe_8s_ease-in-out_infinite]" />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="max-w-5xl mx-auto"
+          className="relative max-w-5xl mx-auto"
         >
-          <div className="max-w-3xl mb-12 sm:mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-border-color bg-card px-3 py-1 mb-5">
-              <Sparkles className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">your pocket-sized wise friend</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-tight mb-6 lowercase">
+          <div className="max-w-3xl mx-auto text-center mb-12 sm:mb-12 relative z-10">
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05 }}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-tight mb-6 lowercase"
+            >
               your space to process it all.
               <br />
               <span className="text-primary">that's coree.</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase">
+            </motion.h1>
+            <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase max-w-2xl mx-auto">
               life feels heavy sometimes. coree is your space to talk, process,
-              and understand what's going on inside — without any BS.
+              and understand what's going on inside - without any BS.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button onClick={onGetStarted} className="btn-duo text-sm px-8 py-4">
                 <span>start talking it out</span>
-                <span className="ml-2 opacity-90 normal-case">— it's free</span>
+                <span className="ml-2 opacity-90 normal-case">- it's free</span>
               </button>
               <button onClick={onLogin} className="btn-duo-secondary text-sm px-6 py-3 rounded-2xl">
                 i already have an account
@@ -60,10 +83,62 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <p className="mt-4 text-sm text-muted-foreground font-medium lowercase">
               loved by 20+ people like you · no credit card, no judgment
             </p>
+
+            {/* Floating pill: "listening" indicator */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-10 inline-flex items-center gap-3 rounded-full bg-primary text-primary-foreground px-5 py-2.5 shadow-lg"
+              style={{ boxShadow: "0 6px 0 0 hsl(211 71% 38%)" }}
+            >
+              <span className="h-6 w-6 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                <Mic className="h-3.5 w-3.5" strokeWidth={3} />
+              </span>
+              <span className="text-sm font-bold lowercase">i'm listening</span>
+              <span className="flex items-end gap-0.5 h-4">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span
+                    key={i}
+                    className="w-0.5 bg-primary-foreground rounded-full animate-[breathe_1.2s_ease-in-out_infinite]"
+                    style={{ height: `${40 + ((i * 17) % 60)}%`, animationDelay: `${i * 120}ms` }}
+                  />
+                ))}
+              </span>
+            </motion.div>
+          </div>
+
+          {/* Rotating banner strip - a tilted marquee like the reference */}
+          <div className="relative my-14 sm:my-20 -mx-4 sm:-mx-6 lg:-mx-8">
+            <div
+              className="relative bg-foreground text-background overflow-hidden py-4 border-y-2 border-foreground"
+              style={{ transform: "rotate(-3deg)" }}
+            >
+              <div className="flex whitespace-nowrap animate-[marquee_28s_linear_infinite] gap-10 text-lg sm:text-xl font-black uppercase tracking-wide">
+                {Array.from({ length: 2 }).map((_, k) => (
+                  <div key={k} className="flex items-center gap-10 shrink-0">
+                    {[
+                      "talk it out",
+                      "one thought at a time",
+                      "no judgment",
+                      "just you and coree",
+                      "voice or text",
+                      "wise friend energy",
+                      "private always",
+                    ].map((phrase, i) => (
+                      <span key={`${k}-${i}`} className="flex items-center gap-10">
+                        <span>{phrase}</span>
+                        <span className="text-primary">✦</span>
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Trust indicators */}
-          <div className="mt-12 sm:mt-16">
+          <div className="mt-6 sm:mt-8 relative z-10">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
               {[
                 { icon: Lock, label: "encrypted" },
@@ -98,10 +173,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {[
-                { icon: MessageCircle, title: "text mode", desc: "type it out at your pace. coree replies in short, warm sentences — no walls of advice." },
+                { icon: MessageCircle, title: "text mode", desc: "type it out at your pace. coree replies in short, warm sentences - no walls of advice." },
                 { icon: Mic, title: "voice mode", desc: "talk like you would with a friend. natural voice in, natural voice back." },
-                { icon: Brain, title: "remembers you", desc: "picks up where you left off — your moods, themes, and what's been weighing on you." },
-                { icon: LineChart, title: "weekly insights", desc: "a gentle mood radar from your chats and journal — patterns, not judgments." },
+                { icon: Brain, title: "remembers you", desc: "picks up where you left off - your moods, themes, and what's been weighing on you." },
+                { icon: LineChart, title: "weekly insights", desc: "a gentle mood radar from your chats and journal - patterns, not judgments." },
                 { icon: BookHeart, title: "private journal", desc: "drop a quick note or voice memo. yours alone, encrypted and yours to delete anytime." },
                 { icon: ShieldCheck, title: "private by design", desc: "end-to-end encrypted. no ads, no sharing, no diagnosing. just a safe space." },
               ].map(({ icon: Icon, title, desc }, i) => (
@@ -160,7 +235,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 take five minutes for yourself. coree is ready when you are.
               </p>
               <button onClick={onGetStarted} className="btn-duo text-sm px-8 py-4">
-                start free — no card needed
+                start free - no card needed
               </button>
             </div>
           </section>
@@ -174,7 +249,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <div className="max-w-sm">
               <img src="/logo.svg" alt="coree" className="h-6 mb-3" />
               <p className="text-sm text-muted-foreground font-medium lowercase">
-                a private space to talk it out. not therapy — just a wise friend, whenever.
+                a private space to talk it out. not therapy - just a wise friend, whenever.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-8 sm:gap-14 text-sm">
@@ -188,15 +263,15 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               <div>
                 <p className="font-bold uppercase tracking-wider text-foreground text-xs mb-3">promise</p>
                 <ul className="space-y-2 text-muted-foreground lowercase">
-                  <li>private by design</li>
-                  <li>encrypted always</li>
-                  <li>no diagnoses</li>
+                  <li><Link to="/privacy" className="hover:text-foreground transition">private by design</Link></li>
+                  <li><Link to="/encryption" className="hover:text-foreground transition">encrypted always</Link></li>
+                  <li><Link to="/no-diagnoses" className="hover:text-foreground transition">no diagnoses</Link></li>
                 </ul>
               </div>
             </div>
           </div>
           <div className="mt-10 pt-6 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-            <p className="lowercase">© {currentYear} coree · made with care</p>
+            <p className="lowercase">© 2025 coree · made with care</p>
             <p className="lowercase">if you're in crisis, please reach a professional or local helpline.</p>
           </div>
         </div>
