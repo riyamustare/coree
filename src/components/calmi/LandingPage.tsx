@@ -9,14 +9,14 @@ interface LandingPageProps {
 // warm cream background (#FAF7F2), bold gray-900 headline, blue CTA (#277BD9).
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   return (
-    <div className="min-h-screen bg-[#FAF7F2]">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Floating header */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-[#FAF7F2]/60 backdrop-blur-md border border-white/40 shadow-sm">
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
           <button
             onClick={onLogin}
-            className="bg-[#277BD9] text-[#FAF7F2] w-[130px] h-[40px] rounded-full font-medium hover:bg-[#2e90ff] transition"
+            className="bg-primary text-primary-foreground w-[130px] h-[40px] rounded-full font-medium hover:opacity-90 transition"
           >
             get started
           </button>
@@ -31,37 +31,37 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           className="max-w-5xl mx-auto"
         >
           <div className="max-w-3xl mb-12 sm:mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
               your space to process it all.
               <br />
               <span className="font-black">that's coree.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 font-medium mb-8 leading-relaxed">
+            <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed">
               life feels heavy sometimes. coree is your space to talk, process,
               and understand what's going on inside without any BS.
             </p>
             <button
               onClick={onGetStarted}
-              className="inline-flex items-center px-8 py-3.5 bg-[#277BD9] text-white font-semibold rounded-xl hover:bg-[#2e90ff] transition-all shadow-md hover:shadow-lg"
+              className="inline-flex items-center px-8 py-3.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-all shadow-md hover:shadow-lg"
             >
               <span>start talking it out</span>
               <span className="ml-2 text-sm opacity-90">- it's free</span>
             </button>
-            <p className="mt-4 text-sm text-gray-500 font-medium">
+            <p className="mt-4 text-sm text-muted-foreground font-medium">
               loved by 20+ people like you
             </p>
           </div>
 
           {/* Trust indicators */}
           <div className="mt-12 sm:mt-16">
-            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 opacity-40">
-              <div className="text-xs sm:text-sm font-semibold text-gray-600 tracking-wider">
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 opacity-60">
+              <div className="text-xs sm:text-sm font-semibold text-muted-foreground tracking-wider">
                 ENCRYPTED
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-gray-600 tracking-wider">
+              <div className="text-xs sm:text-sm font-semibold text-muted-foreground tracking-wider">
                 PRIVATE
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-gray-600 tracking-wider">
+              <div className="text-xs sm:text-sm font-semibold text-muted-foreground tracking-wider">
                 AI-POWERED
               </div>
             </div>
@@ -75,11 +75,11 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <div className="max-w-3xl mb-10 sm:mb-12">
               <h2
                 id="features-heading"
-                className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-3"
+                className="text-3xl sm:text-4xl font-bold text-foreground leading-tight mb-3"
               >
                 everything you need to feel heard.
               </h2>
-              <p className="text-base sm:text-lg text-gray-600 font-medium">
+              <p className="text-base sm:text-lg text-muted-foreground font-medium">
                 small features, big calm. built for short check-ins or the long days.
               </p>
             </div>
@@ -117,12 +117,12 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.4, delay: i * 0.05, ease: [0.4, 0, 0.2, 1] }}
-                  className="bg-white border border-gray-200/70 rounded-2xl p-5 sm:p-6 hover:border-gray-300 hover:shadow-sm transition-all"
+                  className="bg-card border border-border rounded-2xl p-5 sm:p-6 hover:border-primary/50 hover:shadow-sm transition-all"
                 >
-                  <h3 className="text-base font-semibold text-gray-900 mb-1.5">
+                  <h3 className="text-base font-semibold text-foreground mb-1.5">
                     {title}
                   </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{desc}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </motion.article>
               ))}
             </div>
