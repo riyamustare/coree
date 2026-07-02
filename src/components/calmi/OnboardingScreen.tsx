@@ -34,11 +34,11 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const progress = ((step + 1) / 3) * 100;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAF7F2] px-4 sm:px-6 py-8 pb-32">
+    <div className="flex min-h-screen flex-col bg-background text-foreground px-4 sm:px-6 py-8 pb-32">
       <div className="flex items-center gap-3 mb-8 max-w-md mx-auto w-full">
-        <div className="flex-1 h-1 rounded-full bg-gray-200 overflow-hidden">
+        <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
           <motion.div
-            className="h-full rounded-full bg-gray-800"
+            className="h-full rounded-full bg-primary"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}
@@ -59,7 +59,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             >
               <img src="/logo.svg" alt="coree" className="h-10 mb-8" />
               
-              <div className="space-y-4 text-gray-900 leading-relaxed">
+              <div className="space-y-4 text-foreground leading-relaxed">
                 <p className="text-base">hi friend,</p>
                 <p className="text-base">we created core because life can be... a lot</p>
                 <p className="text-base">sometimes you just need someone to talk to</p>
@@ -71,8 +71,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                 </p>
                 <p className="text-base">we're here for you</p>
                 <div className="pt-4">
-                  <p className="text-xs text-gray-600">love,</p>
-                  <p className="text-sm font-medium text-gray-900">riya</p>
+                  <p className="text-xs text-muted-foreground">love,</p>
+                  <p className="text-sm font-medium text-foreground">riya</p>
                 </div>
               </div>
             </motion.div>
@@ -88,7 +88,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
               className="w-full max-w-md"
             >
               <div className="text-left">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">what brings you to coree?</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-6">what brings you to coree?</h2>
                 <div className="space-y-3">
                   {INTENT_OPTIONS.map((option) => (
                     <button
@@ -96,8 +96,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                       onClick={() => setSelectedIntent(option)}
                       className={`w-full py-3 px-4 rounded-xl text-base text-left font-medium transition-all ${
                         selectedIntent === option
-                          ? "bg-[#add8ff] text-gray-900"
-                          : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-foreground border border-border hover:border-primary"
                       }`}
                     >
                       {option}
@@ -118,28 +118,28 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
               className="w-full max-w-md"
             >
               <div className="text-left">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">you're all set!</h2>
-                <p className="text-sm text-gray-600 mb-6">we've set up your personalized space and you're ready to start your journey with coree.</p>
+                <h2 className="text-lg font-semibold text-foreground mb-2">you're all set!</h2>
+                <p className="text-sm text-muted-foreground mb-6">we've set up your personalized space and you're ready to start your journey with coree.</p>
 
                 <div className="space-y-4">
                   <div className="flex gap-3">
-                    <Lock className="h-5 w-5 text-gray-900 mt-0.5 shrink-0" />
+                    <Lock className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">everything you share stays private</p>
+                      <p className="text-sm font-semibold text-foreground">everything you share stays private</p>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
-                    <EyeOff className="h-5 w-5 text-gray-900 mt-0.5 shrink-0" />
+                    <EyeOff className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">no judgment, ever</p>
+                      <p className="text-sm font-semibold text-foreground">no judgment, ever</p>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
-                    <Fingerprint className="h-5 w-5 text-gray-900 mt-0.5 shrink-0" />
+                    <Fingerprint className="h-5 w-5 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">we're here to listen</p>
+                      <p className="text-sm font-semibold text-foreground">we're here to listen</p>
                     </div>
                   </div>
                 </div>
@@ -150,12 +150,12 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
       </div>
 
       {/* Fixed button at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#FAF7F2] px-4 sm:px-6 py-6">
+      <div className="fixed bottom-0 left-0 right-0 bg-background px-4 sm:px-6 py-6">
         <div className="flex justify-center">
           <button
             onClick={handleContinue}
             disabled={step === 1 && !selectedIntent}
-            className="w-full max-w-md bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full max-w-md bg-primary hover:opacity-90 text-primary-foreground py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {step === 0 ? "continue" : step === 1 ? "continue" : "start your journey"}
           </button>
