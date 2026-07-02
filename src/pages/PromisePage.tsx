@@ -60,12 +60,20 @@ export default function PromisePage({ which }: { which: PromiseKey }) {
   const data = CONTENT[which];
   const Icon = data.icon;
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="fixed top-4 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-50 rounded-3xl bg-background/60 backdrop-blur-md border border-border/60 shadow-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <button
-            onClick={() => navigate("/")}
+            onClick={goBack}
             className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-muted-foreground hover:text-foreground transition"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />
@@ -139,8 +147,8 @@ export default function PromisePage({ which }: { which: PromiseKey }) {
       <footer className="border-t-2 border-border-color">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center text-xs text-muted-foreground">
           <p className="lowercase">© 2025 coree · made with care</p>
-          <button onClick={() => navigate("/")} className="hover:text-foreground transition lowercase">
-            back to home
+          <button onClick={goBack} className="hover:text-foreground transition lowercase">
+            back
           </button>
         </div>
       </footer>
