@@ -332,6 +332,7 @@ const Index = () => {
       return (
       <InsightsScreen
         userId={user.id}
+        userCreatedAt={user.created_at}
         onGoHome={handleGoHome}
         onViewInsights={() => setScreen("insights")}
         onViewHistory={() => { setHistorySessionId(null); setScreen("history"); }}
@@ -395,6 +396,7 @@ const Index = () => {
         onOpenSettings={() => setScreen("settings")}
         onOpenNotes={() => setScreen("notes")}
         userId={user.id}
+        displayName={profile?.display_name}
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         onGoHome={handleGoHome}
