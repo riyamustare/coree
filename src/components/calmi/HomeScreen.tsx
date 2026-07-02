@@ -25,7 +25,7 @@ interface HomeScreenProps {
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
-  onThemeToggle: (event?: React.MouseEvent) => void;
+  onThemeToggle: (event?: import("react").MouseEvent) => void;
 }
 
 export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle }: HomeScreenProps) {
