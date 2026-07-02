@@ -30,10 +30,10 @@ export function useProfile(userId: string | undefined) {
         .single();
 
       if (error && error.code === "PGRST116") {
-        await supabase.from("profiles").insert({ id: userId } as any);
-        setProfile({ onboarding_intent: null, onboarding_completed: false, genz_mode: false, theme: "light" });
+        await supabase.from("profiles").insert({ id: userId, theme: "dark" } as any);
+        setProfile({ onboarding_intent: null, onboarding_completed: false, genz_mode: false, theme: "dark" });
       } else if (data) {
-        setProfile(data as Profile);
+        setProfile({ ...(data as Profile), theme: (data as Profile).theme || "dark" });
       }
       setLoading(false);
     };
