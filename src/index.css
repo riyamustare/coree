@@ -160,7 +160,7 @@
   }
 
   .card-duo {
-    @apply rounded-2xl border-2 border-border bg-card;
+    @apply rounded-2xl border-2 border-border-color bg-card;
     box-shadow: 0 4px 0 0 hsl(var(--border));
     transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
   }
