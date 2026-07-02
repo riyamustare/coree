@@ -252,29 +252,30 @@ const Index = () => {
 
   // Mic stays off by default — user must tap to start listening
 
-  if (authLoading || (user && profileLoading)) {
-    return <LoadingAnimation />;
-  }
+  const renderScreen = () => {
+    if (authLoading || (user && profileLoading)) {
+      return <LoadingAnimation />;
+    }
 
-  if (screen === "landing" && !user) {
-    return (
-      <LandingPage
-        onGetStarted={() => setScreen("auth")}
-        onLogin={() => setScreen("auth")}
-      />
-    );
-  }
+    if (screen === "landing" && !user) {
+      return (
+        <LandingPage
+          onGetStarted={() => setScreen("auth")}
+          onLogin={() => setScreen("auth")}
+        />
+      );
+    }
 
-  if (screen === "auth" && !user) {
-    return <AuthScreen onBack={() => setScreen("landing")} />;
-  }
+    if (screen === "auth" && !user) {
+      return <AuthScreen onBack={() => setScreen("landing")} />;
+    }
 
-  if (screen === "onboarding") {
-    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
-  }
+    if (screen === "onboarding") {
+      return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+    }
 
-  if (screen === "ending") {
-    return (
+    if (screen === "ending") {
+      return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-6">
         <LoadingAnimation />
         <motion.div
@@ -291,21 +292,21 @@ const Index = () => {
           </div>
         </motion.div>
       </div>
-    );
-  }
+      );
+    }
 
-  if (screen === "summary" && summaryData) {
-    return (
+    if (screen === "summary" && summaryData) {
+      return (
       <SummaryScreen
         summary={summaryData}
         onGoHome={handleGoHome}
         onNewSession={handleNewSession}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "history" && user) {
-    return (
+    if (screen === "history" && user) {
+      return (
       <HistoryScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -320,11 +321,11 @@ const Index = () => {
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
         initialSessionId={historySessionId}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "insights" && user) {
-    return (
+    if (screen === "insights" && user) {
+      return (
       <InsightsScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -338,11 +339,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "settings" && user) {
-    return (
+    if (screen === "settings" && user) {
+      return (
       <SettingsScreen
         userId={user.id}
         userEmail={user.email || ""}
@@ -354,12 +355,15 @@ const Index = () => {
         onSignOut={handleSignOut}
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
+        isPro={subscription.isPro}
+        currentPeriodEnd={subscription.currentPeriodEnd}
+        onUpgrade={() => setShowPaywall(true)}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "notes" && user) {
-    return (
+    if (screen === "notes" && user) {
+      return (
       <NotesScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -373,11 +377,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "home" && user) {
-    return (
+    if (screen === "home" && user) {
+      return (
       <HomeScreen
         onStartConversation={handleStartConversation}
         onSignOut={handleSignOut}
@@ -393,11 +397,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  // Chat
-  return (
+    // Chat
+    return (
     <div className="flex h-[100dvh] flex-col bg-background text-foreground">
       {/* Header */}
       <div className="px-6 py-4">
