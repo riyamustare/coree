@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { MessageCircle, Mic, Brain, LineChart, BookHeart, ShieldCheck, Heart, Lock, Sparkles, Quote } from "lucide-react";
+import { MessageCircle, Mic, Brain, LineChart, BookHeart, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 
 interface LandingPageProps {
   onGetStarted: () => void;
