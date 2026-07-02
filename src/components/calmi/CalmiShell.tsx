@@ -71,7 +71,7 @@ export function CalmiShell({
               onClick={onViewInsights}
               className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
             >
-              <Sparkles className="h-5 w-5" />
+              <Sparkles className="h-5 w-5" strokeWidth={2.5} />
             </button>
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
               <span className="text-sm font-medium text-foreground">insights</span>
@@ -84,7 +84,7 @@ export function CalmiShell({
               onClick={onViewHistory}
               className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
             >
-              <Clock className="h-5 w-5" />
+              <Clock className="h-5 w-5" strokeWidth={2.5} />
             </button>
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
               <span className="text-sm font-medium text-foreground">history</span>
@@ -97,7 +97,7 @@ export function CalmiShell({
               onClick={() => setFeedbackOpen(true)}
               className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
             >
-              <ThumbsUp className="h-5 w-5" />
+              <ThumbsUp className="h-5 w-5" strokeWidth={2.5} />
             </button>
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
               <span className="text-sm font-medium text-foreground">feedback</span>
@@ -110,7 +110,7 @@ export function CalmiShell({
               onClick={onOpenNotes}
               className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
             >
-              <BookOpen className="h-5 w-5" />
+              <BookOpen className="h-5 w-5" strokeWidth={2.5} />
             </button>
             <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 whitespace-nowrap z-50 shadow-sm">
               <span className="text-sm font-medium text-foreground">journal</span>
@@ -127,7 +127,7 @@ export function CalmiShell({
             className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-muted transition text-muted-foreground hover:text-foreground"
             aria-label="Settings"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-5 w-5" strokeWidth={2.5} />
           </button>
           {settingsOpen && (
             <div data-settings-menu className="absolute bottom-full left-0 mb-2 bg-card border border-border rounded-xl shadow-lg p-4 w-56 z-50">
