@@ -50,7 +50,7 @@ export function CalmiShell({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="w-20 bg-background flex flex-col items-center py-6 gap-6 border-r border-border">
+      <aside className="w-20 bg-background flex flex-col items-center py-6 gap-6">
         <button
           type="button"
           onClick={onGoHome}
@@ -159,7 +159,7 @@ export function CalmiShell({
       </aside>
 
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-10 border-b border-border/60">
+        <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-10">
           <div className="mx-auto max-w-4xl px-6 lg:px-8 py-4 flex justify-between items-center w-full">
             <div />
             <div className="flex items-center gap-4">

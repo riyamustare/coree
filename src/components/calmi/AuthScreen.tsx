@@ -162,7 +162,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#FAF7F2] flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-background text-foreground flex items-center justify-center z-50 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +173,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
         {onBack && (
           <button 
             onClick={onBack}
-            className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 text-2xl"
+            className="absolute top-6 right-6 text-muted-foreground hover:text-foreground text-2xl"
           >
             ×
           </button>
@@ -181,10 +181,10 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
 
         {/* Header Text */}
         <div className="text-center mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             {isSignUp ? "Start your journey with coree." : "all ears, always"}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {isSignUp ? "your space to be heard" : "your space to be heard"}
           </p>
         </div>
@@ -193,7 +193,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
           {isForgotPassword ? (
             <>
               <div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {forgotStep === "request"
                     ? "Enter the email for your account and we’ll send a 6-digit code."
                     : "Enter the code from your email and choose a new password."}
@@ -201,7 +201,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-2">email</label>
+                <label className="block text-sm text-foreground mb-2">email</label>
                 <input
                   type="email"
                   value={email}
@@ -209,7 +209,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   placeholder="email"
                   autoComplete="email"
                   maxLength={255}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-card text-foreground border border-border rounded-xl focus:outline-none focus:border-primary text-sm placeholder:text-muted-foreground"
                   required
                 />
               </div>
@@ -217,7 +217,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
               {forgotStep === "verify" && (
                 <>
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">6-digit code</label>
+                    <label className="block text-sm text-foreground mb-2">6-digit code</label>
                     <InputOTP value={otp} onChange={setOtp} maxLength={6}>
                       <InputOTPGroup>
                         <InputOTPSlot index={0} />
@@ -231,7 +231,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">new password</label>
+                    <label className="block text-sm text-foreground mb-2">new password</label>
                     <input
                       type="password"
                       value={newPassword}
@@ -239,20 +239,20 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                       placeholder="new password"
                       autoComplete="new-password"
                       minLength={6}
-                      className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                      className="w-full px-4 py-3 bg-card text-foreground border border-border rounded-xl focus:outline-none focus:border-primary text-sm placeholder:text-muted-foreground"
                       required
                     />
                   </div>
                 </>
               )}
 
-              {error && <div className="text-red-600 text-sm">{error}</div>}
+              {error && <div className="text-destructive text-sm">{error}</div>}
 
               <button
                 type="button"
                 onClick={forgotStep === "request" ? handleForgotPasswordRequest : handleForgotPasswordVerify}
                 disabled={loading}
-                className="w-full bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+                className="w-full bg-primary hover:opacity-90 text-primary-foreground py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
               >
                 {loading
                   ? "working..."
@@ -265,7 +265,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                 <button
                   type="button"
                   onClick={resetForgotFlow}
-                  className="text-black hover:text-gray-700 font-medium text-sm underline"
+                  className="text-foreground hover:opacity-70 font-medium text-sm underline"
                 >
                   back to login
                 </button>
@@ -275,21 +275,21 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
             <>
               {isSignUp && (
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">your name</label>
+                  <label className="block text-sm text-foreground mb-2">your name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="name"
                     maxLength={80}
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                    className="w-full px-4 py-3 bg-card text-foreground border border-border rounded-xl focus:outline-none focus:border-primary text-sm placeholder:text-muted-foreground"
                     required
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm text-gray-700 mb-2">enter your email</label>
+                <label className="block text-sm text-foreground mb-2">enter your email</label>
                 <input
                   type="email"
                   value={email}
@@ -297,13 +297,13 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   placeholder="email"
                   autoComplete="email"
                   maxLength={255}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-card text-foreground border border-border rounded-xl focus:outline-none focus:border-primary text-sm placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-700 mb-2">password</label>
+                <label className="block text-sm text-foreground mb-2">password</label>
                 <input
                   type="password"
                   value={password}
@@ -311,12 +311,12 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   placeholder="password"
                   autoComplete={isSignUp ? "new-password" : "current-password"}
                   minLength={6}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:border-gray-400 text-sm placeholder-gray-400"
+                  className="w-full px-4 py-3 bg-card text-foreground border border-border rounded-xl focus:outline-none focus:border-primary text-sm placeholder:text-muted-foreground"
                   required
                 />
               </div>
 
-              {error && <div className="text-red-600 text-sm">{error}</div>}
+              {error && <div className="text-destructive text-sm">{error}</div>}
 
               {!isSignUp && (
                 <div className="flex w-full justify-end mb-2">
@@ -327,7 +327,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                       setForgotStep("request");
                       setError("");
                     }}
-                    className="self-end text-sm text-gray-600 hover:text-gray-900 underline"
+                    className="self-end text-sm text-muted-foreground hover:text-foreground underline"
                   >
                     forgot password?
                   </button>
@@ -338,21 +338,21 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                 type="button"
                 onClick={handleAuth}
                 disabled={loading}
-                className="w-full bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+                className="w-full bg-primary hover:opacity-90 text-primary-foreground py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
               >
                 {loading ? (isSignUp ? "creating account..." : "logging in...") : (isSignUp ? "sign up" : "login")}
               </button>
 
               {!isSignUp && (
                 <div className="text-center mt-4">
-                  <span className="text-gray-600 text-sm">don't have an account? </span>
+                  <span className="text-muted-foreground text-sm">don't have an account? </span>
                   <button
                     type="button"
                     onClick={() => {
                       setIsSignUp(true);
                       setError("");
                     }}
-                    className="text-black hover:text-gray-700 font-medium text-sm underline"
+                    className="text-foreground hover:opacity-70 font-medium text-sm underline"
                   >
                     signup
                   </button>
@@ -361,14 +361,14 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
 
               {isSignUp && (
                 <div className="text-center mt-4">
-                  <span className="text-gray-600 text-sm">already have an account? </span>
+                  <span className="text-muted-foreground text-sm">already have an account? </span>
                   <button
                     type="button"
                     onClick={() => {
                       setIsSignUp(false);
                       setError("");
                     }}
-                    className="text-black hover:text-gray-700 font-medium text-sm underline"
+                    className="text-foreground hover:opacity-70 font-medium text-sm underline"
                   >
                     login
                   </button>
@@ -380,22 +380,22 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
 
         {/* OR Divider */}
         <div className="flex items-center my-6">
-          <div className="flex-1 border-t border-gray-300"></div>
-          <span className="px-4 text-sm text-gray-500">or</span>
-          <div className="flex-1 border-t border-gray-300"></div>
+          <div className="flex-1 border-t border-border"></div>
+          <span className="px-4 text-sm text-muted-foreground">or</span>
+          <div className="flex-1 border-t border-border"></div>
         </div>
         
         {/* Google Sign In */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full bg-[#277BD9] hover:bg-[#2e90ff] text-[#FAF7F2] py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
+          className="w-full bg-card text-foreground border border-border hover:border-primary py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50"
         >
-          google
+          continue with google
         </button>
 
         {/* Footer Text */}
-        <p className="text-sm text-gray-500 text-center mt-6 leading-relaxed">
+        <p className="text-sm text-muted-foreground text-center mt-6 leading-relaxed">
           by signing up you agree to our <strong>terms of service</strong>,<br />
           <strong>privacy policy</strong> and acknowledge <strong>ai disclaimer.</strong>
         </p>

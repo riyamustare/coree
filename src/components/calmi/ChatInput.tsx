@@ -78,7 +78,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="relative bg-white shadow-sm rounded-2xl border border-gray-200"
+      className="relative bg-card shadow-sm rounded-2xl border border-border"
     >
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Input */}
@@ -90,7 +90,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder={isRecording ? "Listening..." : "type your message..."}
           disabled={disabled || isRecording}
           rows={1}
-          className="flex-1 resize-none bg-transparent text-base leading-relaxed text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:opacity-50 rounded-lg"
+          className="flex-1 resize-none bg-transparent text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50 rounded-lg"
         />
 
         {/* Voice/Send Buttons */}
@@ -102,7 +102,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200 ${
               isRecording
                 ? "bg-red-100 text-red-600"
-                : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                : "text-muted-foreground hover:text-muted-foreground hover:bg-muted"
             } disabled:opacity-30 disabled:cursor-not-allowed`}
             aria-label={isRecording ? "Stop recording" : "Record voice"}
           >
@@ -114,7 +114,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             type="button"
             onClick={handleSubmit}
             disabled={!value.trim() || disabled || isRecording}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#277BD9] text-white transition-all duration-200 hover:bg-[#2e90ff] disabled:opacity-30 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white transition-all duration-200 hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Send"
           >
             <ArrowUp className="h-4 w-4" />

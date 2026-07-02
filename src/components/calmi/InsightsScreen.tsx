@@ -424,7 +424,7 @@ export function InsightsScreen({ userId, onGoHome, onViewInsights, onViewHistory
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-sm font-semibold text-foreground">weekly summary</h3>
               </div>
-              <div className="rounded-2xl border border-border-color bg-white p-6 shadow-soft">
+              <div className="rounded-2xl border border-border-color bg-card p-6 shadow-soft">
                 <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                   {generateWeeklySummary(sessions, journalCount)}
                 </p>
