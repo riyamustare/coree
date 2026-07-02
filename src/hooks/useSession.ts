@@ -56,17 +56,18 @@ export function useSession(userId: string | undefined) {
     const userMessageCount = messages.filter((m) => m.role === "user").length;
     const messageCount = messages.length;
 
-    // If convo is < 60s and has 0-1 user messages, delete it silently
+    // Save the session in history only when the user has 4+ messages
+    // (a proper back-and-forth). Otherwise drop it silently — no time limit.
     const endedAt = new Date().toISOString();
 
-    if (duration < 60 && userMessageCount <= 1) {
+    if (userMessageCount < 4) {
       await supabase.from("messages").delete().eq("session_id", sessionId);
       await supabase.from("sessions").delete().eq("id", sessionId);
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
       return {
-        summary: "Session was too short to save.",
+        summary: "Session was too short to save — chat a bit more next time to save it.",
         messageCount,
         duration,
         endedAt,

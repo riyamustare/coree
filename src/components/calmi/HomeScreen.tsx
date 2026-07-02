@@ -47,13 +47,9 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         .limit(30);
 
       if (data) {
-        const filtered = data.filter((s) => {
-          if (!s.ended_at || !s.started_at) return false;
-          const duration =
-            new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-          return duration > 5 * 60 * 1000;
-        });
-        setPastSessions(filtered.slice(0, 5));
+        // No time filter — the session save threshold now lives in useSession
+        // (a session is kept only when the user sent 4+ messages).
+        setPastSessions(data.slice(0, 5));
       }
     };
     fetchSessions();
@@ -110,7 +106,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
               className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
             />
           </div>
-          <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground">
             {greeting}?
           </h1>
         </motion.div>
@@ -123,23 +119,23 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         >
           <button
             onClick={() => onStartConversation("voice")}
-            className="w-full rounded-xl border border-gray-200 bg-white p-4 sm:p-5 text-left hover:border-gray-300 hover:shadow-md transition-all group active:scale-[0.99]"
+            className="w-full rounded-xl border border-border bg-card p-4 sm:p-5 text-left hover:border-primary/50 hover:shadow-md transition-all group active:scale-[0.99]"
           >
-            <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
+            <p className="text-sm font-medium text-foreground">
               voice mode
             </p>
-            <p className="text-xs text-gray-500 mt-1">in the mood to talk?</p>
+            <p className="text-xs text-muted-foreground mt-1">in the mood to talk?</p>
           </button>
 
           <button
             onClick={() => onStartConversation("text")}
-            className="w-full rounded-xl border border-gray-200 bg-white p-4 sm:p-5 text-left hover:border-gray-300 hover:shadow-md transition-all flex items-center justify-between group active:scale-[0.99]"
+            className="w-full rounded-xl border border-border bg-card p-4 sm:p-5 text-left hover:border-primary/50 hover:shadow-md transition-all flex items-center justify-between group active:scale-[0.99]"
           >
             <div>
-              <p className="text-sm font-medium text-gray-900 group-hover:text-gray-950">
+              <p className="text-sm font-medium text-foreground">
                 text mode
               </p>
-              <p className="text-xs text-gray-500 mt-1">not in the talking mood?</p>
+              <p className="text-xs text-muted-foreground mt-1">not in the talking mood?</p>
             </div>
           </button>
         </motion.div>
@@ -151,11 +147,11 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="w-full max-w-md mt-8 sm:mt-12 px-1"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-medium text-gray-600">history</h2>
+            <h2 className="text-sm font-medium text-muted-foreground">history</h2>
             {pastSessions.length > 0 && (
               <button
                 onClick={onViewHistory}
-                className="flex items-center gap-1 text-xs font-medium text-[#277BD9] hover:text-[#2e90ff] transition"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:opacity-80 transition"
               >
                 See all
                 <ChevronRight className="h-3 w-3" />
@@ -164,8 +160,8 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
           <div className="space-y-2">
             {pastSessions.length === 0 ? (
-              <div className="rounded-lg bg-white border border-gray-200 px-4 py-4 text-center">
-                <p className="text-xs text-gray-600">start a conversation to see it here</p>
+              <div className="rounded-lg bg-card border border-border px-4 py-4 text-center">
+                <p className="text-xs text-muted-foreground">start a conversation — all your sessions will live here</p>
               </div>
             ) : (
               pastSessions.slice(0, 3).map((session, i) => (
@@ -175,12 +171,12 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 + i * 0.05 }}
                   onClick={() => handleSessionClick(session.id)}
-                  className="w-full text-left rounded-lg bg-white px-3 py-2 border border-gray-200 hover:border-gray-300 transition-all text-xs"
+                  className="w-full text-left rounded-lg bg-card px-3 py-2 border border-border hover:border-primary/50 transition-all text-xs"
                 >
-                  <p className="text-gray-900 line-clamp-1 font-medium">
+                  <p className="text-foreground line-clamp-1 font-medium">
                     {session.summary || "A moment of reflection"}
                   </p>
-                  <p className="text-gray-500 mt-1">{formatDate(session.started_at)}</p>
+                  <p className="text-muted-foreground mt-1">{formatDate(session.started_at)}</p>
                 </motion.button>
               ))
             )}
