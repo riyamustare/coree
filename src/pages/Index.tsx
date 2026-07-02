@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
 import { useProfile } from "@/hooks/useProfile";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PaywallModal } from "@/components/calmi/PaywallModal";
 import { LandingPage } from "@/components/calmi/LandingPage";
 import { AuthScreen } from "@/components/calmi/AuthScreen";
 import { HomeScreen } from "@/components/calmi/HomeScreen";
@@ -49,6 +51,8 @@ const ENDING_MESSAGES = [
 const Index = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, completeOnboarding, setGenzMode, setTheme } = useProfile(user?.id);
+  const subscription = useSubscription(user?.id);
+  const [showPaywall, setShowPaywall] = useState(false);
   const {
     sessionId,
     sessionStart,
@@ -135,7 +139,7 @@ const Index = () => {
   const startConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
     setMode(selectedMode);
     trackModeChanged(selectedMode);
-    await startSession();
+    await startSession(selectedMode);
     trackSessionStarted(sessionId || "pending");
     setMessages([
       {
@@ -149,8 +153,12 @@ const Index = () => {
   }, [startSession, sessionId, setMessages]);
 
   const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+    if (selectedMode === "voice" && !subscription.loading && !subscription.canStartVoice) {
+      setShowPaywall(true);
+      return;
+    }
     await startConversation(selectedMode);
-  }, [startConversation]);
+  }, [startConversation, subscription.loading, subscription.canStartVoice]);
 
   const handleEndSession = useCallback(async () => {
     setShowEndConfirm(false);
@@ -244,29 +252,30 @@ const Index = () => {
 
   // Mic stays off by default — user must tap to start listening
 
-  if (authLoading || (user && profileLoading)) {
-    return <LoadingAnimation />;
-  }
+  const renderScreen = () => {
+    if (authLoading || (user && profileLoading)) {
+      return <LoadingAnimation />;
+    }
 
-  if (screen === "landing" && !user) {
-    return (
-      <LandingPage
-        onGetStarted={() => setScreen("auth")}
-        onLogin={() => setScreen("auth")}
-      />
-    );
-  }
+    if (screen === "landing" && !user) {
+      return (
+        <LandingPage
+          onGetStarted={() => setScreen("auth")}
+          onLogin={() => setScreen("auth")}
+        />
+      );
+    }
 
-  if (screen === "auth" && !user) {
-    return <AuthScreen onBack={() => setScreen("landing")} />;
-  }
+    if (screen === "auth" && !user) {
+      return <AuthScreen onBack={() => setScreen("landing")} />;
+    }
 
-  if (screen === "onboarding") {
-    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
-  }
+    if (screen === "onboarding") {
+      return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+    }
 
-  if (screen === "ending") {
-    return (
+    if (screen === "ending") {
+      return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-6">
         <LoadingAnimation />
         <motion.div
@@ -283,21 +292,21 @@ const Index = () => {
           </div>
         </motion.div>
       </div>
-    );
-  }
+      );
+    }
 
-  if (screen === "summary" && summaryData) {
-    return (
+    if (screen === "summary" && summaryData) {
+      return (
       <SummaryScreen
         summary={summaryData}
         onGoHome={handleGoHome}
         onNewSession={handleNewSession}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "history" && user) {
-    return (
+    if (screen === "history" && user) {
+      return (
       <HistoryScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -312,11 +321,11 @@ const Index = () => {
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
         initialSessionId={historySessionId}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "insights" && user) {
-    return (
+    if (screen === "insights" && user) {
+      return (
       <InsightsScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -330,11 +339,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "settings" && user) {
-    return (
+    if (screen === "settings" && user) {
+      return (
       <SettingsScreen
         userId={user.id}
         userEmail={user.email || ""}
@@ -346,12 +355,15 @@ const Index = () => {
         onSignOut={handleSignOut}
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
+        isPro={subscription.isPro}
+        currentPeriodEnd={subscription.currentPeriodEnd}
+        onUpgrade={() => setShowPaywall(true)}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "notes" && user) {
-    return (
+    if (screen === "notes" && user) {
+      return (
       <NotesScreen
         userId={user.id}
         onGoHome={handleGoHome}
@@ -365,11 +377,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  if (screen === "home" && user) {
-    return (
+    if (screen === "home" && user) {
+      return (
       <HomeScreen
         onStartConversation={handleStartConversation}
         onSignOut={handleSignOut}
@@ -385,11 +397,11 @@ const Index = () => {
         theme={(profile?.theme as "light" | "dark") || "light"}
         onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
       />
-    );
-  }
+      );
+    }
 
-  // Chat
-  return (
+    // Chat
+    return (
     <div className="flex h-[100dvh] flex-col bg-background text-foreground">
       {/* Header */}
       <div className="px-6 py-4">
@@ -553,6 +565,23 @@ const Index = () => {
         </div>
       )}
     </div>
+    );
+  };
+
+  return (
+    <>
+      {renderScreen()}
+      <PaywallModal
+        open={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        userEmail={user?.email}
+        userName={(user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name}
+        onSuccess={async () => {
+          setShowPaywall(false);
+          await subscription.refresh();
+        }}
+      />
+    </>
   );
 };
 

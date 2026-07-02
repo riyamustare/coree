@@ -31,11 +31,11 @@ export function useSession(userId: string | undefined) {
     setIsLoading(false);
   }, [userId]);
 
-  const startSession = useCallback(async () => {
+  const startSession = useCallback(async (mode: "text" | "voice" = "text") => {
     if (!userId) return;
     const { data, error } = await supabase
       .from("sessions")
-      .insert({ user_id: userId })
+      .insert({ user_id: userId, mode } as any)
       .select("id")
       .single();
     if (error) {

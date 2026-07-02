@@ -168,6 +168,7 @@ export type Database = {
           emotions: Json | null
           ended_at: string | null
           id: string
+          mode: string
           started_at: string
           summary: string | null
           user_id: string
@@ -177,6 +178,7 @@ export type Database = {
           emotions?: Json | null
           ended_at?: string | null
           id?: string
+          mode?: string
           started_at?: string
           summary?: string | null
           user_id: string
@@ -186,8 +188,57 @@ export type Database = {
           emotions?: Json | null
           ended_at?: string | null
           id?: string
+          mode?: string
           started_at?: string
           summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          current_period_end: string
+          current_period_start?: string
+          id?: string
+          plan?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -197,6 +248,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_qualifying_voice_sessions: {
+        Args: { _user_id: string }
+        Returns: number
+      }
+      has_active_pro: { Args: { _user_id: string }; Returns: boolean }
       match_memories: {
         Args: {
           match_count?: number
