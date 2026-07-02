@@ -200,8 +200,7 @@ function getEmotionTags(emotions: Record<string, number> | null): EmotionTag[] {
 }
 
 export function InsightsScreen({ userId, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: InsightsScreenProps) {
-  // eslint-disable-next-line react/prop-types
-}
+  // component starts below
   const [weekOffset, setWeekOffset] = useState(0);
   const [sessions, setSessions] = useState<WeekSession[]>([]);
   const [sessionMessages, setSessionMessages] = useState<Record<string, ChatLogMessage[]>>({});
