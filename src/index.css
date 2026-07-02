@@ -149,7 +149,7 @@
 
   .btn-duo-secondary {
     @apply relative inline-flex items-center justify-center rounded-2xl font-bold uppercase tracking-wide select-none;
-    @apply bg-card text-foreground px-6 py-3 border-2 border-border;
+    @apply bg-card text-foreground px-6 py-3 border-2 border-border-color;
     box-shadow: 0 4px 0 0 hsl(var(--border));
     transition: transform 120ms ease, box-shadow 120ms ease;
   }
