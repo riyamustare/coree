@@ -42,8 +42,8 @@ serve(async (req) => {
     if (!GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is not configured");
 
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("EXT_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("EXT_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     const { data: messages, error: msgError } = await supabase
