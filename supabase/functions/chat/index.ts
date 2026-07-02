@@ -46,8 +46,8 @@ serve(async (req) => {
         const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
         // Use service role for DB queries, but validate user token separately
         const supabaseAdmin = createClient(
-          Deno.env.get("EXT_SUPABASE_URL") ?? Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("EXT_SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
         );
 
         const token = authHeader.replace("Bearer ", "");
