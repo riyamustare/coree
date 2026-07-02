@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackScreenViewed } from "@/lib/analytics";
 import { CalmiShell } from "./CalmiShell";
@@ -15,9 +16,12 @@ interface SettingsScreenProps {
   onSignOut: () => void;
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
+  isPro?: boolean;
+  currentPeriodEnd?: string | null;
+  onUpgrade?: () => void;
 }
 
-export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle }: SettingsScreenProps) {
+export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, isPro, currentPeriodEnd, onUpgrade }: SettingsScreenProps) {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
@@ -86,7 +90,9 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
           <h2 className="text-base font-semibold text-foreground mb-1">usage analytics</h2>
           <p className="text-xs text-muted-foreground mb-3">how much you've used core</p>
           <div className="rounded-2xl bg-surface px-5 py-4 shadow-soft space-y-3">
-            <span className="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">free</span>
+            <span className="inline-block rounded-full bg-primary/10 px-3 py-0.5 text-xs font-medium text-primary">
+              {isPro ? "pro" : "free"}
+            </span>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">sessions</span>
               <span className="text-foreground font-medium">{sessionCount}</span>
@@ -96,6 +102,49 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
               <span className="text-foreground font-medium">{messageCount}</span>
             </div>
           </div>
+        </motion.div>
+
+        {/* Subscription / Upgrade */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
+          <h2 className="text-base font-semibold text-foreground mb-1">subscription</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            {isPro ? "you're on the pro plan" : "unlock unlimited voice mode"}
+          </p>
+          {isPro ? (
+            <div className="rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">coree Pro</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Renews on{" "}
+                {currentPeriodEnd
+                  ? new Date(currentPeriodEnd).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card px-5 py-4">
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-2xl font-bold text-foreground">₹199</span>
+                <span className="text-xs text-muted-foreground">/ month</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                unlimited voice conversations, priority responses.
+              </p>
+              <button
+                onClick={onUpgrade}
+                className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 transition flex items-center justify-center gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                upgrade to pro
+              </button>
+            </div>
+          )}
         </motion.div>
 
         <hr className="border-border-color mb-6" />
