@@ -322,7 +322,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
         initialSessionId={historySessionId}
       />
       );
@@ -341,7 +341,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }
@@ -379,7 +379,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }
@@ -399,7 +399,7 @@ const Index = () => {
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         onGoHome={handleGoHome}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }
