@@ -22,6 +22,7 @@ import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Mic, MicOff } from "lucide-react";
+import { toggleThemeWithTransition } from "@/lib/themeTransition";
 import {
   setUserProperties,
   resetUserProperties,
@@ -198,9 +199,12 @@ const Index = () => {
     setScreen("history");
   }, []);
 
-  const handleThemeChange = useCallback((theme: "light" | "dark") => {
-    setTheme(theme);
-  }, [setTheme]);
+  const handleThemeChange = useCallback(
+    (theme: "light" | "dark", event?: React.MouseEvent) => {
+      toggleThemeWithTransition(event ?? null, () => setTheme(theme));
+    },
+    [setTheme]
+  );
 
   const handleSendText = useCallback(
     async (content: string) => {
@@ -318,7 +322,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
         initialSessionId={historySessionId}
       />
       );
@@ -337,7 +341,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }
@@ -375,7 +379,7 @@ const Index = () => {
         genzMode={profile?.genz_mode || false}
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }
@@ -395,7 +399,7 @@ const Index = () => {
         onGenzToggle={(enabled) => setGenzMode(enabled)}
         onGoHome={handleGoHome}
         theme={(profile?.theme as "light" | "dark") || "light"}
-        onThemeToggle={() => handleThemeChange(profile?.theme === "light" ? "dark" : "light")}
+        onThemeToggle={(e) => handleThemeChange(profile?.theme === "light" ? "dark" : "light", e)}
       />
       );
     }

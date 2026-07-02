@@ -23,7 +23,7 @@ interface InsightsScreenProps {
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
-  onThemeToggle: () => void;
+  onThemeToggle: (event?: import("react").MouseEvent) => void;
 }
 
 interface WeekSession {

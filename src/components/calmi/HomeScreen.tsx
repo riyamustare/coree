@@ -25,7 +25,7 @@ interface HomeScreenProps {
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
-  onThemeToggle: () => void;
+  onThemeToggle: (event?: import("react").MouseEvent) => void;
 }
 
 export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle }: HomeScreenProps) {
@@ -119,24 +119,21 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         >
           <button
             onClick={() => onStartConversation("voice")}
-            className="w-full rounded-xl border border-border bg-card p-4 sm:p-5 text-left hover:border-primary/50 hover:shadow-md transition-all group active:scale-[0.99]"
+            className="card-duo w-full p-4 sm:p-5 text-left"
           >
-            <p className="text-sm font-medium text-foreground">
-              voice mode
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">in the mood to talk?</p>
+            <p className="text-sm font-bold text-foreground uppercase tracking-wide">voice mode</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">in the mood to talk?</p>
           </button>
 
           <button
             onClick={() => onStartConversation("text")}
-            className="w-full rounded-xl border border-border bg-card p-4 sm:p-5 text-left hover:border-primary/50 hover:shadow-md transition-all flex items-center justify-between group active:scale-[0.99]"
+            className="card-duo w-full p-4 sm:p-5 text-left flex items-center justify-between"
           >
             <div>
-              <p className="text-sm font-medium text-foreground">
-                text mode
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">not in the talking mood?</p>
+              <p className="text-sm font-bold text-foreground uppercase tracking-wide">text mode</p>
+              <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">not in the talking mood?</p>
             </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={2.5} />
           </button>
         </motion.div>
 

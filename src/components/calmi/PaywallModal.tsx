@@ -92,7 +92,7 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
             <button
               onClick={handleUpgrade}
               disabled={loading}
-              className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2"
+              className="btn-duo w-full text-sm gap-2"
             >
               {loading ? (
                 <>
