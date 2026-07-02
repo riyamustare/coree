@@ -31,7 +31,7 @@ interface HistoryScreenProps {
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
-  onThemeToggle: () => void;
+  onThemeToggle: (event?: React.MouseEvent) => void;
   initialSessionId?: string | null;
 }
 

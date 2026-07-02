@@ -24,7 +24,7 @@ interface NotesScreenProps {
   genzMode: boolean;
   onGenzToggle: (enabled: boolean) => void;
   theme: "light" | "dark";
-  onThemeToggle: () => void;
+  onThemeToggle: (event?: React.MouseEvent) => void;
 }
 
 export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: NotesScreenProps) {
