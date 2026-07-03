@@ -9,6 +9,7 @@ import LoadingAnimation from "@/components/LoadingAnimation";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PromisePage from "./pages/PromisePage.tsx";
+import SeoLandingPage from "./pages/SeoLandingPage.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,9 @@ const App = () => (
         <Suspense fallback={<LoadingAnimation />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/ai-friend" element={<SeoLandingPage variant="ai-friend" />} />
+            <Route path="/ai-therapist" element={<SeoLandingPage variant="ai-therapist" />} />
+            <Route path="/ai-therapy" element={<SeoLandingPage variant="ai-therapy" />} />
             <Route path="/privacy" element={<PromisePage which="privacy" />} />
             <Route path="/encryption" element={<PromisePage which="encryption" />} />
             <Route path="/no-diagnoses" element={<PromisePage which="no-diagnoses" />} />
