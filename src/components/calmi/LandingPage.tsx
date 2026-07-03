@@ -221,8 +221,8 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
-                { n: "01", t: "say hi", d: "sign up in seconds. tell coree what brought you here." },
-                { n: "02", t: "talk or type", d: "start a session whenever you need to think out loud." },
+                { n: "01", t: "say hi", d: "sign up in seconds. tell your ai friend what brought you here." },
+                { n: "02", t: "talk or type", d: "start an ai therapist-style session whenever you need to think out loud." },
                 { n: "03", t: "notice patterns", d: "see gentle weekly reflections and pick up where you left off." },
               ].map(({ n, t, d }) => (
                 <div key={n} className="card-duo p-5 sm:p-6">
@@ -230,6 +230,29 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                   <h3 className="mt-2 text-base font-bold text-foreground lowercase">{t}</h3>
                   <p className="mt-1 text-sm text-muted-foreground leading-relaxed lowercase">{d}</p>
                 </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20 sm:mt-28" aria-labelledby="ai-support-title">
+            <div className="max-w-3xl mb-10">
+              <h2 id="ai-support-title" className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
+                coree for ai friend therapy and everyday emotional support
+              </h2>
+              <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
+                people search for coree when they want an ai friend to talk to, an ai therapist-style chat, or a private place to process stress, loneliness, anxiety, relationships, and late-night thoughts.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+              {[
+                { to: "/ai-friend", t: "ai friend", d: "a warm companion for text or voice check-ins when you feel alone." },
+                { to: "/ai-therapist", t: "ai therapist-style support", d: "reflective listening and gentle questions, without diagnosis or treatment claims." },
+                { to: "/ai-therapy", t: "ai therapy companion", d: "short sessions to vent, journal, notice patterns, and feel grounded." },
+              ].map(({ to, t, d }) => (
+                <Link key={to} to={to} className="card-duo p-5 sm:p-6 block hover:-translate-y-0.5 transition-transform">
+                  <h3 className="text-base font-bold text-foreground lowercase">{t}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed lowercase">{d}</p>
+                </Link>
               ))}
             </div>
           </section>
