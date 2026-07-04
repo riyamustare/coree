@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mic, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
+import { WaitlistCard } from "./WaitlistCard";
+import { WaitlistModal } from "./WaitlistModal";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -12,6 +14,7 @@ interface LandingPageProps {
 // warm cream background (#FAF7F2), bold gray-900 headline, blue CTA (#277BD9).
 export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -259,6 +262,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
 
           {/* Final CTA */}
           <section className="mt-20 sm:mt-28">
+            <WaitlistCard onJoin={() => setWaitlistOpen(true)} variant="landing" />
+          </section>
+
+          <section className="mt-20 sm:mt-28">
             <div className="card-duo p-8 sm:p-12 text-center">
               <h2 className="text-2xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
                 your feelings deserve a soft place to land.
@@ -333,6 +340,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           }),
         }}
       />
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
     </div>
   );
 }

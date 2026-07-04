@@ -3,6 +3,8 @@ import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CalmiShell } from "./CalmiShell";
+import { WaitlistCard } from "./WaitlistCard";
+import { WaitlistModal } from "./WaitlistModal";
 import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
 
 interface PastSession {
@@ -31,6 +33,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle, displayName }: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const hour = new Date().getHours();
   const firstName = (displayName || "").trim().split(/\s+/)[0] || "";
@@ -148,6 +151,8 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={2.5} />
           </button>
+
+          <WaitlistCard onJoin={() => setWaitlistOpen(true)} variant="home" />
         </motion.div>
 
         <motion.div
@@ -193,6 +198,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
         </motion.div>
       </div>
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
     </CalmiShell>
   );
 }

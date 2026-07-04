@@ -243,6 +243,42 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist: {
+        Row: {
+          city: string
+          created_at: string
+          email: string
+          id: string
+          looking_for: string
+          name: string
+          notified_at: string | null
+          phone: string
+          user_id: string | null
+        }
+        Insert: {
+          city?: string
+          created_at?: string
+          email: string
+          id?: string
+          looking_for: string
+          name: string
+          notified_at?: string | null
+          phone: string
+          user_id?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          looking_for?: string
+          name?: string
+          notified_at?: string | null
+          phone?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
