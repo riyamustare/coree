@@ -14,6 +14,10 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [forgotStep, setForgotStep] = useState<"request" | "verify" | "reset">("request");
+  const [authMode, setAuthMode] = useState<"email" | "phone">("email");
+  const [phone, setPhone] = useState("");
+  const [phoneOtp, setPhoneOtp] = useState("");
+  const [phoneStep, setPhoneStep] = useState<"enter" | "verify">("enter");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -148,6 +152,69 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
     } catch (err: any) {
       const errorMsg = err.message || "Failed to sign in with Google";
       setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const normalizePhone = (raw: string) => {
+    const trimmed = raw.trim().replace(/\s|-|\(|\)/g, "");
+    return trimmed.startsWith("+") ? trimmed : `+${trimmed.replace(/^0+/, "")}`;
+  };
+
+  const handleSendPhoneOtp = async () => {
+    if (!phone.trim()) {
+      setError("Please enter your phone number.");
+      return;
+    }
+    if (isSignUp && !name.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const normalized = normalizePhone(phone);
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: normalized,
+        options: {
+          channel: "sms",
+          shouldCreateUser: true,
+          data: isSignUp && name.trim() ? { display_name: name.trim() } : undefined,
+        },
+      });
+      if (error) throw error;
+      toast({ title: "code sent", description: `we sent a 6-digit code to ${normalized}.` });
+      setPhoneStep("verify");
+    } catch (err: any) {
+      const msg = err.message || "Unable to send code. Make sure the phone provider is enabled.";
+      setError(msg);
+      toast({ title: "couldn't send code", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    if (phoneOtp.trim().length !== 6) {
+      setError("Enter the 6-digit code.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const normalized = normalizePhone(phone);
+      const { error } = await supabase.auth.verifyOtp({
+        phone: normalized,
+        token: phoneOtp.trim(),
+        type: "sms",
+      });
+      if (error) throw error;
+      isSignUp ? trackSignUp() : trackSignIn();
+    } catch (err: any) {
+      const msg = err.message || "Invalid or expired code.";
+      setError(msg);
+      toast({ title: "couldn't verify", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
