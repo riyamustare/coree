@@ -340,6 +340,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           }),
         }}
       />
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
     </div>
   );
 }
