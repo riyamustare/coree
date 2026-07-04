@@ -319,6 +319,33 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
             </div>
 
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          {!isForgotPassword && (
+            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1 border-2 border-border-color">
+              <button
+                type="button"
+                onClick={() => { setAuthMode("email"); setError(""); setPhoneStep("enter"); setPhoneOtp(""); }}
+                className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                  authMode === "email"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                email
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode("phone"); setError(""); }}
+                className={`py-2 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                  authMode === "phone"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                phone
+              </button>
+            </div>
+          )}
+
           {isForgotPassword ? (
             <>
               <div>
