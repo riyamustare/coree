@@ -194,9 +194,9 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
                 <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center mb-4">
                   <Sparkles className="h-6 w-6 text-primary" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-2xl font-black text-foreground lowercase mb-2">you're in ✨</h2>
+                <h2 className="text-2xl font-black text-foreground lowercase mb-2">joined the waitlist ✨</h2>
                 <p className="text-sm text-muted-foreground font-medium lowercase max-w-xs mx-auto">
-                  we'll reach out on your phone or email when the first bangalore invites go out.
+                  you've joined the waitlist and will be contacted when it's done.
                 </p>
                 <button
                   onClick={handleClose}
