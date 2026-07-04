@@ -431,7 +431,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                 </button>
               </div>
             </>
-          ) : (
+          ) : authMode === "email" ? (
             <>
               {isSignUp && (
                 <div>
@@ -522,6 +522,105 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
                   {isSignUp ? "log in" : "sign up"}
                 </button>
               </div>
+            </>
+          ) : (
+            <>
+              {isSignUp && phoneStep === "enter" && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-2">your name</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="name"
+                    maxLength={80}
+                    className="w-full px-4 py-3 bg-card text-foreground border-2 border-border-color rounded-2xl focus:outline-none focus:border-primary text-sm font-medium placeholder:text-muted-foreground transition"
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-2">phone number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 98xxxxxxxx"
+                  autoComplete="tel"
+                  maxLength={32}
+                  disabled={phoneStep === "verify"}
+                  className="w-full px-4 py-3 bg-card text-foreground border-2 border-border-color rounded-2xl focus:outline-none focus:border-primary text-sm font-medium placeholder:text-muted-foreground transition disabled:opacity-60"
+                  required
+                />
+                <p className="text-[11px] text-muted-foreground mt-1.5 font-medium lowercase">
+                  include country code (e.g. +91 for india).
+                </p>
+              </div>
+
+              {phoneStep === "verify" && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-foreground mb-2">6-digit code</label>
+                  <InputOTP value={phoneOtp} onChange={setPhoneOtp} maxLength={6}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              )}
+
+              {error && (
+                <div className="text-destructive text-sm font-medium lowercase bg-destructive/10 border-2 border-destructive/30 rounded-xl px-3 py-2">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={phoneStep === "enter" ? handleSendPhoneOtp : handleVerifyPhoneOtp}
+                disabled={loading}
+                className="btn-duo w-full py-4 text-sm"
+              >
+                {loading
+                  ? "working..."
+                  : phoneStep === "enter"
+                  ? isSignUp
+                    ? "send code & sign up"
+                    : "send login code"
+                  : "verify & continue"}
+              </button>
+
+              {phoneStep === "verify" && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => { setPhoneStep("enter"); setPhoneOtp(""); setError(""); }}
+                    className="text-foreground hover:text-primary font-bold text-sm lowercase transition"
+                  >
+                    use a different number
+                  </button>
+                </div>
+              )}
+
+              {phoneStep === "enter" && (
+                <div className="text-center pt-2">
+                  <span className="text-muted-foreground text-sm font-medium lowercase">
+                    {isSignUp ? "already have an account? " : "new here? "}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
+                    className="text-primary hover:text-primary/80 font-black text-sm lowercase transition"
+                  >
+                    {isSignUp ? "log in" : "sign up"}
+                  </button>
+                </div>
+              )}
             </>
           )}
             </form>
