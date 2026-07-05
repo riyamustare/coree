@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Mic, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 import { WaitlistCard } from "./WaitlistCard";
 import { WaitlistModal } from "./WaitlistModal";
-import { trackCtaClick, trackPageViewed } from "@/lib/analytics";
+import { trackCtaClick, trackPageViewed, trackNavClick } from "@/lib/analytics";
 
 interface LandingPageProps {
   onGetStarted: () => void;
