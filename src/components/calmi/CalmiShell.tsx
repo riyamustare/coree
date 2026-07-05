@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BookHeart, Compass, History, LogOut, Menu, MessageSquareHeart, Moon, Settings, Sun, X } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
+import { trackNavClick } from "@/lib/analytics";
 
 interface CalmiShellProps {
   userId: string;
@@ -35,7 +36,8 @@ export function CalmiShell({
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const wrap = (fn: () => void) => () => {
+  const wrap = (fn: () => void, destination: string) => () => {
+    trackNavClick(destination, "sidebar");
     fn();
     setMobileOpen(false);
   };
@@ -92,7 +94,7 @@ export function CalmiShell({
         )}
         <button
           type="button"
-          onClick={wrap(onGoHome)}
+          onClick={wrap(onGoHome, "home")}
           className="h-10 w-full md:w-10 rounded-full flex items-center md:justify-center gap-3 transition hover:bg-muted px-2 md:px-0"
           aria-label="Go home"
         >
@@ -102,10 +104,10 @@ export function CalmiShell({
 
         <nav className="flex flex-col gap-2 md:gap-3 w-full md:w-auto">
           {[
-            { icon: Compass, label: "insights", onClick: wrap(onViewInsights) },
-            { icon: History, label: "history", onClick: wrap(onViewHistory) },
-            { icon: BookHeart, label: "journal", onClick: wrap(onOpenNotes) },
-            { icon: MessageSquareHeart, label: "feedback", onClick: wrap(() => setFeedbackOpen(true)) },
+            { icon: Compass, label: "insights", onClick: wrap(onViewInsights, "insights") },
+            { icon: History, label: "history", onClick: wrap(onViewHistory, "history") },
+            { icon: BookHeart, label: "journal", onClick: wrap(onOpenNotes, "journal") },
+            { icon: MessageSquareHeart, label: "feedback", onClick: wrap(() => setFeedbackOpen(true), "feedback") },
           ].map(({ icon: Icon, label, onClick }) => (
             <div key={label} className="group relative w-full md:w-auto">
               <button
@@ -129,7 +131,7 @@ export function CalmiShell({
         <div className="relative w-full md:w-auto">
           <button
             type="button"
-            onClick={() => setSettingsOpen((prev) => !prev)}
+            onClick={() => { trackNavClick("settings_menu", "sidebar"); setSettingsOpen((prev) => !prev); }}
             className="h-11 w-full md:w-11 rounded-2xl flex items-center md:justify-center gap-3 px-3 md:px-0 bg-transparent border-2 border-transparent text-muted-foreground hover:text-primary hover:bg-primary/10 hover:border-primary/30 active:translate-y-0.5 transition-all duration-150"
             aria-label="Settings"
           >
@@ -141,6 +143,7 @@ export function CalmiShell({
               <button
                 type="button"
                 onClick={() => {
+                  trackNavClick("settings", "settings_menu");
                   onOpenSettings();
                   setSettingsOpen(false);
                 }}
@@ -152,6 +155,7 @@ export function CalmiShell({
               <button
                 type="button"
                 onClick={() => {
+                  trackNavClick("sign_out", "settings_menu");
                   onSignOut();
                   setSettingsOpen(false);
                 }}

@@ -100,3 +100,19 @@ export function trackHistoryOpened(sessionId: string) {
 export function trackFeedbackSubmitted() {
   dispatch("feedback_submitted", {});
 }
+
+// ─── Generic UX Events ───
+/** Track a navigation click (sidebar, header, tab, in-app link) */
+export function trackNavClick(destination: string, source: string = "sidebar") {
+  dispatch("nav_clicked", { destination, source });
+}
+
+/** Track a CTA / button click for funnel analysis */
+export function trackCtaClick(cta: string, location: string) {
+  dispatch("cta_clicked", { cta, location });
+}
+
+/** Track a marketing/landing page view (route-level) */
+export function trackPageViewed(page: string, variant?: string) {
+  dispatch("page_viewed", { page, variant: variant ?? null });
+}

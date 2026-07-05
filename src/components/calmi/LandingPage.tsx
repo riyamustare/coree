@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Mic, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 import { WaitlistCard } from "./WaitlistCard";
 import { WaitlistModal } from "./WaitlistModal";
+import { trackCtaClick, trackPageViewed, trackNavClick } from "@/lib/analytics";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -16,6 +17,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   useEffect(() => {
+    trackPageViewed("landing");
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -33,7 +35,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           }`}
         >
           <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
-          <button onClick={onLogin} className="btn-duo h-10 px-5 text-xs rounded-full">
+          <button
+            onClick={() => { trackCtaClick("get_started", "landing_header"); onLogin(); }}
+            className="btn-duo h-10 px-5 text-xs rounded-full"
+          >
             get started
           </button>
         </div>
@@ -76,11 +81,17 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 and understand what's going on inside - without any BS.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <button onClick={onGetStarted} className="btn-duo text-sm px-8 py-4">
+                <button
+                  onClick={() => { trackCtaClick("start_free", "landing_hero"); onGetStarted(); }}
+                  className="btn-duo text-sm px-8 py-4"
+                >
                   <span>start talking it out</span>
                   <span className="ml-2 opacity-90 normal-case">- it's free</span>
                 </button>
-                <button onClick={onLogin} className="btn-duo-secondary text-sm px-6 py-3 rounded-2xl">
+                <button
+                  onClick={() => { trackCtaClick("login", "landing_hero"); onLogin(); }}
+                  className="btn-duo-secondary text-sm px-6 py-3 rounded-2xl"
+                >
                   i already have an account
                 </button>
               </div>
@@ -225,7 +236,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
                 { n: "01", t: "say hi", d: "sign up in seconds. tell your ai friend what brought you here." },
-                { n: "02", t: "talk or type", d: "start an ai therapist-style session whenever you need to think out loud." },
+                { n: "02", t: "talk or type", d: "start a supportive ai therapy chat whenever you need to think out loud." },
                 { n: "03", t: "notice patterns", d: "see gentle weekly reflections and pick up where you left off." },
               ].map(({ n, t, d }) => (
                 <div key={n} className="card-duo p-5 sm:p-6">
@@ -240,19 +251,24 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           <section className="mt-20 sm:mt-28" aria-labelledby="ai-support-title">
             <div className="max-w-3xl mb-10">
               <h2 id="ai-support-title" className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
-                coree for ai friend therapy and everyday emotional support
+                your ai friend for therapy chats and everyday emotional support
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
-                people search for coree when they want an ai friend to talk to, an ai therapist-style chat, or a private place to process stress, loneliness, anxiety, relationships, and late-night thoughts.
+                coree is where people go when they want an ai friend to talk to, an ai therapy chat, or a private place to process stress, loneliness, anxiety, relationships, and late-night thoughts.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
                 { to: "/ai-friend", t: "ai friend", d: "a warm companion for text or voice check-ins when you feel alone." },
-                { to: "/ai-therapist", t: "ai therapist-style support", d: "reflective listening and gentle questions, without diagnosis or treatment claims." },
-                { to: "/ai-therapy", t: "ai therapy companion", d: "short sessions to vent, journal, notice patterns, and feel grounded." },
+                { to: "/ai-therapist", t: "ai therapist chat", d: "reflective listening and gentle questions, private and always available." },
+                { to: "/ai-therapy", t: "ai therapy sessions", d: "short sessions to vent, journal, notice patterns, and feel grounded." },
               ].map(({ to, t, d }) => (
-                <Link key={to} to={to} className="card-duo p-5 sm:p-6 block hover:-translate-y-0.5 transition-transform">
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => trackNavClick(to, "landing_seo_cards")}
+                  className="card-duo p-5 sm:p-6 block hover:-translate-y-0.5 transition-transform"
+                >
                   <h3 className="text-base font-bold text-foreground lowercase">{t}</h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed lowercase">{d}</p>
                 </Link>
@@ -273,7 +289,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               <p className="text-base sm:text-lg text-muted-foreground font-medium mb-6 lowercase">
                 take five minutes for yourself. coree is ready when you are.
               </p>
-              <button onClick={onGetStarted} className="btn-duo text-sm px-8 py-4">
+              <button
+                onClick={() => { trackCtaClick("start_free", "landing_final_cta"); onGetStarted(); }}
+                className="btn-duo text-sm px-8 py-4"
+              >
                 start free - no card needed
               </button>
             </div>
