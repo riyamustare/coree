@@ -206,7 +206,7 @@ const Index = () => {
   }, [startSession, sessionId, setMessages]);
 
   const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
-    trackCtaClick("start_conversation", "home", );
+    trackCtaClick("start_conversation", "home");
     if (selectedMode === "voice" && !subscription.loading && !subscription.canStartVoice) {
       trackCtaClick("paywall_shown", "start_conversation");
       setShowPaywall(true);
