@@ -7,6 +7,9 @@ interface WaitlistCardProps {
 }
 
 export function WaitlistCard({ onJoin, variant = "landing" }: WaitlistCardProps) {
+  // Temporarily hidden everywhere. Code kept intact for future re-enable.
+  return null;
+  // eslint-disable-next-line no-unreachable
   if (variant === "home") {
     return (
       <button
