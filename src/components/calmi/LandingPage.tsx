@@ -70,22 +70,21 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           <div className="grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-14 items-center mb-16 sm:mb-24">
             <div className="max-w-2xl">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.05] mb-6 lowercase">
-                your space to
+                lonely, overwhelmed,
                 <br />
-                process it all.
+                or just need to vent?
                 <br />
-                <span className="text-primary">that's coree.</span>
+                <span className="text-primary">coree is here.</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase">
-                life feels heavy sometimes. coree is your space to talk, process,
-                and understand what's going on inside - without any BS.
+                a private space to talk it out when there's no one else around. vent, unwind, feel a little less alone — voice or text, anytime, no judgment.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => { trackCtaClick("start_free", "landing_hero"); onGetStarted(); }}
                   className="btn-duo text-sm px-8 py-4"
                 >
-                  <span>start talking it out</span>
+                  <span>start venting</span>
                   <span className="ml-2 opacity-90 normal-case">- it's free</span>
                 </button>
                 <button
@@ -251,17 +250,17 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           <section className="mt-20 sm:mt-28" aria-labelledby="ai-support-title">
             <div className="max-w-3xl mb-10">
               <h2 id="ai-support-title" className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
-                your ai friend for therapy chats and everyday emotional support
+                a friend to talk to when you feel lonely or just need to vent
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
-                coree is where people go when they want an ai friend to talk to, an ai therapy chat, or a private place to process stress, loneliness, anxiety, relationships, and late-night thoughts.
+                coree is where people come to feel less alone — to vent about their day, unpack late-night thoughts, or just have someone to talk to when no one else is around.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
-                { to: "/ai-friend", t: "ai friend", d: "a warm companion for text or voice check-ins when you feel alone." },
-                { to: "/ai-therapist", t: "ai therapist chat", d: "reflective listening and gentle questions, private and always available." },
-                { to: "/ai-therapy", t: "ai therapy sessions", d: "short sessions to vent, journal, notice patterns, and feel grounded." },
+                { to: "/ai-friend", t: "a friend to talk to", d: "someone to listen — anytime you feel lonely or just want to talk." },
+                { to: "/ai-therapist", t: "a space to vent", d: "vent freely, no judgment, no follow-ups. just get it out." },
+                { to: "/ai-therapy", t: "unpack your thoughts", d: "short check-ins to process feelings and feel a little lighter." },
               ].map(({ to, t, d }) => (
                 <Link
                   key={to}
