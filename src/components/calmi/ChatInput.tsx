@@ -34,18 +34,10 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       console.error("Web Speech API not supported");
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-    } catch (err) {
-      console.error("Microphone permission denied:", err);
-      alert("Microphone access is blocked. Please allow mic access in your browser settings and try again.");
       return;
     }
     const recognition = new SpeechRecognition();
