@@ -35,6 +35,18 @@ function dispatch(eventName: string, properties: EventProperties) {
   };
   // Replace with analytics SDK call (e.g. amplitude.track(eventName, payload))
   console.debug("[analytics]", eventName, payload);
+  // Forward to Google Analytics (gtag) when available
+  try {
+    const w = window as any;
+    if (typeof w !== "undefined" && typeof w.gtag === "function") {
+      w.gtag("event", eventName, {
+        ..._userProps,
+        ...properties,
+      });
+    }
+  } catch {
+    /* no-op */
+  }
 }
 
 // ─── Auth Events ───
@@ -108,8 +120,21 @@ export function trackNavClick(destination: string, source: string = "sidebar") {
 }
 
 /** Track a CTA / button click for funnel analysis */
-export function trackCtaClick(cta: string, location: string) {
-  dispatch("cta_clicked", { cta, location });
+export function trackCtaClick(
+  cta: string,
+  location: string,
+  extra: EventProperties = {}
+) {
+  dispatch("cta_clicked", { cta, location, ...extra });
+}
+
+/** Track a low-level UI click with contextual properties */
+export function trackClick(
+  element: string,
+  location: string,
+  extra: EventProperties = {}
+) {
+  dispatch("ui_clicked", { element, location, ...extra });
 }
 
 /** Track a marketing/landing page view (route-level) */

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
@@ -36,6 +37,8 @@ import {
   trackVoiceListenStop,
   trackTtsPlayed,
   trackScreenViewed,
+  trackCtaClick,
+  trackPageViewed,
 } from "@/lib/analytics";
 
 type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending" | "settings" | "notes";
@@ -50,6 +53,8 @@ const ENDING_MESSAGES = [
 ];
 
 const Index = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, completeOnboarding, setGenzMode, setTheme } = useProfile(user?.id);
   const subscription = useSubscription(user?.id);
@@ -101,6 +106,53 @@ const Index = () => {
       setUserProperties({ session_id: sessionId });
     }
   }, [sessionId]);
+
+  // ─── URL ↔ screen sync ───
+  const SCREEN_TO_PATH: Record<AppScreen, string> = {
+    landing: "/",
+    auth: "/auth",
+    home: "/home",
+    onboarding: "/onboarding",
+    chat: "/chat",
+    summary: "/chat",
+    ending: "/chat",
+    history: "/history",
+    insights: "/insights",
+    settings: "/settings",
+    notes: "/journal",
+  };
+  const PATH_TO_SCREEN: Record<string, AppScreen> = {
+    "/": "landing",
+    "/auth": "auth",
+    "/home": "home",
+    "/onboarding": "onboarding",
+    "/chat": "chat",
+    "/history": "history",
+    "/insights": "insights",
+    "/settings": "settings",
+    "/journal": "notes",
+  };
+
+  // When URL changes (back/forward), reflect into screen state
+  useEffect(() => {
+    const next = PATH_TO_SCREEN[location.pathname];
+    if (next && next !== screen) {
+      // Only auto-switch if user is allowed on that screen
+      if (!user && (next !== "landing" && next !== "auth")) return;
+      setScreen(next);
+    }
+    // Track every route change as a page view
+    trackPageViewed(location.pathname);
+    trackScreenViewed(location.pathname);
+  }, [location.pathname]);
+
+  // When screen changes, push URL (avoid loops)
+  useEffect(() => {
+    const target = SCREEN_TO_PATH[screen];
+    if (target && target !== location.pathname) {
+      navigate(target, { replace: false });
+    }
+  }, [screen]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -154,7 +206,9 @@ const Index = () => {
   }, [startSession, sessionId, setMessages]);
 
   const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
+    trackCtaClick("start_conversation", "home");
     if (selectedMode === "voice" && !subscription.loading && !subscription.canStartVoice) {
+      trackCtaClick("paywall_shown", "start_conversation");
       setShowPaywall(true);
       return;
     }
@@ -162,6 +216,10 @@ const Index = () => {
   }, [startConversation, subscription.loading, subscription.canStartVoice]);
 
   const handleEndSession = useCallback(async () => {
+    trackCtaClick("end_session_confirm", "chat", {
+      message_count: messages.length,
+      mode,
+    });
     setShowEndConfirm(false);
     stopSpeaking();
     setScreen("ending");
@@ -190,6 +248,7 @@ const Index = () => {
   }, [signOut]);
 
   const handleModeChange = useCallback((newMode: "text" | "voice") => {
+    trackCtaClick("mode_change", "chat", { mode: newMode });
     setMode(newMode);
     trackModeChanged(newMode);
   }, []);
@@ -218,6 +277,7 @@ const Index = () => {
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
       trackVoiceListenStop();
+      trackCtaClick("mic_stop", "chat", { session_id: sessionId || "" });
       // stop listening which will resolve the promise returned by startListening
       await stopListening();
       const transcriptPromise = transcriptPromiseRef.current;
@@ -238,6 +298,7 @@ const Index = () => {
       }
     } else {
       trackVoiceListenStart();
+      trackCtaClick("mic_start", "chat", { session_id: sessionId || "" });
       // startListening returns a promise that resolves when stopListening calls resolve
       transcriptPromiseRef.current = startListening();
     }

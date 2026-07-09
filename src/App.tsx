@@ -29,6 +29,14 @@ const App = () => (
         <Suspense fallback={<LoadingAnimation />}>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/chat" element={<Index />} />
+            <Route path="/insights" element={<Index />} />
+            <Route path="/history" element={<Index />} />
+            <Route path="/journal" element={<Index />} />
+            <Route path="/settings" element={<Index />} />
+            <Route path="/onboarding" element={<Index />} />
+            <Route path="/auth" element={<Index />} />
             <Route path="/ai-friend" element={<SeoLandingPage variant="ai-friend" />} />
             <Route path="/ai-therapist" element={<SeoLandingPage variant="ai-therapist" />} />
             <Route path="/ai-therapy" element={<SeoLandingPage variant="ai-therapy" />} />
