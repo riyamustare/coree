@@ -69,6 +69,18 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
       }
       setDone(true);
       toast({ title: "you're on the list", description: "we'll reach out when spots open up in bangalore." });
+      supabase.functions.invoke("notify-submission", {
+        body: {
+          type: "waitlist",
+          data: {
+            name: parsed.data.name,
+            phone: parsed.data.phone,
+            email: parsed.data.email,
+            looking_for: parsed.data.looking_for,
+            city: "Bangalore",
+          },
+        },
+      }).catch((e) => console.error("notify failed", e));
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {

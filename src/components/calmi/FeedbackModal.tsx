@@ -25,6 +25,9 @@ export function FeedbackModal({ userId, open, onClose }: FeedbackModalProps) {
       toast.error("Failed to send feedback");
     } else {
       trackFeedbackSubmitted();
+      supabase.functions.invoke("notify-submission", {
+        body: { type: "feedback", data: { user_id: userId, content: content.trim() } },
+      }).catch((e) => console.error("notify failed", e));
       toast.success("Thanks for your feedback!");
       setContent("");
       onClose();
