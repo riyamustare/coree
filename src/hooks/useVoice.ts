@@ -7,6 +7,7 @@ export function useVoice() {
   const recognitionRef = useRef<any>(null);
   const resolveRef = useRef<((text: string | null) => void) | null>(null);
   const finalTranscriptRef = useRef("");
+  const interimTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -20,6 +21,7 @@ export function useVoice() {
     setIsListening(true);
     setLiveTranscript("");
     finalTranscriptRef.current = "";
+    interimTranscriptRef.current = "";
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
@@ -38,11 +40,29 @@ export function useVoice() {
         }
       }
       finalTranscriptRef.current = final;
+      interimTranscriptRef.current = interim;
       setLiveTranscript(final + interim);
     };
 
-    recognition.onerror = () => {};
-    recognition.start();
+    recognition.onerror = (e: any) => {
+      console.error("SpeechRecognition error:", e?.error || e);
+    };
+    recognition.onend = () => {
+      // Recognition ended (either by stop() or naturally). Resolve with whatever we captured.
+      const text =
+        (finalTranscriptRef.current + " " + interimTranscriptRef.current).trim() || null;
+      setLiveTranscript(text || "");
+      setIsListening(false);
+      resolveRef.current?.(text);
+      resolveRef.current = null;
+    };
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error("SpeechRecognition start error:", err);
+      setIsListening(false);
+      return null;
+    }
 
     return new Promise((resolve) => {
       resolveRef.current = resolve;
@@ -50,15 +70,13 @@ export function useVoice() {
   }, []);
 
   const stopListening = useCallback(async () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-
-    await new Promise((r) => setTimeout(r, 150));
-
-    const text = finalTranscriptRef.current || liveTranscript || null;
-    setLiveTranscript(text || "");
-    resolveRef.current?.(text);
-  }, [liveTranscript]);
+    // Just stop — onend will resolve the promise with the final+interim text.
+    try {
+      recognitionRef.current?.stop();
+    } catch (err) {
+      console.error("SpeechRecognition stop error:", err);
+    }
+  }, []);
 
   const speak = useCallback(async (text: string) => {
     setIsSpeaking(true);
