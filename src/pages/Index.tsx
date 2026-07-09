@@ -107,6 +107,53 @@ const Index = () => {
     }
   }, [sessionId]);
 
+  // ─── URL ↔ screen sync ───
+  const SCREEN_TO_PATH: Record<AppScreen, string> = {
+    landing: "/",
+    auth: "/auth",
+    home: "/home",
+    onboarding: "/onboarding",
+    chat: "/chat",
+    summary: "/chat",
+    ending: "/chat",
+    history: "/history",
+    insights: "/insights",
+    settings: "/settings",
+    notes: "/journal",
+  };
+  const PATH_TO_SCREEN: Record<string, AppScreen> = {
+    "/": "landing",
+    "/auth": "auth",
+    "/home": "home",
+    "/onboarding": "onboarding",
+    "/chat": "chat",
+    "/history": "history",
+    "/insights": "insights",
+    "/settings": "settings",
+    "/journal": "notes",
+  };
+
+  // When URL changes (back/forward), reflect into screen state
+  useEffect(() => {
+    const next = PATH_TO_SCREEN[location.pathname];
+    if (next && next !== screen) {
+      // Only auto-switch if user is allowed on that screen
+      if (!user && (next !== "landing" && next !== "auth")) return;
+      setScreen(next);
+    }
+    // Track every route change as a page view
+    trackPageViewed(location.pathname);
+    trackScreenViewed(location.pathname);
+  }, [location.pathname]);
+
+  // When screen changes, push URL (avoid loops)
+  useEffect(() => {
+    const target = SCREEN_TO_PATH[screen];
+    if (target && target !== location.pathname) {
+      navigate(target, { replace: false });
+    }
+  }, [screen]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
