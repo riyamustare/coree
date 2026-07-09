@@ -216,6 +216,10 @@ const Index = () => {
   }, [startConversation, subscription.loading, subscription.canStartVoice]);
 
   const handleEndSession = useCallback(async () => {
+    trackCtaClick("end_session_confirm", "chat", {
+      message_count: messages.length,
+      mode,
+    });
     setShowEndConfirm(false);
     stopSpeaking();
     setScreen("ending");
@@ -244,6 +248,7 @@ const Index = () => {
   }, [signOut]);
 
   const handleModeChange = useCallback((newMode: "text" | "voice") => {
+    trackCtaClick("mode_change", "chat", { mode: newMode });
     setMode(newMode);
     trackModeChanged(newMode);
   }, []);
@@ -272,6 +277,7 @@ const Index = () => {
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
       trackVoiceListenStop();
+      trackCtaClick("mic_stop", "chat", { session_id: sessionId || "" });
       // stop listening which will resolve the promise returned by startListening
       await stopListening();
       const transcriptPromise = transcriptPromiseRef.current;
@@ -292,6 +298,7 @@ const Index = () => {
       }
     } else {
       trackVoiceListenStart();
+      trackCtaClick("mic_start", "chat", { session_id: sessionId || "" });
       // startListening returns a promise that resolves when stopListening calls resolve
       transcriptPromiseRef.current = startListening();
     }
