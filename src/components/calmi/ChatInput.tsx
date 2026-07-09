@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowUp, Mic, MicOff } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -34,10 +35,30 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const startRecording = useCallback(() => {
+  const startRecording = useCallback(async () => {
+    // Pre-check mic permission so we can surface a helpful message
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immediately release — SpeechRecognition manages its own stream
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err: any) {
+      console.error("Microphone permission denied:", err);
+      toast({
+        title: "Microphone blocked",
+        description:
+          "Allow mic access in your browser (click the lock icon in the address bar) and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.error("Web Speech API not supported");
+      toast({
+        title: "Voice not supported",
+        description: "Try Chrome or Safari for voice input.",
+        variant: "destructive",
+      });
       return;
     }
     const recognition = new SpeechRecognition();
@@ -53,14 +74,27 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       }
       setValue(transcript);
     };
-    recognition.onerror = () => {
+    recognition.onerror = (e: any) => {
+      console.error("SpeechRecognition error:", e?.error || e);
+      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+        toast({
+          title: "Microphone blocked",
+          description: "Allow mic access in your browser and try again.",
+          variant: "destructive",
+        });
+      }
       setIsRecording(false);
     };
     recognition.onend = () => {
       setIsRecording(false);
     };
-    recognition.start();
-    setIsRecording(true);
+    try {
+      recognition.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("SpeechRecognition start error:", err);
+      setIsRecording(false);
+    }
   }, []);
 
   const stopRecording = useCallback(() => {

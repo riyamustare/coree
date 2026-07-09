@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
@@ -14,7 +15,26 @@ export function useVoice() {
   const startListening = useCallback(async (): Promise<string | null> => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.error("Web Speech API not supported");
+      toast({
+        title: "Voice not supported",
+        description: "Try Chrome or Safari for voice mode.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    // Pre-check mic permission so a denial surfaces a clear message.
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err: any) {
+      console.error("Microphone permission denied:", err);
+      toast({
+        title: "Microphone blocked",
+        description:
+          "Allow mic access in your browser (click the lock icon in the address bar) and try again.",
+        variant: "destructive",
+      });
       return null;
     }
 
@@ -46,6 +66,13 @@ export function useVoice() {
 
     recognition.onerror = (e: any) => {
       console.error("SpeechRecognition error:", e?.error || e);
+      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+        toast({
+          title: "Microphone blocked",
+          description: "Allow mic access in your browser and try again.",
+          variant: "destructive",
+        });
+      }
     };
     recognition.onend = () => {
       // Recognition ended (either by stop() or naturally). Resolve with whatever we captured.
