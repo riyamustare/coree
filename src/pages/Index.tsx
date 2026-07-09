@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSession, type SessionSummary } from "@/hooks/useSession";
 import { useVoice } from "@/hooks/useVoice";
@@ -36,6 +37,8 @@ import {
   trackVoiceListenStop,
   trackTtsPlayed,
   trackScreenViewed,
+  trackCtaClick,
+  trackPageViewed,
 } from "@/lib/analytics";
 
 type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending" | "settings" | "notes";
@@ -50,6 +53,8 @@ const ENDING_MESSAGES = [
 ];
 
 const Index = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile, loading: profileLoading, completeOnboarding, setGenzMode, setTheme } = useProfile(user?.id);
   const subscription = useSubscription(user?.id);
