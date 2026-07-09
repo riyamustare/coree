@@ -18,6 +18,18 @@ export function useVoice() {
       return null;
     }
 
+    // Request mic permission explicitly first — in iframes/PWAs the Web Speech API
+    // often fails with "not-allowed" unless getUserMedia has already been granted.
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immediately release — SpeechRecognition manages its own audio capture.
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err) {
+      console.error("Microphone permission denied:", err);
+      alert("Microphone access is blocked. Please allow mic access in your browser settings and try again.");
+      return null;
+    }
+
     setIsListening(true);
     setLiveTranscript("");
     finalTranscriptRef.current = "";
