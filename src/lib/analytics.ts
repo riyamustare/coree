@@ -35,6 +35,18 @@ function dispatch(eventName: string, properties: EventProperties) {
   };
   // Replace with analytics SDK call (e.g. amplitude.track(eventName, payload))
   console.debug("[analytics]", eventName, payload);
+  // Forward to Google Analytics (gtag) when available
+  try {
+    const w = window as any;
+    if (typeof w !== "undefined" && typeof w.gtag === "function") {
+      w.gtag("event", eventName, {
+        ..._userProps,
+        ...properties,
+      });
+    }
+  } catch {
+    /* no-op */
+  }
 }
 
 // ─── Auth Events ───
