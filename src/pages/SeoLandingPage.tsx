@@ -1,297 +1,150 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Heart, Lock, Mic, Quote, ShieldCheck } from "lucide-react";
-import { trackCtaClick, trackPageViewed } from "@/lib/analytics";
+import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
+import { trackPageViewed } from "@/lib/analytics";
+import Index from "./Index";
 
-interface SeoLandingPageProps {
-  variant: "ai-friend" | "ai-therapist" | "ai-therapy";
-}
+export type SeoVariant =
+  | "ai-friend"
+  | "ai-therapist"
+  | "ai-therapy"
+  | "someone-to-talk-to"
+  | "vent-online"
+  | "feeling-lonely"
+  | "ai-companion"
+  | "therapy-chat"
+  | "mental-health-chat"
+  | "anxiety-help"
+  | "late-night-chat";
 
-const pageCopy = {
+type VariantMeta = {
+  path: string;
+  title: string;
+  description: string;
+  keywords: string;
+  h1: string;
+};
+
+const SITE = "https://www.thecoree.com";
+
+export const seoVariants: Record<SeoVariant, VariantMeta> = {
   "ai-friend": {
-    eyebrow: "a friend to talk to, anytime",
-    h1a: "feeling lonely?",
-    h1b: "someone to talk to.",
-    h1c: "meet coree.",
-    body: "coree is here when there's no one else around — late nights, hard days, in-between moments. talk or text with a warm, judgment-free friend, anytime.",
-    userMsg: "i just need someone to talk to tonight.",
-    aiMsg: "i'm here. what's been sitting with you today?",
-    supportTitle: "a friend to talk to when you feel lonely",
-    supportBody: "coree is where people come when they need someone to talk to — no scripts, no small talk, no waiting rooms. just a warm, private space to feel less alone.",
+    path: "/ai-friend",
+    title: "ai friend to talk to - free, private, anytime | coree",
+    description: "coree is a free ai friend to talk to when you feel lonely. voice or text, judgment-free, anytime. someone to listen when there's no one else around.",
+    keywords: "ai friend, ai friend to talk to, someone to talk to, need a friend, ai companion, free ai friend, lonely, alternative to replika",
+    h1: "an ai friend to talk to, whenever you need one",
   },
   "ai-therapist": {
-    eyebrow: "vent anonymously, judgment-free",
-    h1a: "just need",
-    h1b: "to vent?",
-    h1c: "coree is listening.",
-    body: "a private, anonymous space to let it all out — the stress, the overthinking, the thing you can't say to anyone else. voice or text, whenever you need it.",
-    userMsg: "i can't stop overthinking everything.",
-    aiMsg: "let's slow it down. which thought is the loudest right now?",
-    supportTitle: "a private space to vent, anytime",
-    supportBody: "coree is where people come to vent freely — about work, relationships, family, or the thoughts that keep them up at night. no judgment, no advice you didn't ask for, just space to be heard.",
+    path: "/ai-therapist",
+    title: "ai therapist chat - vent anonymously, free | coree",
+    description: "coree is a free ai therapist chat for venting anonymously. voice or text, private, judgment-free. talk it out whenever you need to.",
+    keywords: "ai therapist, ai therapist chat, vent online, anonymous vent, ai therapy chat, free ai therapist, alternative to wysa",
+    h1: "an ai therapist chat, vent freely anytime",
   },
   "ai-therapy": {
-    eyebrow: "unpack it all, feel a little lighter",
-    h1a: "feeling heavy?",
-    h1b: "unpack it here.",
-    h1c: "coree gets it.",
-    body: "short check-ins to vent, unpack your thoughts, and feel a little less alone. coree remembers what matters and meets you where you are — lonely, stuck, or just tired.",
-    userMsg: "everything feels heavy this week.",
-    aiMsg: "that sounds a lot to carry. want to unpack the heaviest part first?",
-    supportTitle: "a soft place to land when life feels heavy",
-    supportBody: "coree is where people come to process feelings, vent about tough days, and find a bit of calm — private conversations, gentle reflections, no diagnoses.",
+    path: "/ai-therapy",
+    title: "ai therapy online - free, private conversations | coree",
+    description: "ai therapy for short, supportive check-ins. process feelings, unpack thoughts, feel a little lighter. free, private, no diagnoses.",
+    keywords: "ai therapy, ai therapy online, free ai therapy, ai for mental health, ai emotional support, alternative to headspace, alternative to calm",
+    h1: "ai therapy that actually feels human",
   },
-} as const;
+  "someone-to-talk-to": {
+    path: "/someone-to-talk-to",
+    title: "someone to talk to right now - free & anonymous | coree",
+    description: "need someone to talk to right now? coree is a private, anonymous ai friend that listens. voice or text, anytime, no judgment.",
+    keywords: "someone to talk to, someone to talk to right now, need someone to talk to, anonymous chat, i need to talk to someone",
+    h1: "need someone to talk to? coree is here.",
+  },
+  "vent-online": {
+    path: "/vent-online",
+    title: "vent online anonymously - free, private | coree",
+    description: "vent online, anonymously, without judgment. coree listens when you just need to get it out. voice or text, free, private.",
+    keywords: "vent online, vent anonymously, i need to vent, place to vent, anonymous venting, vent to someone",
+    h1: "vent online, free, private, no judgment",
+  },
+  "feeling-lonely": {
+    path: "/feeling-lonely",
+    title: "feeling lonely? talk to someone anytime | coree",
+    description: "feeling lonely tonight? coree is a warm ai friend to talk to when there's no one else around. free, private, anytime.",
+    keywords: "feeling lonely, i feel alone, lonely at night, chat when lonely, friend to talk to at night",
+    h1: "feeling lonely? you're not alone here.",
+  },
+  "ai-companion": {
+    path: "/ai-companion",
+    title: "ai companion for emotional support - free | coree",
+    description: "an ai companion that listens, remembers what matters, and offers warm emotional support. free, private, voice or text.",
+    keywords: "ai companion, ai emotional support, ai listener, ai companion app, alternative to replika",
+    h1: "an ai companion that actually listens",
+  },
+  "therapy-chat": {
+    path: "/therapy-chat",
+    title: "therapy chat online - free, anonymous | coree",
+    description: "a free, anonymous therapy-style chat. talk it out, feel heard, and pick up where you left off. voice or text, anytime.",
+    keywords: "therapy chat, online therapy chat, anonymous therapy chat, free therapy chat, chat therapy",
+    h1: "therapy chat that meets you where you are",
+  },
+  "mental-health-chat": {
+    path: "/mental-health-chat",
+    title: "mental health chat - free ai support 24/7 | coree",
+    description: "a private mental health chat with a warm ai companion. gentle check-ins for stress, anxiety, loneliness, and hard days. free, 24/7.",
+    keywords: "mental health chat, mental health support, ai mental health, mental wellness chat, 24/7 mental health",
+    h1: "a mental health chat, whenever you need it",
+  },
+  "anxiety-help": {
+    path: "/anxiety-help",
+    title: "anxiety help - talk it out, feel lighter | coree",
+    description: "anxious thoughts spiraling? coree helps you slow down, name what you're feeling, and unpack it, one message at a time.",
+    keywords: "anxiety help, help with anxiety, anxiety chat, calm anxiety, overthinking help",
+    h1: "anxiety help, one thought at a time",
+  },
+  "late-night-chat": {
+    path: "/late-night-chat",
+    title: "late-night chat - someone to talk to at 3am | coree",
+    description: "can't sleep? coree is here for late-night conversations when no one else is up. voice or text, private, judgment-free.",
+    keywords: "late night chat, someone to talk to at night, 3am thoughts, can't sleep chat, late night ai friend",
+    h1: "late-night chat when the world is asleep",
+  },
+};
+
+interface SeoLandingPageProps {
+  variant: SeoVariant;
+}
 
 export default function SeoLandingPage({ variant }: SeoLandingPageProps) {
-  const copy = pageCopy[variant];
-  const [scrolled, setScrolled] = useState(false);
+  const meta = seoVariants[variant];
+  const url = `${SITE}${meta.path}`;
 
   useEffect(() => {
     trackPageViewed("seo_landing", variant);
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
   }, [variant]);
 
-  const ctaLocation = `seo_${variant}`;
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="fixed left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-6xl top-4">
-        <div
-          className={`flex justify-between items-center px-4 sm:px-6 transition-all duration-300 ease-out rounded-3xl border ${
-            scrolled
-              ? "py-3 bg-background/70 backdrop-blur-md border-border/60 shadow-sm"
-              : "py-4 bg-transparent border-transparent"
-          }`}
-        >
-          <Link to="/" aria-label="coree home">
-            <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
-          </Link>
-          <Link
-            to="/"
-            onClick={() => trackCtaClick("get_started", `${ctaLocation}_header`)}
-            className="btn-duo h-10 px-5 text-xs rounded-full"
-          >
-            get started
-          </Link>
-        </div>
-      </header>
-
-      <main className="relative pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(hsl(var(--muted-foreground) / 0.18) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-            maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
-          }}
-        />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-          className="relative max-w-6xl mx-auto"
-        >
-          <div className="grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-14 items-center mb-16 sm:mb-24">
-            <div className="max-w-2xl">
-              <p className="mb-4 text-xs font-black uppercase tracking-widest text-primary">{copy.eyebrow}</p>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-foreground leading-[1.05] mb-6 lowercase">
-                {copy.h1a}
-                <br />
-                {copy.h1b}
-                <br />
-                <span className="text-primary">{copy.h1c}</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase">
-                {copy.body}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  to="/"
-                  onClick={() => trackCtaClick("start_free", `${ctaLocation}_hero`)}
-                  className="btn-duo text-sm px-8 py-4"
-                >
-                  <span>start talking to coree</span>
-                  <span className="ml-2 opacity-90 normal-case">- it's free</span>
-                </Link>
-                <Link
-                  to="/privacy"
-                  onClick={() => trackCtaClick("privacy", `${ctaLocation}_hero`)}
-                  className="btn-duo-secondary text-sm px-6 py-3 rounded-2xl"
-                >
-                  private by design
-                </Link>
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground font-medium lowercase">
-                loved by 50+ people like you
-              </p>
-            </div>
-
-            <div className="relative h-[420px] sm:h-[460px] w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20, rotate: -2 }}
-                animate={{ opacity: 1, y: 0, rotate: -2 }}
-                transition={{ duration: 0.6, delay: 0.15 }}
-                className="absolute inset-0 sm:inset-x-6 card-duo p-5 sm:p-6 flex flex-col gap-3"
-              >
-                <div className="flex items-center gap-2 pb-3 border-b-2 border-border-color">
-                  <img src="/logo-icon.svg" alt="coree" className="h-6 w-6" />
-                  <span className="text-sm font-bold lowercase">coree</span>
-                  <span className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-[breathe_1.6s_ease-in-out_infinite]" />
-                    listening
-                  </span>
-                </div>
-
-                <div className="flex justify-end">
-                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%] text-sm font-medium lowercase">
-                    {copy.userMsg}
-                  </div>
-                </div>
-                <div className="flex justify-start">
-                  <div className="bg-muted text-foreground rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] text-sm font-medium lowercase">
-                    {copy.aiMsg}
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-3 border-t-2 border-border-color flex items-center gap-2">
-                  <div className="flex-1 rounded-full bg-muted h-9" />
-                  <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center">
-                    <Mic className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.85, rotate: 6 }}
-                animate={{ opacity: 1, scale: 1, rotate: 6 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="hidden sm:flex absolute -top-4 -right-2 card-duo bg-card px-4 py-3 items-center gap-2 max-w-[220px]"
-              >
-                <Quote className="h-4 w-4 text-primary shrink-0" strokeWidth={2.5} />
-                <span className="text-xs font-bold text-foreground lowercase leading-snug">
-                  finally, a space i actually want to open.
-                </span>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 12, rotate: -6 }}
-                animate={{ opacity: 1, y: 0, rotate: -6 }}
-                transition={{ duration: 0.5, delay: 0.75 }}
-                className="hidden sm:flex absolute -bottom-4 -left-2 card-duo bg-card px-4 py-3 items-center gap-3"
-              >
-                <div className="h-8 w-8 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-                  <Heart className="h-4 w-4 text-primary" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-foreground leading-none">5 mins</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-1">avg check-in</p>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          <div className="mt-2 relative z-10">
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-              {[
-                { icon: Lock, label: "encrypted" },
-                { icon: ShieldCheck, label: "private" },
-                { icon: Heart, label: "human-first" },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-2 rounded-full border-2 border-border-color bg-card px-3 py-1.5">
-                  <Icon className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-foreground">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <section className="mt-20 sm:mt-28" aria-labelledby="support-title">
-            <div className="max-w-3xl mb-10">
-              <h2 id="support-title" className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
-                {copy.supportTitle}
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
-                {copy.supportBody}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-              {[
-                { n: "01", t: "say hi", d: "sign up in seconds. no forms, no intake, no waiting." },
-                { n: "02", t: "talk or type", d: "voice or text sessions whenever you need to think out loud." },
-                { n: "03", t: "notice patterns", d: "gentle weekly reflections so you pick up where you left off." },
-              ].map(({ n, t, d }) => (
-                <div key={n} className="card-duo p-5 sm:p-6">
-                  <span className="text-xs font-black text-primary tracking-widest">{n}</span>
-                  <h3 className="mt-2 text-base font-bold text-foreground lowercase">{t}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed lowercase">{d}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mt-20 sm:mt-28">
-            <div className="card-duo p-8 sm:p-12 text-center">
-              <h2 className="text-2xl sm:text-4xl font-black text-foreground leading-tight mb-3 lowercase">
-                your feelings deserve a soft place to land.
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground font-medium mb-6 lowercase">
-                take five minutes for yourself. coree is ready when you are.
-              </p>
-              <Link
-                to="/"
-                onClick={() => trackCtaClick("start_free", `${ctaLocation}_final`)}
-                className="btn-duo text-sm px-8 py-4 inline-block"
-              >
-                start free - no card needed
-              </Link>
-            </div>
-          </section>
-        </motion.div>
-      </main>
-
-      <footer className="border-t-2 border-border-color mt-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col sm:flex-row justify-between gap-8">
-            <div className="max-w-sm">
-              <img src="/logo.svg" alt="coree" className="h-6 mb-3" />
-              <p className="text-sm text-muted-foreground font-medium lowercase">
-                a private space to talk it out. not therapy - just a wise friend, whenever.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-8 sm:gap-14 text-sm">
-              <div>
-                <p className="font-bold uppercase tracking-wider text-foreground text-xs mb-3">explore</p>
-                <ul className="space-y-2 text-muted-foreground lowercase">
-                  <li><Link to="/ai-friend" className="hover:text-foreground transition">ai friend</Link></li>
-                  <li><Link to="/ai-therapist" className="hover:text-foreground transition">ai therapist chat</Link></li>
-                  <li><Link to="/ai-therapy" className="hover:text-foreground transition">ai therapy</Link></li>
-                </ul>
-              </div>
-              <div>
-                <p className="font-bold uppercase tracking-wider text-foreground text-xs mb-3">promise</p>
-                <ul className="space-y-2 text-muted-foreground lowercase">
-                  <li><Link to="/privacy" className="hover:text-foreground transition">private by design</Link></li>
-                  <li><Link to="/encryption" className="hover:text-foreground transition">encrypted always</Link></li>
-                  <li><Link to="/no-diagnoses" className="hover:text-foreground transition">no diagnoses</Link></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="mt-10 pt-6 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-            <p className="lowercase">© 2025 coree · made with care</p>
-            <p className="lowercase">if you're in crisis, please reach a professional or local helpline.</p>
-          </div>
-        </div>
-      </footer>
-    </div>
+    <>
+      <Helmet>
+        <title>{meta.title}</title>
+        <meta name="description" content={meta.description} />
+        <meta name="keywords" content={meta.keywords} />
+        <link rel="canonical" href={url} />
+        <meta property="og:title" content={meta.title} />
+        <meta property="og:description" content={meta.description} />
+        <meta property="og:url" content={url} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:title" content={meta.title} />
+        <meta name="twitter:description" content={meta.description} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: meta.title,
+          description: meta.description,
+          url,
+          inLanguage: "en",
+          isPartOf: { "@type": "WebSite", name: "coree", url: SITE },
+          about: { "@type": "Thing", name: meta.h1 },
+        })}</script>
+      </Helmet>
+      {/* Hidden semantic H1 so crawlers see the targeted keyword on this URL. */}
+      <h1 className="sr-only">{meta.h1}</h1>
+      <Index />
+    </>
   );
 }

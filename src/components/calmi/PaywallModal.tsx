@@ -105,7 +105,7 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
             </button>
 
             <p className="text-[11px] text-muted-foreground text-center mt-3">
-              Secure payment via Razorpay. One-time charge — renew manually next month.
+              Secure payment via Razorpay. One-time charge - renew manually next month.
             </p>
           </motion.div>
         </motion.div>

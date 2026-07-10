@@ -315,7 +315,7 @@ const Index = () => {
     }
   }, [messages, mode, isLoading, speak]);
 
-  // Mic stays off by default — user must tap to start listening
+  // Mic stays off by default - user must tap to start listening
 
   const renderScreen = () => {
     if (authLoading || (user && profileLoading)) {
@@ -356,7 +356,7 @@ const Index = () => {
           className="max-w-xl text-center p-6"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Generating your session insights</h2>
-          <p className="text-sm text-gray-600">Hang tight — we're summarizing your conversation and extracting useful insights. This may take a moment.</p>
+          <p className="text-sm text-gray-600">Hang tight - we're summarizing your conversation and extracting useful insights. This may take a moment.</p>
           <div className="mt-4 inline-flex items-center gap-3 justify-center">
             <span className="text-2xl">✋</span>
             <span className="text-sm text-muted-foreground">Preparing insights…</span>

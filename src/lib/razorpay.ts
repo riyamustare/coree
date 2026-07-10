@@ -46,7 +46,7 @@ export async function startProCheckout(opts: StartCheckoutOpts) {
     currency: data.currency,
     order_id: data.orderId,
     name: "coree Pro",
-    description: "Unlimited voice mode — 1 month",
+    description: "Unlimited voice mode - 1 month",
     theme: { color: "#277BD9" },
     prefill: {
       email: opts.userEmail || "",

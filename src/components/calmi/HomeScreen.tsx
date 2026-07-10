@@ -64,7 +64,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         .limit(30);
 
       if (data) {
-        // No time filter — the session save threshold now lives in useSession
+        // No time filter - the session save threshold now lives in useSession
         // (a session is kept only when the user sent 4+ messages).
         setPastSessions(data.slice(0, 5));
       }

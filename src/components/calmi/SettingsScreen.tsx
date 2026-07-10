@@ -134,7 +134,7 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
                       month: "short",
                       year: "numeric",
                     })
-                  : "—"}
+                  : "-"}
               </p>
             </div>
           ) : (

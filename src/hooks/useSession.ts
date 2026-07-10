@@ -57,7 +57,7 @@ export function useSession(userId: string | undefined) {
     const messageCount = messages.length;
 
     // Save the session in history only when the user has 4+ messages
-    // (a proper back-and-forth). Otherwise drop it silently — no time limit.
+    // (a proper back-and-forth). Otherwise drop it silently - no time limit.
     const endedAt = new Date().toISOString();
 
     if (userMessageCount < 4) {
@@ -67,7 +67,7 @@ export function useSession(userId: string | undefined) {
       setSessionStart(null);
       setMessages([]);
       return {
-        summary: "Session was too short to save — chat a bit more next time to save it.",
+        summary: "Session was too short to save - chat a bit more next time to save it.",
         messageCount,
         duration,
         endedAt,

@@ -40,6 +40,14 @@ const App = () => (
             <Route path="/ai-friend" element={<SeoLandingPage variant="ai-friend" />} />
             <Route path="/ai-therapist" element={<SeoLandingPage variant="ai-therapist" />} />
             <Route path="/ai-therapy" element={<SeoLandingPage variant="ai-therapy" />} />
+            <Route path="/someone-to-talk-to" element={<SeoLandingPage variant="someone-to-talk-to" />} />
+            <Route path="/vent-online" element={<SeoLandingPage variant="vent-online" />} />
+            <Route path="/feeling-lonely" element={<SeoLandingPage variant="feeling-lonely" />} />
+            <Route path="/ai-companion" element={<SeoLandingPage variant="ai-companion" />} />
+            <Route path="/therapy-chat" element={<SeoLandingPage variant="therapy-chat" />} />
+            <Route path="/mental-health-chat" element={<SeoLandingPage variant="mental-health-chat" />} />
+            <Route path="/anxiety-help" element={<SeoLandingPage variant="anxiety-help" />} />
+            <Route path="/late-night-chat" element={<SeoLandingPage variant="late-night-chat" />} />
             <Route path="/privacy" element={<PromisePage which="privacy" />} />
             <Route path="/encryption" element={<PromisePage which="encryption" />} />
             <Route path="/no-diagnoses" element={<PromisePage which="no-diagnoses" />} />
