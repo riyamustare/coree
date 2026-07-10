@@ -39,7 +39,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     // Pre-check mic permission so we can surface a helpful message
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Immediately release — SpeechRecognition manages its own stream
+      // Immediately release - SpeechRecognition manages its own stream
       stream.getTracks().forEach((t) => t.stop());
     } catch (err: any) {
       console.error("Microphone permission denied:", err);

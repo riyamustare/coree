@@ -72,11 +72,11 @@ export function WaitlistCard({ onJoin, variant = "landing" }: WaitlistCardProps)
               find people who match your vibe.
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground font-medium mb-6 lowercase leading-relaxed">
-              coree is building a small, curated space for real hangs — coffee, walks, weekend plans, and honest friendships. starting with bangalore.
+              coree is building a small, curated space for real hangs - coffee, walks, weekend plans, and honest friendships. starting with bangalore.
             </p>
             <button onClick={onJoin} className="btn-duo text-sm px-7 py-4">
               <span>join the waitlist</span>
-              <span className="ml-2 opacity-90 normal-case">— it's free</span>
+              <span className="ml-2 opacity-90 normal-case">- it's free</span>
             </button>
           </div>
           <div className="hidden lg:flex flex-col gap-3">

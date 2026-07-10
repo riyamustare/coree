@@ -97,7 +97,7 @@ export function useVoice() {
   }, []);
 
   const stopListening = useCallback(async () => {
-    // Just stop — onend will resolve the promise with the final+interim text.
+    // Just stop - onend will resolve the promise with the final+interim text.
     try {
       recognitionRef.current?.stop();
     } catch (err) {

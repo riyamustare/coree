@@ -77,7 +77,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 <span className="text-primary">coree is here.</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase">
-                a private space to talk it out when there's no one else around. vent, unwind, feel a little less alone — voice or text, anytime, no judgment.
+                a private space to talk it out when there's no one else around. vent, unwind, feel a little less alone - voice or text, anytime, no judgment.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
@@ -253,12 +253,12 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 a friend to talk to when you feel lonely or just need to vent
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
-                coree is where people come to feel less alone — to vent about their day, unpack late-night thoughts, or just have someone to talk to when no one else is around.
+                coree is where people come to feel less alone - to vent about their day, unpack late-night thoughts, or just have someone to talk to when no one else is around.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
-                { to: "/ai-friend", t: "a friend to talk to", d: "someone to listen — anytime you feel lonely or just want to talk." },
+                { to: "/ai-friend", t: "a friend to talk to", d: "someone to listen - anytime you feel lonely or just want to talk." },
                 { to: "/ai-therapist", t: "a space to vent", d: "vent freely, no judgment, no follow-ups. just get it out." },
                 { to: "/ai-therapy", t: "unpack your thoughts", d: "short check-ins to process feelings and feel a little lighter." },
               ].map(({ to, t, d }) => (
