@@ -1,4 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+@font-face {
+  font-family: 'Pepi TRIAL';
+  src: url('/__l5e/assets-v1/d90a4dfb-13f8-4b86-bbe9-b07e6c864505/PepiTRIAL-Hair-BF676cc172003e7.otf') format('opentype');
+  font-style: normal;
+  font-weight: 100 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pepi TRIAL';
+  src: url('/__l5e/assets-v1/a87394de-df0c-4903-afb8-adb642238da5/PepiTRIAL-Bold-BF676cc171e9076.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pepi TRIAL';
+  src: url('/__l5e/assets-v1/45b8bcd1-6e6a-48a9-bc30-1b3d27af064d/PepiTRIAL-Black-BF676cc171e13ab.otf') format('opentype');
+  font-style: normal;
+  font-weight: 800 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pepi TRIAL';
+  src: url('/__l5e/assets-v1/3ffb74f8-f053-4fd8-b2b2-dd41ff740f25/PepiTRIAL-BoldItalic-BF676cc171bac84.otf') format('opentype');
+  font-style: italic;
+  font-weight: 400 700;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
@@ -107,17 +137,17 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Nunito', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    letter-spacing: -0.01em;
+    font-family: 'Pepi TRIAL', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: 0;
     font-weight: 600;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Nunito', 'Inter', system-ui, sans-serif;
+    font-family: 'Pepi TRIAL', system-ui, sans-serif;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
   }
 }
 
