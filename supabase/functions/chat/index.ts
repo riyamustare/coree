@@ -163,17 +163,15 @@ serve(async (req) => {
     const gJson = await gResp.json();
     const outText = gJson?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-    const stream = new ReadableStream({
-      start(controller) {
-        const chunk = JSON.stringify({ choices: [{ delta: { content: outText } }] });
-        controller.enqueue(new TextEncoder().encode(`data: ${chunk}\n\n`));
-        controller.enqueue(new TextEncoder().encode(`data: [DONE]\n\n`));
-        controller.close();
-      },
-    });
+    if (!outText.trim()) {
+      return new Response(JSON.stringify({ error: "AI returned an empty response" }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    return new Response(stream, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    return new Response(JSON.stringify({ text: outText }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat error:", e);

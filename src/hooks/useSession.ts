@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 export interface ChatMessage {
   id: string;
@@ -31,8 +32,8 @@ export function useSession(userId: string | undefined) {
     setIsLoading(false);
   }, [userId]);
 
-  const startSession = useCallback(async (mode: "text" | "voice" = "text") => {
-    if (!userId) return;
+  const startSession = useCallback(async (mode: "text" | "voice" = "text"): Promise<string | null> => {
+    if (!userId) return null;
     const { data, error } = await supabase
       .from("sessions")
       .insert({ user_id: userId, mode } as any)
@@ -40,11 +41,17 @@ export function useSession(userId: string | undefined) {
       .single();
     if (error) {
       console.error("Failed to create session:", error);
-      return;
+      toast({
+        title: "Could not start the conversation",
+        description: "Please check your connection and try again.",
+        variant: "destructive",
+      });
+      return null;
     }
     setSessionId(data.id);
     setSessionStart(new Date());
     setMessages([]);
+    return data.id;
   }, [userId]);
 
   const endSession = useCallback(async (): Promise<SessionSummary | null> => {
@@ -133,12 +140,13 @@ export function useSession(userId: string | undefined) {
       setIsLoading(true);
 
       try {
-        await supabase.from("messages").insert({
+        const { error: messageError } = await supabase.from("messages").insert({
           session_id: sessionId,
           user_id: userId,
           role: "user",
           content,
         });
+        if (messageError) throw messageError;
 
         const recentExchanges = messages.slice(-10);
         const contextMessages = recentExchanges.map((m) => ({
@@ -146,77 +154,22 @@ export function useSession(userId: string | undefined) {
           content: m.content,
         }));
 
-        const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-        const { data: { session: authSession } } = await supabase.auth.getSession();
-        const resp = await fetch(CHAT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authSession?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
+        const { data, error } = await supabase.functions.invoke("chat", {
+          body: {
             message: content,
             sessionId,
             contextMessages,
             genzMode,
-          }),
+          },
         });
+        if (error) throw error;
+        const assistantContent = typeof data?.text === "string" ? data.text.trim() : "";
+        if (!assistantContent) throw new Error("The response was empty");
 
-        if (!resp.ok || !resp.body) {
-          throw new Error("Failed to get response");
-        }
-
-        const reader = resp.body.getReader();
-        const decoder = new TextDecoder();
-        let assistantContent = "";
-        let textBuffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          textBuffer += decoder.decode(value, { stream: true });
-
-          let newlineIndex: number;
-          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-            let line = textBuffer.slice(0, newlineIndex);
-            textBuffer = textBuffer.slice(newlineIndex + 1);
-            if (line.endsWith("\r")) line = line.slice(0, -1);
-            if (line.startsWith(":") || line.trim() === "") continue;
-            if (!line.startsWith("data: ")) continue;
-
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === "[DONE]") break;
-
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const delta = parsed.choices?.[0]?.delta?.content;
-              if (delta) {
-                assistantContent += delta;
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === "assistant") {
-                    return prev.map((m, i) =>
-                      i === prev.length - 1
-                        ? { ...m, content: assistantContent }
-                        : m
-                    );
-                  }
-                  return [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      role: "assistant",
-                      content: assistantContent,
-                    },
-                  ];
-                });
-              }
-            } catch {
-              textBuffer = line + "\n" + textBuffer;
-              break;
-            }
-          }
-        }
+        setMessages((prev) => [
+          ...prev,
+          { id: crypto.randomUUID(), role: "assistant", content: assistantContent },
+        ]);
 
         if (assistantContent) {
           await supabase.from("messages").insert({
@@ -236,6 +189,11 @@ export function useSession(userId: string | undefined) {
             content: "I'm having trouble responding right now. Please try again.",
           },
         ]);
+        toast({
+          title: "Response interrupted",
+          description: "Your message is safe. Please try sending it again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }

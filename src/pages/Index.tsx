@@ -192,8 +192,9 @@ const Index = () => {
   const startConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
     setMode(selectedMode);
     trackModeChanged(selectedMode);
-    await startSession(selectedMode);
-    trackSessionStarted(sessionId || "pending");
+    const newSessionId = await startSession(selectedMode);
+    if (!newSessionId) return;
+    trackSessionStarted(newSessionId);
     setMessages([
       {
         id: crypto.randomUUID(),
@@ -203,7 +204,7 @@ const Index = () => {
     ]);
     setScreen("chat");
     trackScreenViewed("chat");
-  }, [startSession, sessionId, setMessages]);
+  }, [startSession, setMessages]);
 
   const handleStartConversation = useCallback(async (selectedMode: "text" | "voice" = "text") => {
     trackCtaClick("start_conversation", "home");
