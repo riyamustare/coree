@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { startProCheckout } from "@/lib/razorpay";
+import { startProCheckout } from "@/lib/payments";
 import { toast } from "@/hooks/use-toast";
 
 interface PaywallModalProps {
@@ -17,20 +17,11 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
 
   const handleUpgrade = async () => {
     setLoading(true);
-    await startProCheckout({
-      userEmail,
-      userName,
-      onSuccess: () => {
-        setLoading(false);
-        toast({ title: "Welcome to Pro!", description: "Enjoy unlimited voice mode for 30 days." });
-        onSuccess();
-      },
-      onDismiss: () => setLoading(false),
-      onError: (msg) => {
-        setLoading(false);
-        toast({ title: "Payment failed", description: msg, variant: "destructive" });
-      },
-    });
+    const { error } = await startProCheckout();
+    if (error) {
+      setLoading(false);
+      toast({ title: "Payment failed", description: error, variant: "destructive" });
+    }
   };
 
   return (
@@ -105,7 +96,7 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
             </button>
 
             <p className="text-[11px] text-muted-foreground text-center mt-3">
-              Secure payment via Razorpay. One-time charge - renew manually next month.
+              Secure payment via Dodo Payments. Renews monthly - cancel anytime.
             </p>
           </motion.div>
         </motion.div>
