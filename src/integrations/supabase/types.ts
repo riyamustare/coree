@@ -202,11 +202,10 @@ export type Database = {
           currency: string
           current_period_end: string
           current_period_start: string
-          dodo_customer_id: string | null
-          dodo_payment_id: string | null
-          dodo_subscription_id: string | null
           id: string
           plan: string
+          polar_customer_id: string | null
+          polar_subscription_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -217,11 +216,10 @@ export type Database = {
           currency?: string
           current_period_end: string
           current_period_start?: string
-          dodo_customer_id?: string | null
-          dodo_payment_id?: string | null
-          dodo_subscription_id?: string | null
           id?: string
           plan?: string
+          polar_customer_id?: string | null
+          polar_subscription_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -232,11 +230,10 @@ export type Database = {
           currency?: string
           current_period_end?: string
           current_period_start?: string
-          dodo_customer_id?: string | null
-          dodo_payment_id?: string | null
-          dodo_subscription_id?: string | null
           id?: string
           plan?: string
+          polar_customer_id?: string | null
+          polar_subscription_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
