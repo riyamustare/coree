@@ -96,7 +96,7 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
             </button>
 
             <p className="text-[11px] text-muted-foreground text-center mt-3">
-              Secure payment via Dodo Payments. Renews monthly - cancel anytime.
+              Secure payment via Polar. Renews monthly - cancel anytime.
             </p>
           </motion.div>
         </motion.div>

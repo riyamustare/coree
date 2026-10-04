@@ -12,5 +12,5 @@ verify_jwt = false
 [functions.text-to-speech]
 verify_jwt = false
 
-[functions.dodo-webhook]
+[functions.polar-webhook]
 verify_jwt = false

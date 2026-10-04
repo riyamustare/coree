@@ -1,9 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
-/** Redirects the user to Dodo Payments hosted checkout for coree Pro. */
+/** Redirects the user to Polar hosted checkout for the coree Pro subscription. */
 export async function startProCheckout(): Promise<{ error?: string }> {
-  const { data, error } = await supabase.functions.invoke("dodo-create-checkout", {
-    body: { returnUrl: `${window.location.origin}/settings?upgraded=1` },
+  const { data, error } = await supabase.functions.invoke("polar-checkout", {
+    body: { origin: window.location.origin },
   });
   if (error || !data?.url) return { error: data?.error || "Could not open checkout. Please try again." };
   window.location.href = data.url;
