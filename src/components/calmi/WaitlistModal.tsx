@@ -81,8 +81,8 @@ export function WaitlistModal({ open, onClose }: WaitlistModalProps) {
           },
         },
       }).catch((e) => console.error("notify failed", e));
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

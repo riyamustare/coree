@@ -37,9 +37,11 @@ function dispatch(eventName: string, properties: EventProperties) {
   console.debug("[analytics]", eventName, payload);
   // Forward to Google Analytics (gtag) when available
   try {
-    const w = window as any;
-    if (typeof w !== "undefined" && typeof w.gtag === "function") {
-      w.gtag("event", eventName, {
+    const gtag = (window as Window & {
+      gtag?: (command: string, name: string, parameters: EventProperties) => void;
+    }).gtag;
+    if (typeof gtag === "function") {
+      gtag("event", eventName, {
         ..._userProps,
         ...properties,
       });

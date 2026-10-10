@@ -5,6 +5,15 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
 const PRODUCT_NAME = 'coree Pro';
+const APP_ORIGIN = 'https://www.trycore.xyz';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isProduct(value: unknown): value is { id: string; name: string } {
+  return isRecord(value) && typeof value.id === 'string' && typeof value.name === 'string';
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -28,8 +37,11 @@ Deno.serve(async (req) => {
     let productId = Deno.env.get('POLAR_PRODUCT_ID');
     if (!productId) {
       const list = await fetch(`${base}/v1/products/?query=${encodeURIComponent(PRODUCT_NAME)}&is_archived=false&is_recurring=true`, { headers });
-      const listData = await list.json();
-      productId = listData?.items?.find((p: any) => p.name === PRODUCT_NAME)?.id;
+      const listData: unknown = await list.json();
+      const products = isRecord(listData) && Array.isArray(listData.items) ? listData.items : [];
+      productId = products.find((product): product is { id: string; name: string } =>
+        isProduct(product) && product.name === PRODUCT_NAME
+      )?.id;
       if (!productId) {
         const created = await fetch(`${base}/v1/products/`, {
           method: 'POST',
@@ -41,20 +53,15 @@ Deno.serve(async (req) => {
             prices: [{ amount_type: 'fixed', price_amount: 19900, price_currency: 'inr' }],
           }),
         });
-        const p = await created.json();
+        const product: unknown = await created.json();
         if (!created.ok) {
-          console.error('Polar product error', p);
+          console.error('Polar product error', product);
           return json({ error: 'Could not set up the plan' }, 500);
         }
-        productId = p.id;
+        if (!isProduct(product)) return json({ error: 'Could not set up the plan' }, 500);
+        productId = product.id;
       }
     }
-
-    let origin = 'https://www.thecoree.com';
-    try {
-      const body = await req.json();
-      if (typeof body?.origin === 'string' && /^https?:\/\/[^\s]{1,200}$/.test(body.origin)) origin = body.origin;
-    } catch { /* no body */ }
 
     const resp = await fetch(`${base}/v1/checkouts/`, {
       method: 'POST',
@@ -63,12 +70,12 @@ Deno.serve(async (req) => {
         products: [productId],
         external_customer_id: userId,
         customer_email: email,
-        success_url: `${origin}/settings?upgraded=1&checkout_id={CHECKOUT_ID}`,
+        success_url: `${APP_ORIGIN}/settings?upgraded=1&checkout_id={CHECKOUT_ID}`,
         metadata: { user_id: userId },
       }),
     });
-    const data = await resp.json();
-    if (!resp.ok || !data?.url) {
+    const data: unknown = await resp.json();
+    if (!resp.ok || !isRecord(data) || typeof data.url !== 'string') {
       console.error('Polar checkout error', resp.status, data);
       return json({ error: 'Could not start checkout' }, 500);
     }

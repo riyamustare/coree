@@ -32,7 +32,7 @@ interface WeekSession {
   started_at: string;
   ended_at: string | null;
   summary: string | null;
-  emotions: Record<string, number> | null;
+  emotions: import("@/integrations/supabase/types").Json | null;
 }
 
 interface ChatLogMessage {
@@ -234,7 +234,7 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
       setJournalCount(journalRes.count || 0);
 
       if (sessionsRes.data) {
-        const sessionData = sessionsRes.data as any[];
+        const sessionData: WeekSession[] = sessionsRes.data;
         setSessions(sessionData);
 
         if (sessionData.length > 0) {
@@ -280,9 +280,9 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
     EMOTION_KEYS.forEach((k) => (totals[k] = []));
 
     sessions.forEach((s) => {
-      if (s.emotions && typeof s.emotions === "object") {
+      if (s.emotions && typeof s.emotions === "object" && !Array.isArray(s.emotions)) {
         EMOTION_KEYS.forEach((k) => {
-          const val = (s.emotions as any)[k];
+          const val = s.emotions[k];
           if (typeof val === "number") totals[k].push(val);
         });
       }

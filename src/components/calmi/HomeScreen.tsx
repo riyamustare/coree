@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CalmiShell } from "./CalmiShell";
 import { WaitlistCard } from "./WaitlistCard";
-import { WaitlistModal } from "./WaitlistModal";
 import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
+
+const WaitlistModal = lazy(() =>
+  import("./WaitlistModal").then((module) => ({ default: module.WaitlistModal }))
+);
 
 interface PastSession {
   id: string;
@@ -198,7 +201,11 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           </div>
         </motion.div>
       </div>
-      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+      {waitlistOpen && (
+        <Suspense fallback={null}>
+          <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+        </Suspense>
+      )}
     </CalmiShell>
   );
 }

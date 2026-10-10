@@ -1,35 +1,3 @@
-@font-face {
-  font-family: 'Pepi TRIAL';
-  src: url('/__l5e/assets-v1/d90a4dfb-13f8-4b86-bbe9-b07e6c864505/PepiTRIAL-Hair-BF676cc172003e7.otf') format('opentype');
-  font-style: normal;
-  font-weight: 100 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pepi TRIAL';
-  src: url('/__l5e/assets-v1/a87394de-df0c-4903-afb8-adb642238da5/PepiTRIAL-Bold-BF676cc171e9076.otf') format('opentype');
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pepi TRIAL';
-  src: url('/__l5e/assets-v1/45b8bcd1-6e6a-48a9-bc30-1b3d27af064d/PepiTRIAL-Black-BF676cc171e13ab.otf') format('opentype');
-  font-style: normal;
-  font-weight: 800 900;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Pepi TRIAL';
-  src: url('/__l5e/assets-v1/3ffb74f8-f053-4fd8-b2b2-dd41ff740f25/PepiTRIAL-BoldItalic-BF676cc171bac84.otf') format('opentype');
-  font-style: italic;
-  font-weight: 400 700;
-  font-display: swap;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

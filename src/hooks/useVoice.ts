@@ -1,11 +1,15 @@
 import { useState, useCallback, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
+import {
+  getSpeechRecognitionConstructor,
+  type SpeechRecognitionInstance,
+} from "@/lib/speechRecognition";
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const resolveRef = useRef<((text: string | null) => void) | null>(null);
   const finalTranscriptRef = useRef("");
   const interimTranscriptRef = useRef("");
@@ -13,7 +17,7 @@ export function useVoice() {
   const abortRef = useRef<AbortController | null>(null);
 
   const startListening = useCallback(async (): Promise<string | null> => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognitionConstructor();
     if (!SpeechRecognition) {
       toast({
         title: "Voice not supported",
@@ -27,7 +31,7 @@ export function useVoice() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Microphone permission denied:", err);
       toast({
         title: "Microphone blocked",
@@ -49,7 +53,7 @@ export function useVoice() {
     recognition.lang = "en-US";
     recognitionRef.current = recognition;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       let interim = "";
       let final = "";
       for (let i = 0; i < event.results.length; i++) {
@@ -64,7 +68,7 @@ export function useVoice() {
       setLiveTranscript(final + interim);
     };
 
-    recognition.onerror = (e: any) => {
+    recognition.onerror = (e) => {
       console.error("SpeechRecognition error:", e?.error || e);
       if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
         toast({
@@ -184,8 +188,8 @@ export function useVoice() {
       };
 
       await audio.play();
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
+    } catch (err: unknown) {
+      if (!(err instanceof Error) || err.name !== "AbortError") {
         console.error("TTS error:", err);
       }
       setIsSpeaking(false);

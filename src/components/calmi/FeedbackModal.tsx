@@ -18,8 +18,8 @@ export function FeedbackModal({ userId, open, onClose }: FeedbackModalProps) {
     if (!content.trim()) return;
     setSubmitting(true);
     const { error } = await supabase
-      .from("feedback" as any)
-      .insert({ user_id: userId, content: content.trim() } as any);
+      .from("feedback")
+      .insert({ user_id: userId, content: content.trim() });
     setSubmitting(false);
     if (error) {
       toast.error("Failed to send feedback");
