@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mic, ShieldCheck, Heart, Lock, Quote } from "lucide-react";
 import { WaitlistCard } from "./WaitlistCard";
-import { WaitlistModal } from "./WaitlistModal";
 import { trackCtaClick, trackPageViewed, trackNavClick } from "@/lib/analytics";
+
+const WaitlistModal = lazy(() =>
+  import("./WaitlistModal").then((module) => ({ default: module.WaitlistModal }))
+);
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -358,7 +361,11 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           }),
         }}
       />
-      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+      {waitlistOpen && (
+        <Suspense fallback={null}>
+          <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -36,7 +36,7 @@ export function useSession(userId: string | undefined) {
     if (!userId) return null;
     const { data, error } = await supabase
       .from("sessions")
-      .insert({ user_id: userId, mode } as any)
+      .insert({ user_id: userId, mode })
       .select("id")
       .single();
     if (error) {

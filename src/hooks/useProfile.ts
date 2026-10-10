@@ -31,7 +31,7 @@ export function useProfile(userId: string | undefined) {
         .single();
 
       if (error && error.code === "PGRST116") {
-        await supabase.from("profiles").insert({ id: userId, theme: "dark" } as any);
+        await supabase.from("profiles").insert({ id: userId, theme: "dark" });
         setProfile({ display_name: null, onboarding_intent: null, onboarding_completed: false, genz_mode: false, theme: "dark" });
       } else if (data) {
         setProfile({ ...(data as Profile), theme: (data as Profile).theme || "dark" });
@@ -47,7 +47,7 @@ export function useProfile(userId: string | undefined) {
       if (!userId) return;
       await supabase
         .from("profiles")
-        .update({ onboarding_intent: intent, onboarding_completed: true } as any)
+        .update({ onboarding_intent: intent, onboarding_completed: true })
         .eq("id", userId);
       setProfile((prev) => prev ? { ...prev, onboarding_intent: intent, onboarding_completed: true } : prev);
     },
@@ -57,7 +57,7 @@ export function useProfile(userId: string | undefined) {
   const setGenzMode = useCallback(
     async (enabled: boolean) => {
       if (!userId) return;
-      await supabase.from("profiles").update({ genz_mode: enabled } as any).eq("id", userId);
+      await supabase.from("profiles").update({ genz_mode: enabled }).eq("id", userId);
       setProfile((prev) => prev ? { ...prev, genz_mode: enabled } : prev);
     },
     [userId]
@@ -66,7 +66,7 @@ export function useProfile(userId: string | undefined) {
   const setTheme = useCallback(
     async (theme: string) => {
       if (!userId) return;
-      await supabase.from("profiles").update({ theme } as any).eq("id", userId);
+      await supabase.from("profiles").update({ theme }).eq("id", userId);
       setProfile((prev) => prev ? { ...prev, theme } : prev);
     },
     [userId]

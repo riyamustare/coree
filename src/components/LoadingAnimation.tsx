@@ -1,16 +1,11 @@
-import React from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
 const LoadingAnimation = () => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background z-50">
-      <div className="w-12 h-12">
-        <DotLottieReact
-          src="https://lottie.host/83995e80-755a-4818-9fd1-b24763ccca9e/69WYSTeTY9.lottie"
-          loop
-          autoplay
-        />
-      </div>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+      role="status"
+      aria-label="Loading"
+    >
+      <span className="h-12 w-12 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
     </div>
   );
 };

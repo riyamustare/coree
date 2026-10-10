@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { lazy, Suspense, useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,21 +7,9 @@ import { useVoice } from "@/hooks/useVoice";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PaywallModal } from "@/components/calmi/PaywallModal";
-import { LandingPage } from "@/components/calmi/LandingPage";
-import { AuthScreen } from "@/components/calmi/AuthScreen";
-import { HomeScreen } from "@/components/calmi/HomeScreen";
-import { OnboardingScreen } from "@/components/calmi/OnboardingScreen";
-import { SummaryScreen } from "@/components/calmi/SummaryScreen";
-import { HistoryScreen } from "@/components/calmi/HistoryScreen";
-import { InsightsScreen } from "@/components/calmi/InsightsScreen";
-import { SettingsScreen } from "@/components/calmi/SettingsScreen.jsx";
-import { NotesScreen } from "@/components/calmi/NotesScreen";
-import { SessionHeader } from "@/components/calmi/SessionHeader";
-import { MessageBlock } from "@/components/calmi/MessageBlock";
 import { ChatInput } from "@/components/calmi/ChatInput";
 import { VoiceVisualizer } from "@/components/calmi/VoiceVisualizer";
 import LoadingAnimation from "@/components/LoadingAnimation";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Mic, MicOff } from "lucide-react";
 import { toggleThemeWithTransition } from "@/lib/themeTransition";
 import {
@@ -41,7 +29,64 @@ import {
   trackPageViewed,
 } from "@/lib/analytics";
 
+const LandingPage = lazy(() =>
+  import("@/components/calmi/LandingPage").then((module) => ({ default: module.LandingPage }))
+);
+const AuthScreen = lazy(() =>
+  import("@/components/calmi/AuthScreen").then((module) => ({ default: module.AuthScreen }))
+);
+const HomeScreen = lazy(() =>
+  import("@/components/calmi/HomeScreen").then((module) => ({ default: module.HomeScreen }))
+);
+const OnboardingScreen = lazy(() =>
+  import("@/components/calmi/OnboardingScreen").then((module) => ({ default: module.OnboardingScreen }))
+);
+const SummaryScreen = lazy(() =>
+  import("@/components/calmi/SummaryScreen").then((module) => ({ default: module.SummaryScreen }))
+);
+const HistoryScreen = lazy(() =>
+  import("@/components/calmi/HistoryScreen").then((module) => ({ default: module.HistoryScreen }))
+);
+const InsightsScreen = lazy(() =>
+  import("@/components/calmi/InsightsScreen").then((module) => ({ default: module.InsightsScreen }))
+);
+const SettingsScreen = lazy(() =>
+  import("@/components/calmi/SettingsScreen.tsx").then((module) => ({ default: module.SettingsScreen }))
+);
+const NotesScreen = lazy(() =>
+  import("@/components/calmi/NotesScreen").then((module) => ({ default: module.NotesScreen }))
+);
+const DotLottieReact = lazy(() =>
+  import("@lottiefiles/dotlottie-react").then((module) => ({ default: module.DotLottieReact }))
+);
+
 type AppScreen = "landing" | "auth" | "home" | "onboarding" | "chat" | "summary" | "history" | "insights" | "ending" | "settings" | "notes";
+
+const SCREEN_TO_PATH: Record<AppScreen, string> = {
+  landing: "/",
+  auth: "/auth",
+  home: "/home",
+  onboarding: "/onboarding",
+  chat: "/chat",
+  summary: "/chat",
+  ending: "/chat",
+  history: "/history",
+  insights: "/insights",
+  settings: "/settings",
+  notes: "/journal",
+};
+
+const PATH_TO_SCREEN: Record<string, AppScreen> = {
+  "/": "landing",
+  "/auth": "auth",
+  "/home": "home",
+  "/onboarding": "onboarding",
+  "/chat": "chat",
+  "/history": "history",
+  "/insights": "insights",
+  "/settings": "settings",
+  "/journal": "notes",
+};
 
 const GREETING = "How are you feeling right now?";
 const INITIAL_AI_MESSAGE = "Hey there! How's it going? What's on your mind today?";
@@ -108,35 +153,10 @@ const Index = () => {
   }, [sessionId]);
 
   // ─── URL ↔ screen sync ───
-  const SCREEN_TO_PATH: Record<AppScreen, string> = {
-    landing: "/",
-    auth: "/auth",
-    home: "/home",
-    onboarding: "/onboarding",
-    chat: "/chat",
-    summary: "/chat",
-    ending: "/chat",
-    history: "/history",
-    insights: "/insights",
-    settings: "/settings",
-    notes: "/journal",
-  };
-  const PATH_TO_SCREEN: Record<string, AppScreen> = {
-    "/": "landing",
-    "/auth": "auth",
-    "/home": "home",
-    "/onboarding": "onboarding",
-    "/chat": "chat",
-    "/history": "history",
-    "/insights": "insights",
-    "/settings": "settings",
-    "/journal": "notes",
-  };
-
   // When URL changes (back/forward), reflect into screen state
   useEffect(() => {
     const next = PATH_TO_SCREEN[location.pathname];
-    if (next && next !== screen) {
+    if (next) {
       // Only auto-switch if user is allowed on that screen
       if (!user && (next !== "landing" && next !== "auth")) return;
       setScreen(next);
@@ -144,7 +164,7 @@ const Index = () => {
     // Track every route change as a page view
     trackPageViewed(location.pathname);
     trackScreenViewed(location.pathname);
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   // When screen changes, push URL (avoid loops)
   useEffect(() => {
@@ -152,7 +172,7 @@ const Index = () => {
     if (target && target !== location.pathname) {
       navigate(target, { replace: false });
     }
-  }, [screen]);
+  }, [location.pathname, navigate, screen]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -166,7 +186,7 @@ const Index = () => {
     } else if (screen === "landing" || screen === "auth") {
       setScreen("home");
     }
-  }, [user, authLoading, profile, profileLoading]);
+  }, [user, authLoading, profile, profileLoading, screen]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -231,7 +251,7 @@ const Index = () => {
     setSummaryData(result);
     setScreen("summary");
     trackScreenViewed("summary");
-  }, [endSession, stopSpeaking, sessionId]);
+  }, [endSession, messages.length, mode, stopSpeaking, sessionId]);
 
   const handleGoHome = useCallback(() => {
     setSummaryData(null);
@@ -318,6 +338,15 @@ const Index = () => {
 
   // Mic stays off by default - user must tap to start listening
 
+  const userMetadata = user?.user_metadata as Record<string, unknown> | undefined;
+  const getMetadataName = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = userMetadata?.[key];
+      if (typeof value === "string") return value;
+    }
+    return "";
+  };
+
   const renderScreen = () => {
     if (authLoading || (user && profileLoading)) {
       return <LoadingAnimation />;
@@ -337,11 +366,7 @@ const Index = () => {
     }
 
     if (screen === "onboarding") {
-      const nameFromMeta =
-        (user?.user_metadata as any)?.full_name ||
-        (user?.user_metadata as any)?.name ||
-        (user?.user_metadata as any)?.first_name ||
-        "";
+      const nameFromMeta = getMetadataName("full_name", "name", "first_name");
       const displayName = profile?.display_name || nameFromMeta || "";
       return <OnboardingScreen onComplete={handleOnboardingComplete} displayName={displayName} />;
     }
@@ -644,17 +669,19 @@ const Index = () => {
 
   return (
     <>
-      {renderScreen()}
-      <PaywallModal
-        open={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        userEmail={user?.email}
-        userName={(user?.user_metadata as any)?.full_name || (user?.user_metadata as any)?.name}
-        onSuccess={async () => {
-          setShowPaywall(false);
-          await subscription.refresh();
-        }}
-      />
+      <Suspense fallback={<LoadingAnimation />}>
+        {renderScreen()}
+        <PaywallModal
+          open={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          userEmail={user?.email}
+          userName={getMetadataName("full_name", "name") || undefined}
+          onSuccess={async () => {
+            setShowPaywall(false);
+            await subscription.refresh();
+          }}
+        />
+      </Suspense>
     </>
   );
 };

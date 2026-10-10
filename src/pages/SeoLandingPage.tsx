@@ -24,7 +24,7 @@ type VariantMeta = {
   h1: string;
 };
 
-const SITE = "https://www.thecoree.com";
+const SITE = "https://trycore.xyz";
 
 export const seoVariants: Record<SeoVariant, VariantMeta> = {
   "ai-friend": {

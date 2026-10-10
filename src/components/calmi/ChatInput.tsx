@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowUp, Mic, MicOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import {
+  getSpeechRecognitionConstructor,
+  type SpeechRecognitionInstance,
+} from "@/lib/speechRecognition";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -12,7 +16,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -41,7 +45,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Immediately release - SpeechRecognition manages its own stream
       stream.getTracks().forEach((t) => t.stop());
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Microphone permission denied:", err);
       toast({
         title: "Microphone blocked",
@@ -52,7 +56,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = getSpeechRecognitionConstructor();
     if (!SpeechRecognition) {
       toast({
         title: "Voice not supported",
@@ -67,14 +71,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     recognition.lang = "en-US";
     recognitionRef.current = recognition;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       let transcript = "";
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
       setValue(transcript);
     };
-    recognition.onerror = (e: any) => {
+    recognition.onerror = (e) => {
       console.error("SpeechRecognition error:", e?.error || e);
       if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
         toast({

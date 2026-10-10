@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const GOOGLE_API_URL = (apiKey: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
 async function callGemini(apiKey: string, systemPrompt: string, userText: string, maxTokens = 300): Promise<string> {
   const resp = await fetch(GOOGLE_API_URL(apiKey), {
@@ -70,7 +70,9 @@ serve(async (req) => {
     if (!session) throw new Error("Session not found");
 
     const conversationText = messages
-      .map((m: any) => `${m.role === "user" ? "User" : "Core"}: ${m.content}`)
+      .map((message: { role: string; content: string }) =>
+        `${message.role === "user" ? "User" : "Core"}: ${message.content}`
+      )
       .join("\n");
 
     // Run summary and emotion extraction in parallel

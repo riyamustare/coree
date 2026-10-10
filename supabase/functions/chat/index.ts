@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
@@ -36,6 +37,16 @@ SAFETY (non-negotiable):
 
 REMEMBER: you are not a replacement for therapy - you're the friend who helps people feel less alone at 2am. Warm, brief, real.`;
 
+interface RecentSession {
+  summary: string | null;
+  emotions: unknown;
+  ended_at: string | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -49,7 +60,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     let memories: string[] = [];
     let userIntent: string | null = null;
-    let recentSessions: Array<{ summary: string | null; emotions: any; ended_at: string | null }> = [];
+    let recentSessions: RecentSession[] = [];
 
     if (authHeader) {
       try {
@@ -76,8 +87,22 @@ serve(async (req) => {
           ]);
 
           if (profileRes.data?.onboarding_intent) userIntent = profileRes.data.onboarding_intent;
-          if (memoryRes.data) memories = memoryRes.data.map((m: any) => m.content);
-          if (sessionRes.data && sessionRes.data.length > 0) recentSessions = sessionRes.data;
+          if (memoryRes.data) {
+            memories = memoryRes.data.map((memory: { content: string }) => memory.content);
+          }
+          if (sessionRes.data) {
+            recentSessions = sessionRes.data.flatMap((session: unknown) => {
+              if (!isRecord(session)) return [];
+              const { summary, emotions, ended_at } = session;
+              if (
+                (summary === null || typeof summary === "string") &&
+                (ended_at === null || typeof ended_at === "string")
+              ) {
+                return [{ summary, emotions, ended_at }];
+              }
+              return [];
+            });
+          }
         }
       } catch (err) {
         console.error("Memory retrieval error:", err);
@@ -108,7 +133,7 @@ serve(async (req) => {
     if (recentSessions.length > 0) {
       const emotionalArc = recentSessions.map((s) => {
         const when = s.ended_at ? new Date(s.ended_at).toLocaleDateString() : "recent";
-        const emo = s.emotions
+        const emo = isRecord(s.emotions)
           ? Object.entries(s.emotions)
               .filter(([, v]) => typeof v === "number" && (v as number) >= 30)
               .sort((a, b) => (b[1] as number) - (a[1] as number))
@@ -121,7 +146,7 @@ serve(async (req) => {
       fullSystemPrompt += `\n\nEmotional history (most recent first):\n${emotionalArc}`;
     }
 
-    const contents: any[] = [];
+    const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
     if (contextMessages && contextMessages.length > 0) {
       for (const m of contextMessages) {
         if (m.role === "system") continue;
@@ -133,7 +158,7 @@ serve(async (req) => {
     }
     contents.push({ role: "user", parts: [{ text: message }] });
 
-    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GOOGLE_API_KEY}`;
+    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GOOGLE_API_KEY}`;
 
     const gResp = await fetch(googleUrl, {
       method: "POST",
