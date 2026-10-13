@@ -1,6 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import {
+  trackDay7Return,
+  trackSessionCompleted,
+  trackVoiceStageLatency,
+} from "@/lib/analytics";
 
 export interface ChatMessage {
   id: string;
@@ -22,6 +27,21 @@ export function useSession(userId: string | undefined) {
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const activeModeRef = useRef<"text" | "voice">("text");
+
+  const maybeTrackDay7Return = useCallback((currentSessionId?: string) => {
+    if (!userId || typeof window === "undefined") return;
+    const now = Date.now();
+    const STORAGE_KEY = "core_last_session_at";
+    const lastSeen = Number(window.localStorage.getItem(STORAGE_KEY) || "0");
+    if (lastSeen > 0) {
+      const daysSinceLastSession = Math.floor((now - lastSeen) / (1000 * 60 * 60 * 24));
+      if (daysSinceLastSession >= 7) {
+        trackDay7Return(daysSinceLastSession, currentSessionId);
+      }
+    }
+    window.localStorage.setItem(STORAGE_KEY, String(now));
+  }, [userId]);
 
   // Reset all session state when the authenticated user changes
   // (sign in/out, switching accounts) to avoid bleeding state across users.
@@ -34,6 +54,7 @@ export function useSession(userId: string | undefined) {
 
   const startSession = useCallback(async (mode: "text" | "voice" = "text"): Promise<string | null> => {
     if (!userId) return null;
+    activeModeRef.current = mode;
     const { data, error } = await supabase
       .from("sessions")
       .insert({ user_id: userId, mode })
@@ -51,8 +72,9 @@ export function useSession(userId: string | undefined) {
     setSessionId(data.id);
     setSessionStart(new Date());
     setMessages([]);
+    maybeTrackDay7Return(data.id);
     return data.id;
-  }, [userId]);
+  }, [userId, maybeTrackDay7Return]);
 
   const endSession = useCallback(async (): Promise<SessionSummary | null> => {
     if (!sessionId) return null;
@@ -73,6 +95,7 @@ export function useSession(userId: string | undefined) {
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
+      trackSessionCompleted(sessionId, duration, messageCount, activeModeRef.current);
       return {
         summary: "Session was too short to save - chat a bit more next time to save it.",
         messageCount,
@@ -102,6 +125,7 @@ export function useSession(userId: string | undefined) {
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
+      trackSessionCompleted(sessionId, duration, messageCount, activeModeRef.current);
 
       return {
         summary,
@@ -116,6 +140,7 @@ export function useSession(userId: string | undefined) {
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
+      trackSessionCompleted(sessionId, duration, messageCount, activeModeRef.current);
       return {
         summary: "You took a moment to reflect today. That matters.",
         messageCount,
@@ -154,6 +179,7 @@ export function useSession(userId: string | undefined) {
           content: m.content,
         }));
 
+        const llmStart = performance.now();
         const { data, error } = await supabase.functions.invoke("chat", {
           body: {
             message: content,
@@ -163,6 +189,9 @@ export function useSession(userId: string | undefined) {
           },
         });
         if (error) throw error;
+        const llmLatencyMs = Math.round(performance.now() - llmStart);
+        trackVoiceStageLatency("llm", llmLatencyMs, sessionId, activeModeRef.current);
+
         const assistantContent = typeof data?.text === "string" ? data.text.trim() : "";
         if (!assistantContent) throw new Error("The response was empty");
 

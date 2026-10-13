@@ -193,7 +193,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
             }}
           />
           <div className="relative z-10">
-            <img src="/logo.svg" alt="coree" className="h-6 brightness-0 invert" />
+            <img src="/logo.svg" alt="core" className="h-6 brightness-0 invert" />
           </div>
           <div className="relative z-10 max-w-md">
             <h1 className="text-4xl xl:text-5xl font-black leading-[1.05] lowercase mb-4">
@@ -202,7 +202,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
               process it all.
             </h1>
             <p className="text-base xl:text-lg opacity-90 font-medium lowercase leading-relaxed">
-              coree is your wise-friend companion. talk, type, unpack - as much or as little as you want.
+              core is your wise-friend companion. talk, type, unpack - as much or as little as you want.
             </p>
             <div className="mt-8 grid grid-cols-1 gap-3">
               {[
@@ -234,7 +234,7 @@ export function AuthScreen({ onBack }: AuthScreenProps) {
           >
             {/* Mobile logo */}
             <div className="flex lg:hidden justify-center mb-6">
-              <img src="/logo.svg" alt="coree" className="h-6" />
+              <img src="/logo.svg" alt="core" className="h-6" />
             </div>
 
             <div className="text-center mb-8">

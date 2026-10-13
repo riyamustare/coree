@@ -37,7 +37,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               : "py-4 bg-transparent border-transparent"
           }`}
         >
-          <img src="/logo.svg" alt="coree" className="h-6 md:h-6" />
+          <img src="/logo.svg" alt="core" className="h-6 md:h-6" />
           <button
             onClick={() => { trackCtaClick("get_started", "landing_header"); onLogin(); }}
             className="btn-duo h-10 px-5 text-xs rounded-full"
@@ -77,7 +77,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 <br />
                 or just need to vent?
                 <br />
-                <span className="text-primary">coree is here.</span>
+                <span className="text-primary">core is here.</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-8 leading-relaxed lowercase">
                 a private space to talk it out when there's no one else around. vent, unwind, feel a little less alone - voice or text, anytime, no judgment.
@@ -112,8 +112,8 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 className="absolute inset-0 sm:inset-x-6 card-duo p-5 sm:p-6 flex flex-col gap-3"
               >
                 <div className="flex items-center gap-2 pb-3 border-b-2 border-border-color">
-                  <img src="/logo-icon.svg" alt="coree" className="h-6 w-6" />
-                  <span className="text-sm font-bold lowercase">coree</span>
+                  <img src="/logo-icon.svg" alt="core" className="h-6 w-6" />
+                  <span className="text-sm font-bold lowercase">core</span>
                   <span className="ml-auto flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary animate-[breathe_1.6s_ease-in-out_infinite]" />
                     listening
@@ -256,7 +256,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 a friend to talk to when you feel lonely or just need to vent
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground font-medium lowercase leading-relaxed">
-                coree is where people come to feel less alone - to vent about their day, unpack late-night thoughts, or just have someone to talk to when no one else is around.
+                core is where people come to feel less alone - to vent about their day, unpack late-night thoughts, or just have someone to talk to when no one else is around.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
@@ -289,7 +289,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 your feelings deserve a soft place to land.
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground font-medium mb-6 lowercase">
-                take five minutes for yourself. coree is ready when you are.
+                take five minutes for yourself. core is ready when you are.
               </p>
               <button
                 onClick={() => { trackCtaClick("start_free", "landing_final_cta"); onGetStarted(); }}
@@ -307,7 +307,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col sm:flex-row justify-between gap-8">
             <div className="max-w-sm">
-              <img src="/logo.svg" alt="coree" className="h-6 mb-3" />
+              <img src="/logo.svg" alt="core" className="h-6 mb-3" />
               <p className="text-sm text-muted-foreground font-medium lowercase">
                 a private space to talk it out. not therapy - just a wise friend, whenever.
               </p>
@@ -331,7 +331,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             </div>
           </div>
           <div className="mt-10 pt-6 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-muted-foreground">
-            <p className="lowercase">© 2025 coree · made with care</p>
+            <p className="lowercase">© 2025 core · made with care</p>
             <p className="lowercase">if you're in crisis, please reach a professional or local helpline.</p>
           </div>
         </div>
@@ -344,10 +344,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            name: "coree",
+            name: "core",
             applicationCategory: "HealthApplication",
             description:
-              "coree is your friendly AI companion for short, supportive voice or text conversations.",
+              "core is your friendly AI companion for short, supportive voice or text conversations.",
             operatingSystem: "Web",
             offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
             featureList: [

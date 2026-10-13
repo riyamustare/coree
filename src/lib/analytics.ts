@@ -71,35 +71,47 @@ export function trackOnboardingCompleted(intent: string) {
 }
 
 // ─── Session Events ───
-export function trackSessionStarted(sessionId: string) {
-  dispatch("session_started", { session_id: sessionId });
+export function trackSessionStarted(sessionId: string, mode: "text" | "voice" = "text") {
+  dispatch("session_started", { session_id: sessionId, mode });
 }
-export function trackSessionEnded(sessionId: string, durationSec: number, messageCount: number) {
-  dispatch("session_ended", { session_id: sessionId, duration_sec: durationSec, message_count: messageCount });
+export function trackSessionEnded(sessionId: string, durationSec: number, messageCount: number, mode: "text" | "voice" = "text") {
+  dispatch("session_ended", { session_id: sessionId, duration_sec: durationSec, message_count: messageCount, mode });
+}
+export function trackSessionCompleted(sessionId: string, durationSec: number, messageCount: number, mode: "text" | "voice" = "text") {
+  dispatch("session_completed", { session_id: sessionId, duration_sec: durationSec, message_count: messageCount, mode });
+}
+export function trackDay7Return(daysSinceLastSession: number, sessionId?: string) {
+  dispatch("day_7_return", { days_since_last_session: daysSinceLastSession, session_id: sessionId ?? null });
 }
 
 // ─── Chat Events ───
 export function trackMessageSent(sessionId: string, mode: "text" | "voice") {
   dispatch("message_sent", { session_id: sessionId, mode });
 }
-export function trackResponseReceived(sessionId: string) {
-  dispatch("response_received", { session_id: sessionId });
+export function trackResponseReceived(sessionId: string, latencyMs?: number) {
+  dispatch("response_received", { session_id: sessionId, latency_ms: latencyMs ?? null });
 }
 
 // ─── Mode Events ───
 export function trackModeChanged(mode: "text" | "voice") {
   dispatch("mode_changed", { mode });
 }
+export function trackModeUsage(mode: "text" | "voice", source: "session" | "message" = "session", sessionId?: string) {
+  dispatch("mode_usage", { mode, source, session_id: sessionId ?? null });
+}
 
 // ─── Voice Events ───
-export function trackVoiceListenStart() {
-  dispatch("voice_listen_started", {});
+export function trackVoiceListenStart(sessionId?: string) {
+  dispatch("voice_listen_started", { session_id: sessionId ?? null });
 }
-export function trackVoiceListenStop() {
-  dispatch("voice_listen_stopped", {});
+export function trackVoiceListenStop(sessionId?: string) {
+  dispatch("voice_listen_stopped", { session_id: sessionId ?? null });
 }
-export function trackTtsPlayed() {
-  dispatch("tts_played", {});
+export function trackVoiceStageLatency(stage: "asr" | "llm" | "tts", latencyMs: number, sessionId?: string, mode?: "text" | "voice") {
+  dispatch("voice_stage_latency", { stage, latency_ms: latencyMs, session_id: sessionId ?? null, mode: mode ?? null });
+}
+export function trackTtsPlayed(sessionId?: string, latencyMs?: number) {
+  dispatch("tts_played", { session_id: sessionId ?? null, latency_ms: latencyMs ?? null });
 }
 
 // ─── Navigation Events ───

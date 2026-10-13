@@ -131,3 +131,50 @@ Events are currently logged to `console.debug`. To integrate with Amplitude, Mix
 npm i
 npm run dev
 ```
+
+## CI and release checks
+
+Pull requests run formatting, ESLint, TypeScript, unit tests, mocked chat API
+integration tests, and a production build in that order. The
+required GitHub check is **CI / Lint, types, tests, and build**.
+The Prettier check currently gates the manifest, workflow, script, and test
+files; ESLint covers the application source. Existing source files have
+Prettier baseline differences, so expanding Prettier enforcement to all source
+files should be paired with a separate formatting-only change.
+
+To make those checks mandatory, a repository admin must add a branch protection
+rule or ruleset for `main` in **Settings → Branches**. Require a pull request
+before merging, require the check above to pass, and prevent force pushes and
+branch deletions. Disable administrator bypass if direct pushes must be blocked
+for administrators too.
+
+For post-deploy checks, run **Actions → Staging smoke tests → Run workflow**
+after deploying a preview/staging version. Configure the following GitHub
+Actions secrets first:
+
+- `STAGING_SUPABASE_URL`
+- `STAGING_SUPABASE_ANON_KEY`
+- Optional `STAGING_SMOKE_AUDIO_BASE64` to exercise speech-to-text as part of
+  the voice round trip
+
+The smoke workflow exercises the real staging chat and text-to-speech
+providers; configure their provider secrets in the staging Supabase project.
+Without the audio fixture, speech-to-text is skipped. Keep staging separate
+from production. With Vercel Git deployments, use a preview deployment as
+staging, run the smoke workflow, and promote that exact verified deployment
+only after it succeeds:
+
+```sh
+npx vercel promote <verified-deployment-url>
+```
+
+For rollback to the previous production deployment:
+
+```sh
+npx vercel rollback
+```
+
+These commands require an authenticated Vercel CLI linked to the project. If
+production currently auto-deploys on a `main` push, configure Vercel so that
+the production promotion cannot bypass staging smoke tests. Production
+credentials must stay in the hosting provider, not in this repository.

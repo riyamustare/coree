@@ -4,7 +4,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const PRODUCT_NAME = 'coree Pro';
+const PRODUCT_NAME = 'core Pro';
 const APP_ORIGIN = 'https://www.trycore.xyz';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
           headers,
           body: JSON.stringify({
             name: PRODUCT_NAME,
-            description: 'Unlimited voice conversations with coree.',
+            description: 'Unlimited voice conversations with core.',
             recurring_interval: 'month',
             prices: [{ amount_type: 'fixed', price_amount: 19900, price_currency: 'inr' }],
           }),

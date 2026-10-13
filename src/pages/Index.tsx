@@ -21,6 +21,7 @@ import {
   trackMessageSent,
   trackResponseReceived,
   trackModeChanged,
+  trackModeUsage,
   trackVoiceListenStart,
   trackVoiceListenStop,
   trackTtsPlayed,
@@ -214,7 +215,8 @@ const Index = () => {
     trackModeChanged(selectedMode);
     const newSessionId = await startSession(selectedMode);
     if (!newSessionId) return;
-    trackSessionStarted(newSessionId);
+    trackSessionStarted(newSessionId, selectedMode);
+    trackModeUsage(selectedMode, "session", newSessionId);
     setMessages([
       {
         id: crypto.randomUUID(),
@@ -246,7 +248,7 @@ const Index = () => {
     setScreen("ending");
     const result = await endSession();
     if (result) {
-      trackSessionEnded(sessionId || "", result.duration, result.messageCount);
+      trackSessionEnded(sessionId || "", result.duration, result.messageCount, mode);
     }
     setSummaryData(result);
     setScreen("summary");
@@ -297,7 +299,7 @@ const Index = () => {
 
   const handleVoiceToggleFixed = useCallback(async () => {
     if (isListening) {
-      trackVoiceListenStop();
+      trackVoiceListenStop(sessionId || undefined);
       trackCtaClick("mic_stop", "chat", { session_id: sessionId || "" });
       // stop listening which will resolve the promise returned by startListening
       await stopListening();
@@ -318,10 +320,10 @@ const Index = () => {
         trackResponseReceived(sessionId || "");
       }
     } else {
-      trackVoiceListenStart();
+      trackVoiceListenStart(sessionId || undefined);
       trackCtaClick("mic_start", "chat", { session_id: sessionId || "" });
       // startListening returns a promise that resolves when stopListening calls resolve
-      transcriptPromiseRef.current = startListening();
+      transcriptPromiseRef.current = startListening(sessionId || undefined);
     }
   }, [isListening, startListening, stopListening, sendMessage, sessionId, profile?.genz_mode]);
 
@@ -331,10 +333,10 @@ const Index = () => {
     const last = messages[messages.length - 1];
     if (last.role === "assistant" && last.id !== spokenMessageIdRef.current) {
       spokenMessageIdRef.current = last.id;
-      trackTtsPlayed();
-      speak(last.content);
+      trackTtsPlayed(sessionId || undefined, undefined);
+      speak(last.content, sessionId || undefined);
     }
-  }, [messages, mode, isLoading, speak]);
+  }, [messages, mode, isLoading, sessionId, speak]);
 
   // Mic stays off by default - user must tap to start listening
 
@@ -532,7 +534,7 @@ const Index = () => {
               {msg.role === "assistant" && (
                 <div className="flex items-start gap-3 max-w-[80%]">
                   <div className="w-8 h-8 flex-shrink-0 mt-1">
-                    <img src="/logo-icon.svg" alt="coree" className="w-full h-full object-contain" />
+                    <img src="/logo-icon.svg" alt="core" className="w-full h-full object-contain" />
                   </div>
                   <div className="bg-card text-card-foreground rounded-lg px-4 py-3 shadow-sm border border-border">
                     <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.content}</p>

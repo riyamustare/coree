@@ -52,11 +52,11 @@ export function PaywallModal({ open, onClose, onSuccess, userEmail, userName }: 
 
             <div className="mb-5">
               <span className="inline-block rounded-full bg-primary/15 px-3 py-0.5 text-xs font-semibold text-primary mb-3">
-                coree Pro
+                core Pro
               </span>
               <h2 className="text-2xl font-bold text-foreground mb-1">Unlock voice mode</h2>
               <p className="text-sm text-muted-foreground">
-                You've used your free voice session. Upgrade to keep talking with coree.
+                You've used your free voice session. Upgrade to keep talking with core.
               </p>
             </div>
 

@@ -68,7 +68,7 @@ serve(async (req) => {
       });
     }
 
-    const subject = type === "feedback" ? "New Coree feedback submission" : "New Coree waitlist signup";
+    const subject = type === "feedback" ? "New core feedback submission" : "New core waitlist signup";
 
     const rows: string[] = [];
     for (const [key, label] of submissionFields[type]) {
@@ -95,7 +95,7 @@ serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        from: "Coree <onboarding@resend.dev>",
+        from: "core <onboarding@resend.dev>",
         to: [NOTIFY_TO],
         subject,
         html,

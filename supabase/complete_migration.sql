@@ -1,4 +1,4 @@
--- Complete Coree database schema, consolidated from supabase/migrations.
+-- Complete core database schema, consolidated from supabase/migrations.
 -- Run once against a fresh Supabase project. This is a bootstrap schema, not
 -- an additional migration to apply after the existing migration history.
 

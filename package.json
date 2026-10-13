@@ -8,8 +8,12 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "format:check": "prettier --check package.json .github/workflows/*.yml scripts/*.mjs 'src/test/**/*.test.ts'",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude 'src/test/integration/**'",
+    "test:integration": "vitest run src/test/integration",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -17,6 +21,7 @@
     "@hookform/resolvers": "^3.10.0",
     "@lottiefiles/dotlottie-react": "^0.19.2",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
+    "@microsoft/clarity": "^1.0.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -91,6 +96,7 @@
     "jsdom": "^20.0.3",
     "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.6",
+    "prettier": "^3.9.10",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",

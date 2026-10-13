@@ -18,23 +18,23 @@ const CONTENT: Record<
     eyebrow: "our promise",
     title: "private by design.",
     intro:
-      "coree is a space that belongs to you. we built it so your thoughts stay yours - not fuel for ads, not training data, not analytics for someone else.",
+      "core is a space that belongs to you. we built it so your thoughts stay yours - not fuel for ads, not training data, not analytics for someone else.",
     icon: ShieldCheck,
     bullets: [
       { title: "no ads, ever", body: "we don't sell attention. no trackers, no third-party ad networks, no re-targeting." },
       { title: "your data is not training fuel", body: "your conversations are never used to train external models. period." },
       { title: "you own your history", body: "delete a session, a note, or your whole account any time. it goes with you." },
-      { title: "minimum data by default", body: "we collect only what's needed to make coree work - nothing extra, no shadow profiles." },
+      { title: "minimum data by default", body: "we collect only what's needed to make core work - nothing extra, no shadow profiles." },
     ],
   },
   encryption: {
     eyebrow: "our promise",
     title: "encrypted always.",
     intro:
-      "everything you share with coree travels and rests behind modern encryption. no plain-text sitting around, no side doors.",
+      "everything you share with core travels and rests behind modern encryption. no plain-text sitting around, no side doors.",
     icon: Lock,
     bullets: [
-      { title: "encrypted in transit", body: "every request is protected with TLS 1.2+, so nothing you say leaks between you and coree." },
+      { title: "encrypted in transit", body: "every request is protected with TLS 1.2+, so nothing you say leaks between you and core." },
       { title: "encrypted at rest", body: "sessions, notes, and voice memos are stored encrypted on secure infrastructure." },
       { title: "scoped access controls", body: "only your account can read your data. row-level security keeps sessions isolated per user." },
       { title: "no long-term audio", body: "voice recordings are transcribed and discarded - we keep the text you can actually use." },
@@ -44,12 +44,12 @@ const CONTENT: Record<
     eyebrow: "our promise",
     title: "no diagnoses.",
     intro:
-      "coree is a wise friend, not a clinician. we help you think out loud, notice patterns, and feel less alone - we don't label you.",
+      "core is a wise friend, not a clinician. we help you think out loud, notice patterns, and feel less alone - we don't label you.",
     icon: HeartHandshake,
     bullets: [
-      { title: "not a medical tool", body: "coree does not diagnose, treat, or replace mental health care. it's a supportive companion." },
+      { title: "not a medical tool", body: "core does not diagnose, treat, or replace mental health care. it's a supportive companion." },
       { title: "no scary labels", body: "we won't slap a disorder on you or pathologize a hard day. we listen and reflect." },
-      { title: "we point you to real help", body: "if something serious comes up, coree encourages you to reach a professional or a helpline." },
+      { title: "we point you to real help", body: "if something serious comes up, core encourages you to reach a professional or a helpline." },
       { title: "you set the pace", body: "share as much or as little as you want. there's no intake form and no waiting room." },
     ],
   },
@@ -79,7 +79,7 @@ export default function PromisePage({ which }: { which: PromiseKey }) {
             <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />
             back
           </button>
-          <img src="/logo.svg" alt="coree" className="h-6" />
+          <img src="/logo.svg" alt="core" className="h-6" />
           <button
             onClick={() => navigate("/")}
             className="btn-duo h-10 px-5 text-xs rounded-full"
@@ -135,7 +135,7 @@ export default function PromisePage({ which }: { which: PromiseKey }) {
               we're a small team. write to us any time.
             </p>
             <a
-              href="mailto:hello@coree.app"
+              href="mailto:hello@core.app"
               className="btn-duo text-sm px-6 py-3 inline-flex"
             >
               say hi
@@ -146,7 +146,7 @@ export default function PromisePage({ which }: { which: PromiseKey }) {
 
       <footer className="border-t-2 border-border-color">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center text-xs text-muted-foreground">
-          <p className="lowercase">© 2025 coree · made with care</p>
+          <p className="lowercase">© 2025 core · made with care</p>
           <button onClick={goBack} className="hover:text-foreground transition lowercase">
             back
           </button>

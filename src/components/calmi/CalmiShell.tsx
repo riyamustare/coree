@@ -98,8 +98,8 @@ export function CalmiShell({
           className="h-10 w-full md:w-10 rounded-full flex items-center md:justify-center gap-3 transition hover:bg-muted px-2 md:px-0"
           aria-label="Go home"
         >
-          <img src="/logo-icon.svg" alt="coree" className="h-6 w-6 object-contain" />
-          <span className="md:hidden text-sm font-black lowercase text-foreground">coree</span>
+          <img src="/logo-icon.svg" alt="core" className="h-6 w-6 object-contain" />
+          <span className="md:hidden text-sm font-black lowercase text-foreground">core</span>
         </button>
 
         <nav className="flex flex-col gap-2 md:gap-3 w-full md:w-auto">
