@@ -60,11 +60,11 @@ export function OnboardingScreen({ onComplete, displayName }: OnboardingScreenPr
               transition={{ duration: 0.35 }}
               className="w-full max-w-md text-left card-duo p-6 sm:p-8"
             >
-              <img src="/logo.svg" alt="coree" className="h-8 mb-6" />
+              <img src="/logo.svg" alt="core" className="h-8 mb-6" />
 
               <div className="space-y-4 text-foreground leading-relaxed lowercase">
                 <p className="text-base font-medium">hi {firstName},</p>
-                <p className="text-base font-medium">we created coree because life can be... a lot</p>
+                <p className="text-base font-medium">we created core because life can be... a lot</p>
                 <p className="text-base font-medium">sometimes you just need someone to talk to</p>
                 <p className="text-base font-medium">whether you're navigating a rough day,
                   <br />
@@ -91,7 +91,7 @@ export function OnboardingScreen({ onComplete, displayName }: OnboardingScreenPr
               className="w-full max-w-md"
             >
               <div className="text-left">
-                <h2 className="text-2xl font-black text-foreground mb-6 lowercase">what brings you to coree?</h2>
+                <h2 className="text-2xl font-black text-foreground mb-6 lowercase">what brings you to core?</h2>
                 <div className="space-y-3">
                   {INTENT_OPTIONS.map((option) => (
                     <button
@@ -127,7 +127,7 @@ export function OnboardingScreen({ onComplete, displayName }: OnboardingScreenPr
             >
               <div className="text-left">
                 <h2 className="text-2xl font-black text-foreground mb-2 lowercase">you're all set!</h2>
-                <p className="text-sm text-muted-foreground mb-6 font-medium lowercase">we've set up your personalized space and you're ready to start your journey with coree.</p>
+                <p className="text-sm text-muted-foreground mb-6 font-medium lowercase">we've set up your personalized space and you're ready to start your journey with core.</p>
 
                 <div className="space-y-3">
                   {[

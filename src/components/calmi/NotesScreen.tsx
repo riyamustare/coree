@@ -36,19 +36,19 @@ export function NotesScreen({ userId, onGoHome, onViewInsights, onViewHistory, o
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
-  useEffect(() => {
-    trackScreenViewed("notes");
-    fetchNotes();
-  }, [userId]);
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     const { data } = await supabase
       .from("notes")
       .select("*")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
     if (data) setNotes(data);
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    trackScreenViewed("notes");
+    fetchNotes();
+  }, [fetchNotes]);
 
   const handleNewNote = async () => {
     const { data } = await supabase

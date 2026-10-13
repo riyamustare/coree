@@ -96,7 +96,7 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
         {/* Usage analytics */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
           <h2 className="text-xs font-bold uppercase tracking-wider text-foreground mb-1">usage</h2>
-          <p className="text-xs text-muted-foreground mb-3 font-medium lowercase">how much you've used coree</p>
+          <p className="text-xs text-muted-foreground mb-3 font-medium lowercase">how much you've used core</p>
           <div className="card-duo px-5 py-4 space-y-3">
             <span className="inline-block rounded-full border-2 border-primary bg-primary/10 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-primary">
               {isPro ? "pro" : "free"}
@@ -124,7 +124,7 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
             <div className="card-duo px-5 py-4 border-primary/60 bg-primary/5">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-black lowercase text-foreground">coree pro</span>
+                <span className="text-sm font-black lowercase text-foreground">core pro</span>
               </div>
               <p className="text-xs text-muted-foreground font-medium lowercase">
                 renews on{" "}

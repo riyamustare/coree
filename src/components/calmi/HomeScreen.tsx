@@ -120,7 +120,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="flex flex-col items-center gap-2 mb-6 sm:mb-8 text-center"
         >
           <div className="h-12 w-12 rounded-full flex items-center justify-center mb-1">
-            <img src="/logo-icon.svg" alt="coree" className="h-8 w-8 object-contain" />
+            <img src="/logo-icon.svg" alt="core" className="h-8 w-8 object-contain" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground lowercase">
             {greeting}

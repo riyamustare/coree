@@ -4,6 +4,7 @@ import {
   getSpeechRecognitionConstructor,
   type SpeechRecognitionInstance,
 } from "@/lib/speechRecognition";
+import { trackTtsPlayed, trackVoiceListenStart, trackVoiceListenStop, trackVoiceStageLatency } from "@/lib/analytics";
 
 export function useVoice() {
   const [isListening, setIsListening] = useState(false);
@@ -15,8 +16,10 @@ export function useVoice() {
   const interimTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const asrStartRef = useRef<number | null>(null);
 
-  const startListening = useCallback(async (): Promise<string | null> => {
+  const startListening = useCallback(async (sessionId?: string): Promise<string | null> => {
     const SpeechRecognition = getSpeechRecognitionConstructor();
     if (!SpeechRecognition) {
       toast({
@@ -42,6 +45,8 @@ export function useVoice() {
       return null;
     }
 
+    sessionIdRef.current = sessionId ?? null;
+    asrStartRef.current = performance.now();
     setIsListening(true);
     setLiveTranscript("");
     finalTranscriptRef.current = "";
@@ -82,12 +87,15 @@ export function useVoice() {
       // Recognition ended (either by stop() or naturally). Resolve with whatever we captured.
       const text =
         (finalTranscriptRef.current + " " + interimTranscriptRef.current).trim() || null;
+      const asrLatencyMs = asrStartRef.current ? Math.round(performance.now() - asrStartRef.current) : 0;
+      trackVoiceStageLatency("asr", asrLatencyMs, sessionIdRef.current, "voice");
       setLiveTranscript(text || "");
       setIsListening(false);
       resolveRef.current?.(text);
       resolveRef.current = null;
     };
     try {
+      trackVoiceListenStart(sessionId);
       recognition.start();
     } catch (err) {
       console.error("SpeechRecognition start error:", err);
@@ -103,14 +111,16 @@ export function useVoice() {
   const stopListening = useCallback(async () => {
     // Just stop - onend will resolve the promise with the final+interim text.
     try {
+      trackVoiceListenStop(sessionIdRef.current ?? undefined);
       recognitionRef.current?.stop();
     } catch (err) {
       console.error("SpeechRecognition stop error:", err);
     }
   }, []);
 
-  const speak = useCallback(async (text: string) => {
+  const speak = useCallback(async (text: string, sessionId?: string) => {
     setIsSpeaking(true);
+    const ttsStart = performance.now();
 
     // Abort any in-flight request
     abortRef.current?.abort();
@@ -136,6 +146,9 @@ export function useVoice() {
           signal: controller.signal,
         }
       );
+
+      const ttsLatencyMs = Math.round(performance.now() - ttsStart);
+      trackVoiceStageLatency("tts", ttsLatencyMs, sessionId ?? null, "voice");
 
       if (!response.ok) {
         console.error("TTS failed:", response.status);
@@ -187,6 +200,7 @@ export function useVoice() {
         audioRef.current = null;
       };
 
+      trackTtsPlayed(sessionId ?? undefined, ttsLatencyMs);
       await audio.play();
     } catch (err: unknown) {
       if (!(err instanceof Error) || err.name !== "AbortError") {
