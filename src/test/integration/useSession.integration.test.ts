@@ -100,7 +100,9 @@ describe("chat API integration", () => {
       await result.current.sendMessage("I am settling in.");
     });
     vi.mocked(supabase.functions.invoke).mockResolvedValueOnce({
-      data: { summary: "You shared that you moved to Pune and are settling in." },
+      data: {
+        summary: "You shared that you moved to Pune and are settling in.",
+      },
       error: null,
     } as never);
 
@@ -119,8 +121,7 @@ describe("chat API integration", () => {
 
   it("ignores a chat response after the authenticated user changes", async () => {
     let resolveChat:
-      | ((value: { data: { text: string }; error: null }) => void)
-      | undefined;
+      ((value: { data: { text: string }; error: null }) => void) | undefined;
     vi.mocked(supabase.functions.invoke).mockImplementationOnce(
       () =>
         new Promise((resolve) => {

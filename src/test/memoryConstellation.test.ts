@@ -272,8 +272,9 @@ describe("residence history reconciliation", () => {
       [] as Array<{ source: string; target: string; type: string }>,
     );
 
-    expect(graph.nodes.find(({ id }) => id === "old-home")?.properties.valid_to)
-      .toBe("2026-10-18T00:00:00.000Z");
+    expect(
+      graph.nodes.find(({ id }) => id === "old-home")?.properties.valid_to,
+    ).toBe("2026-10-18T00:00:00.000Z");
     expect(graph.links).toContainEqual({
       source: "current-home",
       target: "old-home",
