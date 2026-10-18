@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { CalmiShell } from "./CalmiShell";
 import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
+import { toDirectAddress } from "@/lib/personLanguage";
 
 interface PastSession {
   id: string;
   started_at: string;
   ended_at: string | null;
   summary: string | null;
+  preview?: string;
 }
 
 interface ChatMessage {
@@ -18,6 +20,7 @@ interface ChatMessage {
   role: string;
   content: string;
   created_at: string;
+  memory_trace: import("@/integrations/supabase/types").Json;
 }
 
 interface HistoryScreenProps {
@@ -35,10 +38,25 @@ interface HistoryScreenProps {
   initialSessionId?: string | null;
 }
 
-export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle, initialSessionId }: HistoryScreenProps) {
+export function HistoryScreen({
+  userId,
+  onGoHome,
+  onViewInsights,
+  onViewHistory,
+  onOpenNotes,
+  onOpenSettings,
+  onSignOut,
+  genzMode,
+  onGenzToggle,
+  theme,
+  onThemeToggle,
+  initialSessionId,
+}: HistoryScreenProps) {
   const [sessions, setSessions] = useState<PastSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<PastSession | null>(null);
+  const [selectedSession, setSelectedSession] = useState<PastSession | null>(
+    null,
+  );
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
 
@@ -53,16 +71,35 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
         .order("started_at", { ascending: false });
 
       if (data) {
-        const filtered = data.filter((s) => {
-          if (!s.ended_at || !s.started_at) return false;
-          const duration = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime();
-          return duration > 5 * 60 * 1000;
-        });
-        setSessions(filtered);
+        const sessionIds = data.map((session) => session.id);
+        const { data: messages } = sessionIds.length
+          ? await supabase
+              .from("messages")
+              .select("session_id, role, content, created_at")
+              .in("session_id", sessionIds)
+              .order("created_at", { ascending: false })
+          : { data: [] };
+        const previews = new Map<string, string[]>();
+        for (const message of messages || []) {
+          const preview = previews.get(message.session_id) || [];
+          if (preview.length < 2) {
+            preview.push(
+              `${message.role === "user" ? "You" : "Core"}: ${message.content}`,
+            );
+            previews.set(message.session_id, preview);
+          }
+        }
+        const sessionsWithPreviews = data.map((session) => ({
+          ...session,
+          preview: previews.get(session.id)?.reverse().join(" · "),
+        }));
+        setSessions(sessionsWithPreviews);
 
         // Auto-open if initialSessionId provided
         if (initialSessionId) {
-          const target = filtered.find((s) => s.id === initialSessionId);
+          const target = sessionsWithPreviews.find(
+            (session) => session.id === initialSessionId,
+          );
           if (target) openSession(target);
         }
       }
@@ -77,25 +114,43 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
     trackHistoryOpened(session.id);
     const { data } = await supabase
       .from("messages")
-      .select("id, role, content, created_at")
+      .select("id, role, content, created_at, memory_trace")
       .eq("session_id", session.id)
       .order("created_at", { ascending: true });
-    setChatLog(data || []);
+    setChatLog(
+      (data || []).map((message) => ({
+        ...message,
+        memory_trace: Array.isArray(message.memory_trace)
+          ? message.memory_trace.filter(
+              (id): id is string => typeof id === "string",
+            )
+          : [],
+      })),
+    );
     setChatLoading(false);
   };
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const formatDuration = (start: string, end: string) => {
-    const mins = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000);
+    const mins = Math.round(
+      (new Date(end).getTime() - new Date(start).getTime()) / 60000,
+    );
     return `${mins} min`;
   };
 
   const formatTime = (dateStr: string) => {
-    return new Date(dateStr).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return new Date(dateStr).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
   };
 
   if (selectedSession) {
@@ -126,11 +181,16 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
                   <ArrowLeft className="h-4 w-4 text-foreground" />
                 </button>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">{formatDate(selectedSession.started_at)}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatDate(selectedSession.started_at)}
+                  </p>
                   {selectedSession.ended_at && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {formatDuration(selectedSession.started_at, selectedSession.ended_at)}
+                      {formatDuration(
+                        selectedSession.started_at,
+                        selectedSession.ended_at,
+                      )}
                     </p>
                   )}
                 </div>
@@ -141,13 +201,17 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
                     summary
                   </p>
-                  <p className="text-sm text-foreground leading-relaxed">{selectedSession.summary}</p>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {toDirectAddress(selectedSession.summary)}
+                  </p>
                 </div>
               )}
 
               <div className="space-y-3">
                 {chatLog.length === 0 ? (
-                  <p className="text-center text-sm text-muted-foreground py-8">No messages found</p>
+                  <p className="text-center text-sm text-muted-foreground py-8">
+                    No messages found
+                  </p>
                 ) : (
                   chatLog.map((msg) => (
                     <motion.div
@@ -160,8 +224,14 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
                           : "bg-surface shadow-soft mr-8"
                       }`}
                     >
-                      <p className="text-sm text-foreground leading-relaxed">{msg.content}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">{formatTime(msg.created_at)}</p>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {msg.role === "assistant"
+                          ? toDirectAddress(msg.content)
+                          : msg.content}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {formatTime(msg.created_at)}
+                      </p>
                     </motion.div>
                   ))
                 )}
@@ -193,12 +263,16 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
         <div className="flex min-h-screen flex-col bg-background px-4 py-6">
           <div className="mx-auto w-full max-w-xl flex-1">
             <div className="mb-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">All conversations</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                All conversations
+              </h1>
             </div>
 
             {sessions.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground">No conversations yet</p>
+                <p className="text-sm text-muted-foreground">
+                  No conversations yet
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -213,10 +287,17 @@ export function HistoryScreen({ userId, onGoHome, onViewInsights, onViewHistory,
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm text-foreground line-clamp-2 flex-1">
-                        {session.summary || "A moment of reflection"}
+                        {toDirectAddress(
+                          session.summary || "A moment of reflection",
+                        )}
                       </p>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                     </div>
+                    {session.preview && (
+                      <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                        {session.preview}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-2">
                       <span className="text-xs text-muted-foreground">
                         {formatDate(session.started_at)}

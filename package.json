@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:unit": "vitest run --exclude 'src/test/integration/**'",
     "test:integration": "vitest run src/test/integration",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "migrate:legacy-memories": "npm run migrate:legacy --prefix memory-service",
+    "test:memory-service": "npm test --prefix memory-service",
+    "test:memory-concurrency": "npm run test:concurrency --prefix memory-service"
   },
   "dependencies": {
     "@elevenlabs/react": "^0.14.2",

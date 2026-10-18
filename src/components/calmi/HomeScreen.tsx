@@ -5,9 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { CalmiShell } from "./CalmiShell";
 import { WaitlistCard } from "./WaitlistCard";
 import { trackScreenViewed, trackHistoryOpened } from "@/lib/analytics";
+import { toDirectAddress } from "@/lib/personLanguage";
 
 const WaitlistModal = lazy(() =>
-  import("./WaitlistModal").then((module) => ({ default: module.WaitlistModal }))
+  import("./WaitlistModal").then((module) => ({
+    default: module.WaitlistModal,
+  })),
 );
 
 interface PastSession {
@@ -34,18 +37,40 @@ interface HomeScreenProps {
   displayName?: string | null;
 }
 
-export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onViewInsights, onOpenSession, onOpenSettings, onOpenNotes, onGoHome, userId, genzMode, onGenzToggle, theme, onThemeToggle, displayName }: HomeScreenProps) {
+export function HomeScreen({
+  onStartConversation,
+  onSignOut,
+  onViewHistory,
+  onViewInsights,
+  onOpenSession,
+  onOpenSettings,
+  onOpenNotes,
+  onGoHome,
+  userId,
+  genzMode,
+  onGenzToggle,
+  theme,
+  onThemeToggle,
+  displayName,
+}: HomeScreenProps) {
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
   const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const hour = new Date().getHours();
   const firstName = (displayName || "").trim().split(/\s+/)[0] || "";
   const timeGreeting =
-    hour < 5 ? "still up" :
-    hour < 12 ? "good morning" :
-    hour < 17 ? "good afternoon" :
-    hour < 21 ? "good evening" : "hey night owl";
-  const greeting = firstName ? `${timeGreeting}, ${firstName.toLowerCase()}` : timeGreeting;
+    hour < 5
+      ? "still up"
+      : hour < 12
+        ? "good morning"
+        : hour < 17
+          ? "good afternoon"
+          : hour < 21
+            ? "good evening"
+            : "hey night owl";
+  const greeting = firstName
+    ? `${timeGreeting}, ${firstName.toLowerCase()}`
+    : timeGreeting;
   const subGreetings = [
     "what's alive in you right now?",
     "how's your heart today?",
@@ -67,8 +92,6 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
         .limit(30);
 
       if (data) {
-        // No time filter - the session save threshold now lives in useSession
-        // (a session is kept only when the user sent 4+ messages).
         setPastSessions(data.slice(0, 5));
       }
     };
@@ -88,7 +111,7 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
 
   const formatDuration = (start: string, end: string) => {
     const mins = Math.round(
-      (new Date(end).getTime() - new Date(start).getTime()) / 60000
+      (new Date(end).getTime() - new Date(start).getTime()) / 60000,
     );
     return `${mins} min`;
   };
@@ -120,7 +143,11 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="flex flex-col items-center gap-2 mb-6 sm:mb-8 text-center"
         >
           <div className="h-12 w-12 rounded-full flex items-center justify-center mb-1">
-            <img src="/logo-icon.svg" alt="core" className="h-8 w-8 object-contain" />
+            <img
+              src="/logo-icon.svg"
+              alt="core"
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-foreground lowercase">
             {greeting}
@@ -140,8 +167,12 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             onClick={() => onStartConversation("voice")}
             className="card-duo w-full p-4 sm:p-5 text-left"
           >
-            <p className="text-sm font-bold text-foreground uppercase tracking-wide">voice mode</p>
-            <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">in the mood to talk?</p>
+            <p className="text-sm font-bold text-foreground uppercase tracking-wide">
+              voice mode
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">
+              in the mood to talk?
+            </p>
           </button>
 
           <button
@@ -149,10 +180,17 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
             className="card-duo w-full p-4 sm:p-5 text-left flex items-center justify-between"
           >
             <div>
-              <p className="text-sm font-bold text-foreground uppercase tracking-wide">text mode</p>
-              <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">not in the talking mood?</p>
+              <p className="text-sm font-bold text-foreground uppercase tracking-wide">
+                text mode
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 font-medium normal-case">
+                not in the talking mood?
+              </p>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={2.5} />
+            <ChevronRight
+              className="h-5 w-5 text-muted-foreground"
+              strokeWidth={2.5}
+            />
           </button>
 
           <WaitlistCard onJoin={() => setWaitlistOpen(true)} variant="home" />
@@ -165,7 +203,9 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           className="w-full max-w-md mt-8 sm:mt-12 px-1"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">history</h2>
+            <h2 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+              history
+            </h2>
             {pastSessions.length > 0 && (
               <button
                 onClick={onViewHistory}
@@ -179,7 +219,9 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
           <div className="space-y-2.5">
             {pastSessions.length === 0 ? (
               <div className="card-duo px-4 py-5 text-center">
-                <p className="text-xs text-muted-foreground font-medium lowercase">start a conversation - all your sessions will live here</p>
+                <p className="text-xs text-muted-foreground font-medium lowercase">
+                  start a conversation - all your sessions will live here
+                </p>
               </div>
             ) : (
               pastSessions.slice(0, 3).map((session, i) => (
@@ -192,9 +234,13 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
                   className="card-duo w-full text-left px-4 py-3 text-xs"
                 >
                   <p className="text-foreground line-clamp-1 font-bold lowercase">
-                    {session.summary || "A moment of reflection"}
+                    {toDirectAddress(
+                      session.summary || "A moment of reflection",
+                    )}
                   </p>
-                  <p className="text-muted-foreground mt-1 font-medium lowercase">{formatDate(session.started_at)}</p>
+                  <p className="text-muted-foreground mt-1 font-medium lowercase">
+                    {formatDate(session.started_at)}
+                  </p>
                 </motion.button>
               ))
             )}
@@ -203,7 +249,10 @@ export function HomeScreen({ onStartConversation, onSignOut, onViewHistory, onVi
       </div>
       {waitlistOpen && (
         <Suspense fallback={null}>
-          <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
+          <WaitlistModal
+            open={waitlistOpen}
+            onClose={() => setWaitlistOpen(false)}
+          />
         </Suspense>
       )}
     </CalmiShell>

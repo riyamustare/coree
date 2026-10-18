@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Clock, MessageCircle } from "lucide-react";
 import type { SessionSummary } from "@/hooks/useSession";
 import ReactMarkdown from "react-markdown";
+import { toDirectAddress } from "@/lib/personLanguage";
 
 interface SummaryScreenProps {
   summary: SessionSummary;
@@ -31,9 +32,9 @@ function formatTimestamp(timestamp: string): string {
 
 function generateSessionTitle(summary: string | null): string {
   if (!summary) return "meaningful moment";
-  
+
   const summaryLower = summary.toLowerCase();
-  
+
   const themes: Record<string, string> = {
     trust: "leaning into trust",
     growth: "seeds of growth",
@@ -51,23 +52,26 @@ function generateSessionTitle(summary: string | null): string {
     balance: "seeking balance",
     healing: "gentle healing",
   };
-  
+
   for (const [keyword, title] of Object.entries(themes)) {
     if (summaryLower.includes(keyword)) {
       return title;
     }
   }
-  
+
   if (summaryLower.includes("thank") || summaryLower.includes("grateful")) {
     return "gratitude and grace";
   }
-  if (summaryLower.includes("challenge") || summaryLower.includes("difficult")) {
+  if (
+    summaryLower.includes("challenge") ||
+    summaryLower.includes("difficult")
+  ) {
     return "weathering the storm";
   }
   if (summaryLower.includes("happy") || summaryLower.includes("joy")) {
     return "joy rising";
   }
-  
+
   return "meaningful moment";
 }
 
@@ -88,26 +92,30 @@ const EMOTION_EMOJIS: Record<string, EmotionTag> = {
 
 function getEmotionTags(emotions: Record<string, number> | null): EmotionTag[] {
   if (!emotions) return [];
-  
+
   const tags: EmotionTag[] = [];
   const emotionEntries = Object.entries(emotions)
     .filter(([_, value]) => typeof value === "number" && value > 0)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
-  
+
   emotionEntries.forEach(([emotionName]) => {
     const emotionKey = emotionName.toLowerCase();
     if (EMOTION_EMOJIS[emotionKey]) {
       tags.push(EMOTION_EMOJIS[emotionKey]);
     }
   });
-  
+
   return tags;
 }
 
-export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreenProps) {
+export function SummaryScreen({
+  summary,
+  onGoHome,
+  onNewSession,
+}: SummaryScreenProps) {
   const emotionTags = getEmotionTags(summary.emotions || null);
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-6">
       <div className="mx-auto w-full max-w-xl flex-1 flex flex-col">
@@ -145,14 +153,16 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
           {/* Session Summary */}
           <div className="mb-8">
             <div className="text-base leading-relaxed text-foreground prose prose-sm max-w-none">
-              <ReactMarkdown>{summary.summary}</ReactMarkdown>
+              <ReactMarkdown>{toDirectAddress(summary.summary)}</ReactMarkdown>
             </div>
           </div>
 
           {/* Message History Header */}
           <div className="flex items-center gap-2 mb-4 mt-8 pt-6 border-t border-border">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">message history</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              message history
+            </h3>
           </div>
 
           {/* Messages */}
@@ -173,7 +183,9 @@ export function SummaryScreen({ summary, onGoHome, onNewSession }: SummaryScreen
                       } rounded-lg px-4 py-3`}
                     >
                       <p className="text-sm text-foreground leading-relaxed">
-                        {msg.content}
+                        {isUserMessage
+                          ? msg.content
+                          : toDirectAddress(msg.content)}
                       </p>
                     </div>
                   </div>

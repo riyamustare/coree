@@ -1,9 +1,17 @@
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Clock, MessageCircle, Smile, BookOpen } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  MessageCircle,
+  Smile,
+  BookOpen,
+} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { CalmiShell } from "./CalmiShell";
+import { toDirectAddress } from "@/lib/personLanguage";
 import {
   Radar,
   RadarChart,
@@ -43,7 +51,14 @@ interface ChatLogMessage {
   created_at: string;
 }
 
-const EMOTION_KEYS = ["happiness", "sadness", "anger", "fear", "surprise", "disgust"];
+const EMOTION_KEYS = [
+  "happiness",
+  "sadness",
+  "anger",
+  "fear",
+  "surprise",
+  "disgust",
+];
 
 function getWeekRange(offset: number) {
   const now = new Date();
@@ -92,10 +107,10 @@ function formatSessionDate(dateStr: string) {
 
 function generateSessionTitle(summary: string | null): string {
   if (!summary) return "meaningful moment";
-  
+
   // Extract key themes from summary and create a poetic title
   const summaryLower = summary.toLowerCase();
-  
+
   const themes: Record<string, string> = {
     trust: "leaning into trust",
     growth: "seeds of growth",
@@ -113,28 +128,34 @@ function generateSessionTitle(summary: string | null): string {
     balance: "seeking balance",
     healing: "gentle healing",
   };
-  
+
   for (const [keyword, title] of Object.entries(themes)) {
     if (summaryLower.includes(keyword)) {
       return title;
     }
   }
-  
+
   // If no theme matches, generate from summary length and mood
   if (summaryLower.includes("thank") || summaryLower.includes("grateful")) {
     return "gratitude and grace";
   }
-  if (summaryLower.includes("challenge") || summaryLower.includes("difficult")) {
+  if (
+    summaryLower.includes("challenge") ||
+    summaryLower.includes("difficult")
+  ) {
     return "weathering the storm";
   }
   if (summaryLower.includes("happy") || summaryLower.includes("joy")) {
     return "joy rising";
   }
-  
+
   return "meaningful moment";
 }
 
-function generateWeeklySummary(sessions: WeekSession[], journalCount: number): string {
+function generateWeeklySummary(
+  sessions: WeekSession[],
+  journalCount: number,
+): string {
   if (sessions.length === 0) {
     return "No conversations recorded this week yet. Add a few more sessions to unlock a richer weekly summary.";
   }
@@ -182,27 +203,42 @@ const NUANCED_EMOTIONS: Record<string, EmotionTag> = {
 
 function getEmotionTags(emotions: Record<string, number> | null): EmotionTag[] {
   if (!emotions) return [];
-  
+
   const tags: EmotionTag[] = [];
   const emotionEntries = Object.entries(emotions)
     .filter(([_, value]) => typeof value === "number" && value > 0)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
-  
+
   emotionEntries.forEach(([emotionName]) => {
     const emotionKey = emotionName.toLowerCase();
     if (EMOTION_EMOJIS[emotionKey]) {
       tags.push(EMOTION_EMOJIS[emotionKey]);
     }
   });
-  
+
   return tags;
 }
 
-export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, theme, onThemeToggle }: InsightsScreenProps) {
+export function InsightsScreen({
+  userId,
+  userCreatedAt,
+  onGoHome,
+  onViewInsights,
+  onViewHistory,
+  onOpenNotes,
+  onOpenSettings,
+  onSignOut,
+  genzMode,
+  onGenzToggle,
+  theme,
+  onThemeToggle,
+}: InsightsScreenProps) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [sessions, setSessions] = useState<WeekSession[]>([]);
-  const [sessionMessages, setSessionMessages] = useState<Record<string, ChatLogMessage[]>>({});
+  const [sessionMessages, setSessionMessages] = useState<
+    Record<string, ChatLogMessage[]>
+  >({});
   const [loading, setLoading] = useState(true);
   const [totalMessages, setTotalMessages] = useState(0);
   const [journalCount, setJournalCount] = useState(0);
@@ -252,7 +288,9 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
           ]);
 
           setTotalMessages(count || 0);
-          const grouped = (messagesRes.data || []).reduce<Record<string, ChatLogMessage[]>>((acc, message) => {
+          const grouped = (messagesRes.data || []).reduce<
+            Record<string, ChatLogMessage[]>
+          >((acc, message) => {
             if (!acc[message.session_id]) acc[message.session_id] = [];
             acc[message.session_id].push(message as ChatLogMessage);
             return acc;
@@ -280,7 +318,11 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
     EMOTION_KEYS.forEach((k) => (totals[k] = []));
 
     sessions.forEach((s) => {
-      if (s.emotions && typeof s.emotions === "object" && !Array.isArray(s.emotions)) {
+      if (
+        s.emotions &&
+        typeof s.emotions === "object" &&
+        !Array.isArray(s.emotions)
+      ) {
         EMOTION_KEYS.forEach((k) => {
           const val = s.emotions[k];
           if (typeof val === "number") totals[k].push(val);
@@ -290,9 +332,10 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
 
     return EMOTION_KEYS.map((k) => ({
       emotion: k,
-      value: totals[k].length > 0
-        ? Math.round(totals[k].reduce((a, b) => a + b, 0) / totals[k].length)
-        : 0,
+      value:
+        totals[k].length > 0
+          ? Math.round(totals[k].reduce((a, b) => a + b, 0) / totals[k].length)
+          : 0,
     }));
   }, [sessions, hasEnoughActivity]);
 
@@ -308,7 +351,9 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
     monday.setHours(0, 0, 0, 0);
     return monday;
   }, [userCreatedAt]);
-  const atSignupWeek = signupWeekStart ? start.getTime() <= signupWeekStart.getTime() : false;
+  const atSignupWeek = signupWeekStart
+    ? start.getTime() <= signupWeekStart.getTime()
+    : false;
 
   return (
     <CalmiShell
@@ -326,8 +371,12 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
     >
       <div className="mx-auto w-full max-w-xl flex-1 px-4 py-6 pt-16 md:pt-6">
         <div className="mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">your reflections</p>
-          <h1 className="text-3xl sm:text-4xl font-black lowercase tracking-tight text-foreground">insights</h1>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">
+            your reflections
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-black lowercase tracking-tight text-foreground">
+            insights
+          </h1>
         </div>
 
         <div className="card-duo flex items-center justify-between px-4 py-3 mb-6">
@@ -361,13 +410,17 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             className="space-y-6"
           >
             <div>
-              <h2 className="text-2xl font-black lowercase tracking-tight text-foreground mb-1">your week</h2>
+              <h2 className="text-2xl font-black lowercase tracking-tight text-foreground mb-1">
+                your week
+              </h2>
               <p className="text-sm text-muted-foreground font-medium lowercase">
                 get a weekly reflection on your thoughts, patterns, and progress
               </p>
               {!hasEnoughActivity && (
                 <p className="mt-3 inline-block card-duo px-3 py-2 text-xs text-primary font-bold lowercase">
-                  you're {activityNeeded} {activityNeeded !== 1 ? "entries" : "entry"} away (convos or journal)
+                  you're {activityNeeded}{" "}
+                  {activityNeeded !== 1 ? "entries" : "entry"} away (convos or
+                  journal)
                 </p>
               )}
             </div>
@@ -376,23 +429,37 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">stats</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  stats
+                </h3>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="card-duo px-4 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">convos</p>
-                  <p className="text-3xl font-black text-foreground mt-1">{sessions.length}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    convos
+                  </p>
+                  <p className="text-3xl font-black text-foreground mt-1">
+                    {sessions.length}
+                  </p>
                 </div>
                 <div className="card-duo px-4 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">messages</p>
-                  <p className="text-3xl font-black text-foreground mt-1">{totalMessages}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    messages
+                  </p>
+                  <p className="text-3xl font-black text-foreground mt-1">
+                    {totalMessages}
+                  </p>
                 </div>
                 <div className="card-duo px-4 py-3">
                   <div className="flex items-center gap-1">
                     <BookOpen className="h-3 w-3 text-muted-foreground" />
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">journal</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      journal
+                    </p>
                   </div>
-                  <p className="text-3xl font-black text-foreground mt-1">{journalCount}</p>
+                  <p className="text-3xl font-black text-foreground mt-1">
+                    {journalCount}
+                  </p>
                 </div>
               </div>
             </div>
@@ -401,16 +468,27 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Smile className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">mood</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  mood
+                </h3>
               </div>
               <div className="card-duo p-4">
                 {hasEnoughActivity && moodData.some((d) => d.value > 0) ? (
                   <ResponsiveContainer width="100%" height={280}>
-                    <RadarChart data={moodData} cx="50%" cy="50%" outerRadius="70%">
+                    <RadarChart
+                      data={moodData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius="70%"
+                    >
                       <PolarGrid stroke="hsl(var(--border))" />
                       <PolarAngleAxis
                         dataKey="emotion"
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 700 }}
+                        tick={{
+                          fill: "hsl(var(--muted-foreground))",
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
                       />
                       <Radar
                         name="mood"
@@ -438,11 +516,15 @@ export function InsightsScreen({ userId, userCreatedAt, onGoHome, onViewInsights
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">weekly summary</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  weekly summary
+                </h3>
               </div>
               <div className="card-duo p-6">
                 <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap font-medium">
-                  {generateWeeklySummary(sessions, journalCount)}
+                  {toDirectAddress(
+                    generateWeeklySummary(sessions, journalCount),
+                  )}
                 </p>
               </div>
             </div>

@@ -1,9 +1,15 @@
-project_id = "pomivualybxaxtrmoyii"
+project_id = "hyvdpbygvgjkeasytalz"
 
 [functions.chat]
 verify_jwt = false
 
 [functions.end-session]
+verify_jwt = false
+
+[functions.memory]
+verify_jwt = false
+
+[functions.polar-checkout]
 verify_jwt = false
 
 [functions.speech-to-text]

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { BookHeart, Compass, History, LogOut, Menu, MessageSquareHeart, Moon, Settings, Sun, X } from "lucide-react";
+import { BookHeart, Compass, History, LogOut, Menu, MessageSquareHeart, Moon, Settings, Sun, X, Brain } from "lucide-react";
 import { FeedbackModal } from "./FeedbackModal";
 import { trackNavClick } from "@/lib/analytics";
+import { useNavigate } from "react-router-dom";
 
 interface CalmiShellProps {
   userId: string;
@@ -32,6 +33,7 @@ export function CalmiShell({
   theme = "dark",
   onThemeToggle,
 }: CalmiShellProps) {
+  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -105,6 +107,7 @@ export function CalmiShell({
         <nav className="flex flex-col gap-2 md:gap-3 w-full md:w-auto">
           {[
             { icon: Compass, label: "insights", onClick: wrap(onViewInsights, "insights") },
+            { icon: Brain, label: "memory", onClick: wrap(() => navigate("/memory"), "memory") },
             { icon: History, label: "history", onClick: wrap(onViewHistory, "history") },
             { icon: BookHeart, label: "journal", onClick: wrap(onOpenNotes, "journal") },
             { icon: MessageSquareHeart, label: "feedback", onClick: wrap(() => setFeedbackOpen(true), "feedback") },

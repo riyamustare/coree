@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackScreenViewed } from "@/lib/analytics";
+import { toast } from "@/hooks/use-toast";
 import { CalmiShell } from "./CalmiShell";
+import { PAYMENTS_ENABLED } from "@/lib/payments";
 
 interface SettingsScreenProps {
   userId: string;
@@ -24,6 +26,8 @@ interface SettingsScreenProps {
 export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, onViewHistory, onOpenNotes, onOpenSettings, onSignOut, genzMode, onGenzToggle, isPro, currentPeriodEnd, onUpgrade }: SettingsScreenProps) {
   const [resetConfirm, setResetConfirm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [memoryDeleteConfirm, setMemoryDeleteConfirm] = useState(false);
+  const [memoryDeleting, setMemoryDeleting] = useState(false);
   const [sessionCount, setSessionCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
 
@@ -41,6 +45,18 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
   }, [userId]);
 
   const handleResetHistory = async () => {
+    const { error: memoryError } = await supabase.functions.invoke("memory", {
+      body: { action: "forget-all" },
+    });
+    if (memoryError) {
+      console.error("Could not clear saved memory before resetting history:", memoryError);
+      toast({
+        title: "History was not reset",
+        description: "Core could not confirm that your saved memory was deleted. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     await supabase.from("messages").delete().eq("user_id", userId);
     await supabase.from("sessions").delete().eq("user_id", userId);
     await supabase.from("memories").delete().eq("user_id", userId);
@@ -50,7 +66,39 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
     setMessageCount(0);
   };
 
+  const handleDeleteMemory = async () => {
+    setMemoryDeleting(true);
+    const { error } = await supabase.functions.invoke("memory", {
+      body: { action: "forget-all" },
+    });
+    if (error) {
+      console.error("Could not delete saved memory:", error);
+      toast({
+        title: "Memory was not deleted",
+        description: "Core could not confirm that your saved memory was deleted. Please try again.",
+        variant: "destructive",
+      });
+      setMemoryDeleting(false);
+      return;
+    }
+    setMemoryDeleteConfirm(false);
+    setMemoryDeleting(false);
+    toast({ title: "Saved memory deleted" });
+  };
+
   const handleDeleteAccount = async () => {
+    const { error: memoryError } = await supabase.functions.invoke("memory", {
+      body: { action: "forget-all" },
+    });
+    if (memoryError) {
+      console.error("Could not clear saved memory before account deletion:", memoryError);
+      toast({
+        title: "Account was not deleted",
+        description: "Core could not confirm that your saved memory was deleted. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     await supabase.from("messages").delete().eq("user_id", userId);
     await supabase.from("sessions").delete().eq("user_id", userId);
     await supabase.from("memories").delete().eq("user_id", userId);
@@ -98,9 +146,11 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
           <h2 className="text-xs font-bold uppercase tracking-wider text-foreground mb-1">usage</h2>
           <p className="text-xs text-muted-foreground mb-3 font-medium lowercase">how much you've used core</p>
           <div className="card-duo px-5 py-4 space-y-3">
-            <span className="inline-block rounded-full border-2 border-primary bg-primary/10 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-primary">
-              {isPro ? "pro" : "free"}
-            </span>
+            {PAYMENTS_ENABLED && (
+              <span className="inline-block rounded-full border-2 border-primary bg-primary/10 px-3 py-0.5 text-[11px] font-black uppercase tracking-wider text-primary">
+                {isPro ? "pro" : "free"}
+              </span>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl border-2 border-border-color bg-background px-3 py-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">sessions</p>
@@ -115,7 +165,8 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
         </motion.div>
 
         {/* Subscription / Upgrade */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
+        {PAYMENTS_ENABLED && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
           <h2 className="text-xs font-bold uppercase tracking-wider text-foreground mb-1">subscription</h2>
           <p className="text-xs text-muted-foreground mb-3 font-medium lowercase">
             {isPro ? "you're on the pro plan" : "unlock unlimited voice mode"}
@@ -155,7 +206,8 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
               </button>
             </div>
           )}
-        </motion.div>
+          </motion.div>
+        )}
 
         <hr className="border-border-color border-t-2 mb-6" />
 
@@ -165,6 +217,49 @@ export function SettingsScreen({ userId, userEmail, onGoHome, onViewInsights, on
           <p className="text-xs text-muted-foreground mb-4 font-medium lowercase">be careful with these settings</p>
 
           <div className="space-y-4">
+            {/* Delete saved memory */}
+            {!memoryDeleteConfirm ? (
+              <div>
+                <button
+                  onClick={() => setMemoryDeleteConfirm(true)}
+                  className="btn-duo-secondary text-xs py-2.5 px-4"
+                >
+                  delete saved memory
+                </button>
+                <p className="text-xs text-muted-foreground mt-2 font-medium lowercase">
+                  this permanently deletes memories Core saved from your conversations. your chat history will remain.
+                </p>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="card-duo p-5"
+              >
+                <h3 className="text-base font-black lowercase text-foreground mb-1">delete saved memory?</h3>
+                <p className="text-sm text-muted-foreground mb-4 font-medium lowercase">
+                  this permanently deletes memories and graph handoffs. your chat history will remain.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setMemoryDeleteConfirm(false)}
+                    disabled={memoryDeleting}
+                    className="btn-duo-secondary text-xs py-2.5 px-4"
+                  >
+                    cancel
+                  </button>
+                  <button
+                    onClick={() => void handleDeleteMemory()}
+                    disabled={memoryDeleting}
+                    className="rounded-2xl bg-destructive text-destructive-foreground px-4 py-2.5 text-xs font-bold uppercase tracking-wide hover:brightness-105 transition disabled:opacity-50"
+                    style={{ boxShadow: "0 4px 0 0 hsl(0 62% 25%)" }}
+                  >
+                    {memoryDeleting ? "deleting…" : "delete saved memory"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Reset chat history */}
             {!resetConfirm ? (
               <div>
