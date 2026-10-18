@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { PAYMENTS_ENABLED } from "@/lib/payments";
 
 export interface SubscriptionState {
   isPro: boolean;
@@ -19,6 +20,15 @@ export function useSubscription(userId: string | undefined) {
   });
 
   const refresh = useCallback(async () => {
+    if (!PAYMENTS_ENABLED) {
+      setState({
+        isPro: false,
+        currentPeriodEnd: null,
+        voiceSessionCount: 0,
+        loading: false,
+      });
+      return;
+    }
     if (!userId) {
       setState({ isPro: false, currentPeriodEnd: null, voiceSessionCount: 0, loading: false });
       return;
@@ -54,7 +64,10 @@ export function useSubscription(userId: string | undefined) {
     refresh();
   }, [refresh]);
 
-  const canStartVoice = state.isPro || state.voiceSessionCount < FREE_VOICE_LIMIT;
+  const canStartVoice =
+    !PAYMENTS_ENABLED ||
+    state.isPro ||
+    state.voiceSessionCount < FREE_VOICE_LIMIT;
 
   return { ...state, canStartVoice, refresh };
 }

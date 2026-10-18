@@ -1,0 +1,27 @@
+{
+  "name": "coree-memory-service",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=../.env --import tsx --watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test src/*.test.ts",
+    "migrate:legacy": "node --env-file-if-exists=../.env --import tsx ../scripts/migrate-postgres-memories.ts",
+    "migrate:model": "node --env-file-if-exists=../.env --import tsx ../scripts/migrate-memory-model.ts",
+    "test:concurrency": "node --env-file-if-exists=../.env --import tsx ../scripts/concurrency-test.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "falkordb": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.16.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

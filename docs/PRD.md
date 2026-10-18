@@ -55,8 +55,10 @@ Core is a warm, AI-powered companion for emotional check-ins. Users can talk or 
 - **Loading state on End:** prevents double-tap and reassures the user the summary is being generated.
 
 ### 4.2 Long-term memory
-- After each session, key insights are extracted and stored as vector embeddings in the `memories` table.
-- On every new message, relevant memories are retrieved and injected into the LLM prompt so Core remembers important context across sessions (how the user has been feeling, recurring themes, etc.).
+- In FalkorDB mode, the memory agent extracts explicit entities, facts, procedures, and goals into a graph dedicated to the authenticated user. Supabase Postgres remains the source of truth for identity, sessions, and messages; the `memories` table is retained as a fallback.
+- Before each reply, the companion agent recalls relevant graph nodes and injects them as a compact “What I remember” block. Facts retain source episodes and changed values supersede prior facts without deleting history.
+- Assistant messages store the IDs used in `memory_trace`; the UI explains the source episodes and lets users inspect, forget, or delete saved graph memory.
+- After a session, a user-scoped handoff gives the check-in agent context for the next session's opening message.
 - **Prompt context per turn:** system prompt + retrieved memories + last 5 dialogue exchanges + last 3 session summaries with dominant emotions.
 
 ### 4.3 Past Conversations (Home)
@@ -129,7 +131,7 @@ Sessions that fail this check are silently deleted (both the session row and its
 | `profiles`  | Name, onboarding intent, gen-z toggle, theme (light/dark), onboarding status.  |
 | `sessions`  | One row per conversation: start/end time, summary, dominant emotions (JSON).   |
 | `messages`  | Every message in every saved session (role: user/assistant, content, time).    |
-| `memories`  | Long-term insights extracted post-session, with vector embeddings for RAG.     |
+| `memories`  | Legacy Postgres summary fallback; FalkorDB stores structured long-term memory. |
 | `notes`     | Journal entries (title, content, timestamps).                                  |
 | `feedback`  | Free-text user feedback.                                                       |
 

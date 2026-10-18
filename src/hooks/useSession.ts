@@ -11,6 +11,7 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  memoryTrace?: string[];
 }
 
 export interface SessionSummary {
@@ -22,12 +23,52 @@ export interface SessionSummary {
   messages?: ChatMessage[];
 }
 
+async function getFunctionErrorMessage(error: unknown): Promise<string | null> {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("context" in error) ||
+    !(error.context instanceof Response)
+  ) {
+    return null;
+  }
+
+  try {
+    const payload: unknown = await error.context.clone().json();
+    if (
+      typeof payload === "object" &&
+      payload !== null &&
+      "error" in payload &&
+      typeof payload.error === "string"
+    ) {
+      return payload.error;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function useSession(userId: string | undefined) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStart, setSessionStart] = useState<Date | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const activeModeRef = useRef<"text" | "voice">("text");
+  const userIdRef = useRef(userId);
+  const activeSessionIdRef = useRef<string | null>(null);
+
+  if (userIdRef.current !== userId) {
+    userIdRef.current = userId;
+    activeSessionIdRef.current = null;
+  }
+
+  const isCurrentSession = useCallback(
+    (requestUserId: string, requestSessionId: string) =>
+      userIdRef.current === requestUserId &&
+      activeSessionIdRef.current === requestSessionId,
+    [],
+  );
 
   const maybeTrackDay7Return = useCallback((currentSessionId?: string) => {
     if (!userId || typeof window === "undefined") return;
@@ -46,6 +87,7 @@ export function useSession(userId: string | undefined) {
   // Reset all session state when the authenticated user changes
   // (sign in/out, switching accounts) to avoid bleeding state across users.
   useEffect(() => {
+    activeSessionIdRef.current = null;
     setSessionId(null);
     setSessionStart(null);
     setMessages([]);
@@ -60,6 +102,7 @@ export function useSession(userId: string | undefined) {
       .insert({ user_id: userId, mode })
       .select("id")
       .single();
+    if (userIdRef.current !== userId) return null;
     if (error) {
       console.error("Failed to create session:", error);
       toast({
@@ -69,6 +112,7 @@ export function useSession(userId: string | undefined) {
       });
       return null;
     }
+    activeSessionIdRef.current = data.id;
     setSessionId(data.id);
     setSessionStart(new Date());
     setMessages([]);
@@ -77,51 +121,62 @@ export function useSession(userId: string | undefined) {
   }, [userId, maybeTrackDay7Return]);
 
   const endSession = useCallback(async (): Promise<SessionSummary | null> => {
-    if (!sessionId) return null;
+    const requestUserId = userId;
+    const requestSessionId = sessionId;
+    if (
+      !requestUserId ||
+      !requestSessionId ||
+      !isCurrentSession(requestUserId, requestSessionId)
+    ) {
+      return null;
+    }
 
     const duration = sessionStart
       ? Math.floor((Date.now() - sessionStart.getTime()) / 1000)
       : 0;
-    const userMessageCount = messages.filter((m) => m.role === "user").length;
     const messageCount = messages.length;
 
-    // Save the session in history only when the user has 4+ messages
-    // (a proper back-and-forth). Otherwise drop it silently - no time limit.
     const endedAt = new Date().toISOString();
-
-    if (userMessageCount < 4) {
-      await supabase.from("messages").delete().eq("session_id", sessionId);
-      await supabase.from("sessions").delete().eq("id", sessionId);
-      setSessionId(null);
-      setSessionStart(null);
-      setMessages([]);
-      trackSessionCompleted(sessionId, duration, messageCount, activeModeRef.current);
-      return {
-        summary: "Session was too short to save - chat a bit more next time to save it.",
-        messageCount,
-        duration,
-        endedAt,
-        emotions: null,
-        messages: [],
-      };
-    }
 
     // Summarize session via edge function
     try {
-      const { data } = await supabase.functions.invoke("end-session", {
+      const { data, error } = await supabase.functions.invoke("end-session", {
         body: { sessionId },
       });
+      if (error) throw error;
+      if (!isCurrentSession(requestUserId, requestSessionId)) return null;
 
-      // Fetch the updated session to get summary and emotions
-      const { data: sessionData } = await supabase
-        .from("sessions")
-        .select("summary, emotions")
-        .eq("id", sessionId)
-        .single();
+      let sessionData: { summary: string | null; emotions: unknown } | null =
+        null;
+      if (typeof data?.summary !== "string") {
+        const { data: savedSession, error: fetchError } = await supabase
+          .from("sessions")
+          .select("summary, emotions")
+          .eq("id", sessionId)
+          .single();
+        if (fetchError) throw fetchError;
+        sessionData = savedSession;
+        if (!isCurrentSession(requestUserId, requestSessionId)) return null;
+      }
 
-      const summary = sessionData?.summary || "You took a moment to reflect today. That matters.";
-      const emotions = (sessionData?.emotions as Record<string, number> | null) || null;
+      const summary =
+        (typeof data?.summary === "string" && data.summary) ||
+        sessionData?.summary ||
+        "You took a moment to reflect today. That matters.";
+      const emotions =
+        (data?.emotions as Record<string, number> | null) ||
+        (sessionData?.emotions as Record<string, number> | null) ||
+        null;
+      if (data?.summaryGenerated === false) {
+        toast({
+          title: "A simple recap was used",
+          description:
+            "The conversation was saved, but a personalized recap could not be generated.",
+          variant: "destructive",
+        });
+      }
 
+      activeSessionIdRef.current = null;
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
@@ -136,7 +191,14 @@ export function useSession(userId: string | undefined) {
         messages,
       };
     } catch (err) {
+      if (!isCurrentSession(requestUserId, requestSessionId)) return null;
       console.error("Failed to end session:", err);
+      toast({
+        title: "Could not save session insights",
+        description: "Your messages remain saved, but the summary and memory may be incomplete.",
+        variant: "destructive",
+      });
+      activeSessionIdRef.current = null;
       setSessionId(null);
       setSessionStart(null);
       setMessages([]);
@@ -150,11 +212,19 @@ export function useSession(userId: string | undefined) {
         messages,
       };
     }
-  }, [sessionId, sessionStart, messages]);
+  }, [sessionId, sessionStart, messages, userId, isCurrentSession]);
 
   const sendMessage = useCallback(
     async (content: string, genzMode: boolean = false): Promise<void> => {
-      if (!sessionId || !userId) return;
+      if (
+        !sessionId ||
+        !userId ||
+        !isCurrentSession(userId, sessionId)
+      ) {
+        return;
+      }
+      const requestUserId = userId;
+      const requestSessionId = sessionId;
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -172,6 +242,7 @@ export function useSession(userId: string | undefined) {
           content,
         });
         if (messageError) throw messageError;
+        if (!isCurrentSession(requestUserId, requestSessionId)) return;
 
         const recentExchanges = messages.slice(-10);
         const contextMessages = recentExchanges.map((m) => ({
@@ -189,6 +260,7 @@ export function useSession(userId: string | undefined) {
           },
         });
         if (error) throw error;
+        if (!isCurrentSession(requestUserId, requestSessionId)) return;
         const llmLatencyMs = Math.round(performance.now() - llmStart);
         trackVoiceStageLatency("llm", llmLatencyMs, sessionId, activeModeRef.current);
 
@@ -197,19 +269,39 @@ export function useSession(userId: string | undefined) {
 
         setMessages((prev) => [
           ...prev,
-          { id: crypto.randomUUID(), role: "assistant", content: assistantContent },
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: assistantContent,
+            memoryTrace: Array.isArray(data?.memoryTrace)
+              ? data.memoryTrace.filter((id: unknown): id is string => typeof id === "string")
+              : [],
+          },
         ]);
 
         if (assistantContent) {
-          await supabase.from("messages").insert({
+          const { error: assistantSaveError } = await supabase.from("messages").insert({
             session_id: sessionId,
             user_id: userId,
             role: "assistant",
             content: assistantContent,
+            memory_trace: Array.isArray(data?.memoryTrace) ? data.memoryTrace : [],
           });
+          if (!isCurrentSession(requestUserId, requestSessionId)) return;
+          if (assistantSaveError) {
+            console.error("Could not persist assistant reply and memory trace:", assistantSaveError);
+            toast({
+              title: "Reply could not be saved",
+              description: "This response may not appear in history or its memory explanation.",
+              variant: "destructive",
+            });
+          }
         }
       } catch (err) {
+        if (!isCurrentSession(requestUserId, requestSessionId)) return;
         console.error("Chat error:", err);
+        const functionError = await getFunctionErrorMessage(err);
+        if (!isCurrentSession(requestUserId, requestSessionId)) return;
         setMessages((prev) => [
           ...prev,
           {
@@ -220,14 +312,18 @@ export function useSession(userId: string | undefined) {
         ]);
         toast({
           title: "Response interrupted",
-          description: "Your message is safe. Please try sending it again.",
+          description:
+            functionError ||
+            "Your message is safe. Please try sending it again.",
           variant: "destructive",
         });
       } finally {
-        setIsLoading(false);
+        if (isCurrentSession(requestUserId, requestSessionId)) {
+          setIsLoading(false);
+        }
       }
     },
-    [sessionId, userId, messages]
+    [sessionId, userId, messages, isCurrentSession]
   );
 
   return {

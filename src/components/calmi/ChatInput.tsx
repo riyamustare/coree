@@ -79,12 +79,19 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       setValue(transcript);
     };
     recognition.onerror = (e) => {
-      console.error("SpeechRecognition error:", e?.error || e);
+      if (e?.error !== "no-speech") {
+        console.error("SpeechRecognition error:", e?.error || e);
+      }
       if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
         toast({
           title: "Microphone blocked",
           description: "Allow mic access in your browser and try again.",
           variant: "destructive",
+        });
+      } else if (e?.error === "no-speech") {
+        toast({
+          title: "I didn't catch that",
+          description: "Try speaking again, or type your message instead.",
         });
       }
       setIsRecording(false);

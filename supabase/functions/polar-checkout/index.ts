@@ -6,6 +6,7 @@ const json = (body: unknown, status = 200) =>
 
 const PRODUCT_NAME = 'core Pro';
 const APP_ORIGIN = 'https://www.trycore.xyz';
+const PAYMENTS_ENABLED = false;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -17,6 +18,7 @@ function isProduct(value: unknown): value is { id: string; name: string } {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (!PAYMENTS_ENABLED) return json({ error: 'Payments are temporarily unavailable' }, 503);
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);

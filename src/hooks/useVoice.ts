@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import {
   getSpeechRecognitionConstructor,
@@ -11,15 +11,19 @@ export function useVoice() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const resolveRef = useRef<((text: string | null) => void) | null>(null);
+  const finishListeningRef = useRef<
+    ((text?: string | null) => void) | null
+  >(null);
+  const listeningAttemptRef = useRef(0);
   const finalTranscriptRef = useRef("");
   const interimTranscriptRef = useRef("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const sessionIdRef = useRef<string | null>(null);
   const asrStartRef = useRef<number | null>(null);
 
-  const startListening = useCallback(async (sessionId?: string): Promise<string | null> => {
+  const startListening = useCallback((sessionId?: string): Promise<string | null> => {
     const SpeechRecognition = getSpeechRecognitionConstructor();
     if (!SpeechRecognition) {
       toast({
@@ -27,24 +31,20 @@ export function useVoice() {
         description: "Try Chrome or Safari for voice mode.",
         variant: "destructive",
       });
-      return null;
+      return Promise.resolve(null);
     }
 
-    // Pre-check mic permission so a denial surfaces a clear message.
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((t) => t.stop());
-    } catch (err: unknown) {
-      console.error("Microphone permission denied:", err);
-      toast({
-        title: "Microphone blocked",
-        description:
-          "Allow mic access in your browser (click the lock icon in the address bar) and try again.",
-        variant: "destructive",
-      });
-      return null;
+    if (finishListeningRef.current) {
+      const previousRecognition = recognitionRef.current;
+      finishListeningRef.current(null);
+      try {
+        previousRecognition?.stop();
+      } catch (error) {
+        console.error("Could not stop the previous speech recognition:", error);
+      }
     }
 
+    const attempt = ++listeningAttemptRef.current;
     sessionIdRef.current = sessionId ?? null;
     asrStartRef.current = performance.now();
     setIsListening(true);
@@ -52,85 +52,171 @@ export function useVoice() {
     finalTranscriptRef.current = "";
     interimTranscriptRef.current = "";
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-    recognitionRef.current = recognition;
-
-    recognition.onresult = (event) => {
-      let interim = "";
-      let final = "";
-      for (let i = 0; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          final += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
+    return new Promise((resolve) => {
+      let recognition: SpeechRecognitionInstance | null = null;
+      let settled = false;
+      const finish = (text?: string | null) => {
+        if (settled) return;
+        settled = true;
+        if (recognitionRef.current === recognition) {
+          recognitionRef.current = null;
         }
-      }
-      finalTranscriptRef.current = final;
-      interimTranscriptRef.current = interim;
-      setLiveTranscript(final + interim);
-    };
+        if (finishListeningRef.current === finish) {
+          finishListeningRef.current = null;
+        }
+        if (listeningAttemptRef.current === attempt) {
+          const transcript =
+            text === undefined
+              ? (
+                  finalTranscriptRef.current +
+                  " " +
+                  interimTranscriptRef.current
+                ).trim() || null
+              : text;
+          setLiveTranscript(transcript || "");
+          setIsListening(false);
+          const asrLatencyMs = asrStartRef.current
+            ? Math.round(performance.now() - asrStartRef.current)
+            : 0;
+          trackVoiceStageLatency(
+            "asr",
+            asrLatencyMs,
+            sessionIdRef.current,
+            "voice",
+          );
+          resolve(transcript);
+        } else {
+          resolve(null);
+        }
+      };
+      finishListeningRef.current = finish;
 
-    recognition.onerror = (e) => {
-      console.error("SpeechRecognition error:", e?.error || e);
-      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognitionRef.current = recognition;
+      recognition.onresult = (event) => {
+        let interim = "";
+        let final = "";
+        for (let i = 0; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        finalTranscriptRef.current = final;
+        interimTranscriptRef.current = interim;
+        setLiveTranscript(final + interim);
+      };
+      recognition.onerror = (event) => {
+        if (event?.error === "no-speech") {
+          toast({
+            title: "I didn't catch that",
+            description:
+              "Try speaking again, or switch to text and type your message.",
+          });
+          return;
+        }
+        if (event?.error === "aborted") return;
+
+        console.error("SpeechRecognition error:", event?.error || event);
+        if (
+          event?.error === "not-allowed" ||
+          event?.error === "service-not-allowed"
+        ) {
+          toast({
+            title: "Microphone blocked",
+            description: "Allow mic access in your browser and try again.",
+            variant: "destructive",
+          });
+        } else if (event?.error === "audio-capture") {
+          toast({
+            title: "Microphone unavailable",
+            description:
+              "No usable microphone is available. Check your input device and try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Voice input stopped",
+            description:
+              "Please check your microphone and try starting voice input again.",
+            variant: "destructive",
+          });
+        }
+        finish(null);
+        try {
+          recognition?.stop();
+        } catch (error) {
+          console.error("Could not stop failed speech recognition:", error);
+        }
+      };
+      recognition.onend = () => finish();
+      try {
+        trackVoiceListenStart(sessionId);
+        recognition.start();
+      } catch (err) {
+        console.error("SpeechRecognition start error:", err);
         toast({
-          title: "Microphone blocked",
-          description: "Allow mic access in your browser and try again.",
+          title: "Voice input unavailable",
+          description: "Please check your microphone and try again.",
           variant: "destructive",
         });
+        finish(null);
       }
-    };
-    recognition.onend = () => {
-      // Recognition ended (either by stop() or naturally). Resolve with whatever we captured.
-      const text =
-        (finalTranscriptRef.current + " " + interimTranscriptRef.current).trim() || null;
-      const asrLatencyMs = asrStartRef.current ? Math.round(performance.now() - asrStartRef.current) : 0;
-      trackVoiceStageLatency("asr", asrLatencyMs, sessionIdRef.current, "voice");
-      setLiveTranscript(text || "");
-      setIsListening(false);
-      resolveRef.current?.(text);
-      resolveRef.current = null;
-    };
-    try {
-      trackVoiceListenStart(sessionId);
-      recognition.start();
-    } catch (err) {
-      console.error("SpeechRecognition start error:", err);
-      setIsListening(false);
-      return null;
-    }
-
-    return new Promise((resolve) => {
-      resolveRef.current = resolve;
     });
   }, []);
 
   const stopListening = useCallback(async () => {
-    // Just stop - onend will resolve the promise with the final+interim text.
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      listeningAttemptRef.current += 1;
+      finishListeningRef.current?.(null);
+      setIsListening(false);
+      return;
+    }
+
     try {
       trackVoiceListenStop(sessionIdRef.current ?? undefined);
-      recognitionRef.current?.stop();
+      setIsListening(false);
+      recognition.stop();
     } catch (err) {
       console.error("SpeechRecognition stop error:", err);
+      finishListeningRef.current?.(null);
     }
   }, []);
 
-  const speak = useCallback(async (text: string, sessionId?: string) => {
-    setIsSpeaking(true);
-    const ttsStart = performance.now();
+  useEffect(
+    () => () => {
+      listeningAttemptRef.current += 1;
+      try {
+        recognitionRef.current?.stop();
+      } catch (error) {
+        console.error("SpeechRecognition cleanup failed:", error);
+      }
+      finishListeningRef.current?.(null);
+    },
+    [],
+  );
 
-    // Abort any in-flight request
+  const speak = useCallback(async (text: string, sessionId?: string) => {
     abortRef.current?.abort();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
+    const isCurrentRequest = () => abortRef.current === controller;
+    const ttsStart = performance.now();
+    setIsSpeaking(true);
 
     try {
       const response = await fetch(
@@ -152,61 +238,120 @@ export function useVoice() {
 
       if (!response.ok) {
         console.error("TTS failed:", response.status);
-        setIsSpeaking(false);
+        if (isCurrentRequest()) setIsSpeaking(false);
         return;
       }
 
-      // Start playback as soon as we have enough data using MediaSource
       const reader = response.body?.getReader();
-      if (!reader) { setIsSpeaking(false); return; }
+      if (!reader) throw new Error("TTS response did not include an audio stream");
 
-      // Collect first chunk quickly, then start playback
-      const chunks: Uint8Array[] = [];
-      let firstChunkReceived = false;
+      const createAudio = (url: string) => {
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audioUrlRef.current = url;
+        const releaseAudio = () => {
+          if (audioRef.current !== audio) return;
+          audioRef.current = null;
+          if (audioUrlRef.current === url) audioUrlRef.current = null;
+          URL.revokeObjectURL(url);
+          if (isCurrentRequest()) setIsSpeaking(false);
+        };
+        audio.onended = releaseAudio;
+        audio.onerror = releaseAudio;
+        return audio;
+      };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (controller.signal.aborted) { setIsSpeaking(false); return; }
-        chunks.push(value);
-        
-        // Start playback after first ~4KB to reduce time-to-first-audio
-        if (!firstChunkReceived && chunks.reduce((s, c) => s + c.byteLength, 0) > 4096) {
-          firstChunkReceived = true;
+      if (
+        typeof MediaSource !== "undefined" &&
+        MediaSource.isTypeSupported("audio/mpeg")
+      ) {
+        const mediaSource = new MediaSource();
+        const sourceOpen = new Promise<void>((resolve, reject) => {
+          mediaSource.addEventListener("sourceopen", () => resolve(), {
+            once: true,
+          });
+          mediaSource.addEventListener(
+            "error",
+            () => reject(new Error("Could not open the audio stream")),
+            { once: true },
+          );
+        });
+        const audioUrl = URL.createObjectURL(mediaSource);
+        const audio = createAudio(audioUrl);
+        await sourceOpen;
+        if (!isCurrentRequest()) return;
+
+        const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+        const appendChunk = (chunk: Uint8Array) =>
+          new Promise<void>((resolve, reject) => {
+            sourceBuffer.addEventListener("updateend", () => resolve(), {
+              once: true,
+            });
+            sourceBuffer.addEventListener(
+              "error",
+              () => reject(new Error("Could not append an audio chunk")),
+              { once: true },
+            );
+            try {
+              sourceBuffer.appendBuffer(chunk);
+            } catch (error) {
+              reject(error);
+            }
+          });
+
+        let playbackStarted = false;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!isCurrentRequest()) return;
+          await appendChunk(value);
+          if (!playbackStarted) {
+            playbackStarted = true;
+            trackTtsPlayed(sessionId ?? undefined, ttsLatencyMs);
+            await audio.play();
+          }
         }
+        if (mediaSource.readyState === "open") mediaSource.endOfStream();
+      } else {
+        const chunks: Uint8Array[] = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!isCurrentRequest()) return;
+          chunks.push(value);
+        }
+        const totalLength = chunks.reduce(
+          (sum, chunk) => sum + chunk.byteLength,
+          0,
+        );
+        const combined = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+          combined.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+        const audio = createAudio(
+          URL.createObjectURL(new Blob([combined], { type: "audio/mpeg" })),
+        );
+        trackTtsPlayed(sessionId ?? undefined, ttsLatencyMs);
+        await audio.play();
       }
-
-      const totalLength = chunks.reduce((sum, buf) => sum + buf.byteLength, 0);
-      const combined = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const buf of chunks) {
-        combined.set(buf, offset);
-        offset += buf.byteLength;
-      }
-
-      const blob = new Blob([combined], { type: "audio/mpeg" });
-      const audioUrl = URL.createObjectURL(blob);
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onended = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-      };
-      audio.onerror = () => {
-        setIsSpeaking(false);
-        URL.revokeObjectURL(audioUrl);
-        audioRef.current = null;
-      };
-
-      trackTtsPlayed(sessionId ?? undefined, ttsLatencyMs);
-      await audio.play();
     } catch (err: unknown) {
-      if (!(err instanceof Error) || err.name !== "AbortError") {
+      if (
+        (!(err instanceof Error) || err.name !== "AbortError") &&
+        isCurrentRequest()
+      ) {
         console.error("TTS error:", err);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        if (audioUrlRef.current) {
+          URL.revokeObjectURL(audioUrlRef.current);
+          audioUrlRef.current = null;
+        }
+        setIsSpeaking(false);
       }
-      setIsSpeaking(false);
     }
   }, []);
 
@@ -215,6 +360,10 @@ export function useVoice() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
+    }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
     }
     setIsSpeaking(false);
   }, []);

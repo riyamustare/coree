@@ -92,6 +92,7 @@ CREATE TABLE public.messages (
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role text NOT NULL CHECK (role IN ('user', 'assistant')),
   content text NOT NULL,
+  memory_trace jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
